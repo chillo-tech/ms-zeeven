@@ -81,7 +81,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: simachille/ms-zeeven
+          images: simachille/ms-zeeven:latest
       
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
