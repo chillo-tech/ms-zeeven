@@ -108,5 +108,4 @@ jobs:
         script: |
           docker-compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker-compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
-          docker rmi simachille/ms-zeeven -f
           docker-compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
