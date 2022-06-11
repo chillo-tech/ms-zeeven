@@ -1,6 +1,5 @@
 package com.cs.ge.configuration;
 
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -11,7 +10,7 @@ import org.springframework.web.filter.CorsFilter;
 public class AppCorsConfiguration {
 
     @Bean
-    public FilterRegistrationBean corsFilter() {
+    public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
@@ -19,6 +18,6 @@ public class AppCorsConfiguration {
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
-        return new FilterRegistrationBean(new CorsFilter(source));
+        return new CorsFilter(source);
     }
 }
