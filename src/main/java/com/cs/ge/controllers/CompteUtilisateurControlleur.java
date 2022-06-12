@@ -23,10 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.mail.MessagingException;
 import java.io.IOException;
 
-
+@CrossOrigin
 @RestController
 @AllArgsConstructor
-@CrossOrigin(origins = "https://app.zeeven.chillo.fr")
 @RequestMapping(consumes = "application/json", produces = "application/json")
 public class CompteUtilisateurControlleur {
 
