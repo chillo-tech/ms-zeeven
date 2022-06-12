@@ -45,7 +45,6 @@ management:
         allowed-methods: "*"
       exposure:
         include: "*"
-        exclude: "env,beans"
   endpoint:
     shutdown:
       enabled: true
