@@ -26,7 +26,7 @@ import java.io.IOException;
 
 @RestController
 @AllArgsConstructor
-@CrossOrigin(origins = {"https://app.zeeven.chillo.fr", "app.zeeven.chillo.fr", "https://app.zeeven.chillo.fr"})
+@CrossOrigin(origins = {"https://app.zeeven.chillo.fr", "app.zeeven.chillo.fr", "https://app.zeeven.chillo.fr", "http://localhost:82"})
 @RequestMapping(consumes = "application/json", produces = "application/json")
 public class CompteUtilisateurControlleur {
 
