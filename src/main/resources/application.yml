@@ -40,6 +40,9 @@ jwt:
 management:
   endpoints:
     web:
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "*"
       exposure:
         include: "*"
         exclude: "env,beans"
