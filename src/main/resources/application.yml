@@ -37,3 +37,12 @@ jwt:
       path: "/login"
       refresh: "/refresh"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+        exclude: "env,beans"
+  endpoint:
+    shutdown:
+      enabled: true
