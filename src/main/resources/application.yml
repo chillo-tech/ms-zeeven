@@ -48,3 +48,8 @@ management:
   endpoint:
     shutdown:
       enabled: true
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE
