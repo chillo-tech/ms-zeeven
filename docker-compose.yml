@@ -13,6 +13,7 @@ services:
       - "8087:8087"
     environment:
       - "SPRING_PROFILES_ACTIVE=recette"
+      - "logging.level.org.springframework=TRACE"
 
     labels:
       - "traefik.enable=true"
