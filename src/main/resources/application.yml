@@ -37,17 +37,6 @@ jwt:
       path: "/login"
       refresh: "/refresh"
 
-management:
-  endpoints:
-    web:
-      cors:
-        allowed-origins: "*"
-        allowed-methods: "*"
-      exposure:
-        include: "*"
-  endpoint:
-    shutdown:
-      enabled: true
 logging:
   level:
     org:
