@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.mail.MessagingException;
 import java.io.IOException;
 
-@CrossOrigin(origins = "ttps://app.zeeven.chillo.fr")
+@CrossOrigin(origins = "https://app.zeeven.chillo.fr")
 @RestController
 @AllArgsConstructor
 @RequestMapping(consumes = "application/json", produces = "application/json")
