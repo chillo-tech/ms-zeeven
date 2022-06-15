@@ -55,6 +55,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
         httpSecurity
                 .headers()
+                .httpStrictTransportSecurity().disable()
                 .frameOptions().sameOrigin()  // required to set for H2 else H2 Console will be blank.
                 .cacheControl();
     }
@@ -69,7 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
-    
+
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         final DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
