@@ -13,7 +13,8 @@ services:
       - "8087:8087"
     environment:
       - "SPRING_PROFILES_ACTIVE=recette"
-      - "logging.level.org.springframework=TRACE"
+      #- "logging.level.org.springframework=TRACE"
+      - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
 
     labels:
       - "traefik.enable=true"

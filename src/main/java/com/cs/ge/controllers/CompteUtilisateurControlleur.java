@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.mail.MessagingException;
 import java.io.IOException;
 
-@CrossOrigin(origins = "https://app.zeeven.chillo.fr")
 @RestController
 @AllArgsConstructor
 @RequestMapping(consumes = "application/json", produces = "application/json")
@@ -32,7 +30,6 @@ public class CompteUtilisateurControlleur {
     private final UtilisateursService utilisateursService;
     private final AuthenticationManager authenticationManager;
 
-    @CrossOrigin(origins = "https://app.zeeven.chillo.fr")
     @RequestMapping(value = "connexion", method = RequestMethod.POST)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody final JwtRequest authenticationRequest) throws Exception {
         this.authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
