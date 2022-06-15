@@ -57,6 +57,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .headers()
                 .frameOptions().sameOrigin()  // required to set for H2 else H2 Console will be blank.
                 .cacheControl();
+        
+        httpSecurity.headers().httpStrictTransportSecurity().disable();
 
         httpSecurity.headers().httpStrictTransportSecurity()
                 .maxAgeInSeconds(0)
