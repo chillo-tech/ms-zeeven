@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,8 +45,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.cors(Customizer.withDefaults()).csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(this.jwtAuthenticationEntryPoint).and()
+        httpSecurity.csrf().disable();
+        httpSecurity.exceptionHandling().authenticationEntryPoint(this.jwtAuthenticationEntryPoint).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
                 .antMatchers(POST, "/connexion").permitAll()
@@ -62,10 +61,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         httpSecurity
                 .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        httpSecurity.headers().httpStrictTransportSecurity().disable();
-        httpSecurity.headers().httpStrictTransportSecurity()
-                .maxAgeInSeconds(0)
-                .includeSubDomains(true);
     }
 
     @Override
@@ -98,7 +93,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(ImmutableList.of("*").asList()); // <-- you may change "*"
         configuration.setAllowedMethods(ImmutableList.of("OPTIONS", "HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
-        configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(ImmutableList.of(
                 "Access-Control-Allow-Credentials",
                 "Accept", "Origin", "Content-Type", "Depth", "User-Agent", "If-Modified-Since,",
@@ -107,6 +101,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilterRegistrationBean() {
