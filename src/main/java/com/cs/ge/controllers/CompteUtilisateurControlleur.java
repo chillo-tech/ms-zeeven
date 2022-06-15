@@ -32,6 +32,7 @@ public class CompteUtilisateurControlleur {
     private final UtilisateursService utilisateursService;
     private final AuthenticationManager authenticationManager;
 
+    @CrossOrigin(origins = "https://app.zeeven.chillo.fr")
     @RequestMapping(value = "connexion", method = RequestMethod.POST)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody final JwtRequest authenticationRequest) throws Exception {
         this.authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
