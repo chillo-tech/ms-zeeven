@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,29 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.mail.MessagingException;
 import java.io.IOException;
 
-@CrossOrigin(
-        // Access-Control-Allow-Origin
-        origins = {"*"},
-
-        // Alternative to origins that supports more flexible originpatterns.
-        // Please, see CorsConfiguration.setAllowedOriginPatterns(List)for details.
-        // originPatterns = { "" },
-
-        // Access-Control-Allow-Credentials
-        allowCredentials = "false",
-
-        // Access-Control-Allow-Headers
-        allowedHeaders = {"*"},
-
-        // Access-Control-Expose-Headers
-        exposedHeaders = {"*"},
-
-        // Access-Control-Max-Age
-        maxAge = 60 * 30,
-
-        // Access-Control-Allow-Methods
-        methods = {RequestMethod.GET, RequestMethod.DELETE, RequestMethod.POST, RequestMethod.PUT}
-)
 @RestController
 @AllArgsConstructor
 @RequestMapping(consumes = "application/json", produces = "application/json")

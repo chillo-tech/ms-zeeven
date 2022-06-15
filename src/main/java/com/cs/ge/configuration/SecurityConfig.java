@@ -4,12 +4,9 @@ import com.cs.ge.security.JwtAuthenticationEntryPoint;
 import com.cs.ge.security.JwtAuthorizationTokenFilter;
 import com.cs.ge.security.JwtTokenUtil;
 import com.cs.ge.services.ProfileService;
-import com.google.common.collect.ImmutableList;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -19,10 +16,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import static org.springframework.http.HttpMethod.POST;
 
@@ -45,9 +38,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final HttpSecurity httpSecurity) throws Exception {
-      httpSecurity.csrf().disable()
-      .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+        httpSecurity.csrf().disable()
+                .exceptionHandling().authenticationEntryPoint(this.jwtAuthenticationEntryPoint).and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
                 .antMatchers(POST, "/connexion").permitAll()
                 .antMatchers(POST, "/inscription").permitAll()
@@ -63,7 +56,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         httpSecurity
                 .headers()
                 .frameOptions().sameOrigin()  // required to set for H2 else H2 Console will be blank.
-                .cacheControl();    }
+                .cacheControl();
+    }
 
     @Override
     protected void configure(final AuthenticationManagerBuilder auth) throws Exception {

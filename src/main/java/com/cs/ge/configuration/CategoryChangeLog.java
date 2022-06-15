@@ -6,7 +6,7 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@ChangeUnit(order = "002", id = "createCat", author = "athena", runAlways = true)
+@ChangeUnit(order = "002", id = "createCat", author = "athena")
 public class CategoryChangeLog {
 
     private final MongoTemplate mongoTemplate;

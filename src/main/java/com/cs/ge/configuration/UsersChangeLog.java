@@ -12,12 +12,12 @@ import static java.lang.Boolean.TRUE;
 
 
 @ChangeUnit(order = "001", id = "createUser", author = "athena")
-public class DatabaseChangeLog {
+public class UsersChangeLog {
     private final MongoTemplate mongoTemplate;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public DatabaseChangeLog(final MongoTemplate mongoTemplate,
-                             final BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UsersChangeLog(final MongoTemplate mongoTemplate,
+                          final BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.mongoTemplate = mongoTemplate;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
