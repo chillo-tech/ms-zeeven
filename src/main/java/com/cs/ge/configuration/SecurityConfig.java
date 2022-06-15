@@ -4,6 +4,7 @@ import com.cs.ge.security.JwtAuthenticationEntryPoint;
 import com.cs.ge.security.JwtAuthorizationTokenFilter;
 import com.cs.ge.security.JwtTokenUtil;
 import com.cs.ge.services.ProfileService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +17,14 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.http.HttpMethod.POST;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -38,7 +44,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf().disable()
+        httpSecurity.cors()
+                .configurationSource(request -> {
+                    log.debug("#####CORS######");
+                    log.debug("######CORS##########");
+                    CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(Arrays.asList("https://app.zeeven.chillo.fr", "http://localhost:3000"));
+                    configuration.setAllowedMethods(Arrays.asList("GET", "POST"));
+                    configuration.setAllowedHeaders(List.of("*"));
+                    log.debug("########CORS########");
+                    return configuration;
+                })
+                .and()
+                .csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(this.jwtAuthenticationEntryPoint).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
