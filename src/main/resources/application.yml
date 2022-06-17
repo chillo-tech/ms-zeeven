@@ -40,11 +40,6 @@ jwt:
 logging:
   level:
     org:
-      springframework:
-        web:
-          cors:
-            DefaultCorsProcessor: DEBUG
-        security: TRACE
-
+      springframework: TRACE
 cors:
   urls: "http://localhost:3000,https://app.zeeven.chillo.fr"
