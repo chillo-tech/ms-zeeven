@@ -9,8 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableMongock
 @SpringBootApplication
 public class MsZeevenApplication {
-
-
     public static void main(final String[] args) {
         SpringApplication.run(MsZeevenApplication.class, args);
     }
