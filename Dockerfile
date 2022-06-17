@@ -1,6 +1,6 @@
 FROM openjdk:11.0.5-jre-stretch
 VOLUME /tmp
-EXPOSE 29903
+EXPOSE 8080
 ARG APP_NAME=ms-zeeven.jar
 ARG JAR_FILE=target/*.jar
 ADD ${JAR_FILE} ms-zeeven.jar

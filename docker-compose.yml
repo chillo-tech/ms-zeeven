@@ -10,7 +10,7 @@ services:
     restart: always
     ports:
       # The HTTP port
-      - "8087:8087"
+      - "8080:8080"
     environment:
       - "SPRING_PROFILES_ACTIVE=recette"
       #- "logging.level.org.springframework=TRACE"
