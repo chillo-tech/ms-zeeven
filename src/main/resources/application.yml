@@ -5,41 +5,41 @@ server:
 app:
   host: http://app.zeeven.com
 spring:
-    application:
-      name: ms-zeeven
-    mail:
-      activation-url: ${app.host}/activer-mon-compte?code=
-      password-url: ${app.host}/activer-mon-compte?code=
-      new-password-url: ${app.host}/activer-mon-compte?code=
-      host: localhost
-      port: 25
-      properties:
-        mail:
-          smtp:
-            port: 25
-          transport:
-            protocol: 'smtp'
-            auth: true
-            starttls:
-              enable: true
-              required: true
+  application:
+    name: ms-zeeven
+  mail:
+    activation-url: ${app.host}/activer-mon-compte?code=
+    password-url: ${app.host}/activer-mon-compte?code=
+    new-password-url: ${app.host}/activer-mon-compte?code=
+    host: localhost
+    port: 25
+    properties:
+      mail:
+        smtp:
+          port: 25
+        transport:
+          protocol: 'smtp'
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 mongock:
   migration-scan-package:
     - com.cs.ge.configuration
 
 jwt:
-  header: "Authorization"
-  secret: "AL_KEY"
+  header: 'Authorization'
+  secret: 'AL_KEY'
   expiration: 3600 # (secondes) == 1 heure
   route:
     authentication:
-      path: "/login"
-      refresh: "/refresh"
+      path: '/login'
+      refresh: '/refresh'
 
 logging:
   level:
     org:
       springframework: DEBUG
 cors:
-  urls: "http://localhost:3000,https://app.zeeven.chillo.fr"
+  urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'
