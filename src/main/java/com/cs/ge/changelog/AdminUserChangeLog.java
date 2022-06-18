@@ -2,15 +2,17 @@ package com.cs.ge.changelog;
 
 import com.cs.ge.entites.Utilisateur;
 import com.cs.ge.enums.Role;
+import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackBeforeExecution;
 import io.mongock.api.annotations.RollbackExecution;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static java.lang.Boolean.TRUE;
 
-@ChangeUnit(order = "003", id = "createAdmin", author = "achille")
+@ChangeUnit(order = "003", id = "createAdmin", author = "achille", runAlways = true)
 public class AdminUserChangeLog {
     private final MongoTemplate mongoTemplate;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -19,6 +21,11 @@ public class AdminUserChangeLog {
                               final BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.mongoTemplate = mongoTemplate;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+    @BeforeExecution
+    public void rollbackBefore() {
+        this.mongoTemplate.dropCollection("UTILISATEURS");
     }
 
     @Execution
@@ -36,6 +43,10 @@ public class AdminUserChangeLog {
 
     @RollbackExecution
     public void rollback() {
+    }
+
+    @RollbackBeforeExecution
+    public void rollbackBeforeExecution() {
     }
 
 }
