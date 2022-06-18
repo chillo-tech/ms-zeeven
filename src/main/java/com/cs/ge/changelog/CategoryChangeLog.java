@@ -1,4 +1,4 @@
-package com.cs.ge.configuration;
+package com.cs.ge.changelog;
 
 import com.cs.ge.entites.Categorie;
 import io.mongock.api.annotations.ChangeUnit;

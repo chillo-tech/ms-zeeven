@@ -1,4 +1,4 @@
-package com.cs.ge.configuration;
+package com.cs.ge.changelog;
 
 import com.cs.ge.entites.Utilisateur;
 import com.cs.ge.enums.Role;

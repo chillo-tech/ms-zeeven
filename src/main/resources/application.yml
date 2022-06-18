@@ -26,7 +26,7 @@ spring:
 
 mongock:
   migration-scan-package:
-    - com.cs.ge.configuration
+    - com.cs.ge.changelog
 
 jwt:
   header: 'Authorization'
