@@ -18,7 +18,9 @@ spring:
     properties:
       mail:
         smtp:
-          port: 25
+          auth: true
+          starttls:
+            enable: true
         transport:
           protocol: 'smtp'
           auth: true

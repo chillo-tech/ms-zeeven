@@ -3,6 +3,7 @@ package com.cs.ge.services.emails;
 import com.cs.ge.dto.Email;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Profile;
+import com.cs.ge.enums.Civility;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,7 @@ public class BaseEmails {
     private static final String LIEN_LABEL = "activationLabel";
     private static final String NOM_DESTINATAIRE = "lastName";
     private static final String PRENOM_DESTINATAIRE = "firstName";
-    private static final String EMAIL_PAR_DEFAUT = "marlene.zeeven@gmail.com";
+    private static final String EMAIL_PAR_DEFAUT = "bonjour.zeeven@gmail.com";
     private static final String APPLICATION_LINK = "applicationLink";
     private static final String TITRE = "titre";
     private static final String EMAIL_DESTINATAIRE = "email";
@@ -63,8 +64,18 @@ public class BaseEmails {
         replacements.put(LIEN_URL, this.applicationHost);
         replacements.put(APPLICATION_LINK, this.applicationHost);
         replacements.put(EMAIL_DESTINATAIRE, guestProfile.getEmail());
+        if (guestProfile.getCivility().equals(Civility.MR)) {
+            replacements.put("civility", "Mr");
+        }
+        if (guestProfile.getCivility().equals(Civility.MR_MRS)) {
+            replacements.put("civility", "Mr & Mme");
+        }
+        if (guestProfile.getCivility().equals(Civility.MRS)) {
+            replacements.put("civility", "Mme");
+        }
         replacements.put("event", String.format("au %s", event.getName().toLowerCase()));
         replacements.put("image", image);
+        replacements.put("imageResourceName", "imageResourceName");
 
         return this.getEmail(replacements, "new-ticket");
     }

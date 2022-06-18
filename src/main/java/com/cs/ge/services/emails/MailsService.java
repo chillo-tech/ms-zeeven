@@ -19,8 +19,10 @@ public class MailsService {
         this.mailSender.send(email);
     }
 
+    @Async
     public void newGuest(Profile guestProfile, Event event, String guestQRCODE) {
         Email email = this.baseEmails.newGuest(guestProfile, event, guestQRCODE);
+        email.setImage(guestQRCODE);
         this.mailSender.send(email);
     }
 }

@@ -18,6 +18,7 @@ public class Email {
     private String subject;
 
     private String message;
+    private String image;
 
     private boolean isHtml;
 
@@ -31,7 +32,7 @@ public class Email {
         this.from = from;
         this.subject = subject;
         this.message = message;
-        this.to.addAll(Arrays.asList(splitByComma(toList)));
+        this.to.addAll(Arrays.asList(Email.splitByComma(toList)));
     }
 
     public Email(String from, String toList, String ccList, String subject, String message) {
@@ -39,12 +40,12 @@ public class Email {
         this.from = from;
         this.subject = subject;
         this.message = message;
-        this.to.addAll(Arrays.asList(splitByComma(toList)));
-        this.cc.addAll(Arrays.asList(splitByComma(ccList)));
+        this.to.addAll(Arrays.asList(Email.splitByComma(toList)));
+        this.cc.addAll(Arrays.asList(Email.splitByComma(ccList)));
     }
 
     public String getFrom() {
-        return from;
+        return this.from;
     }
 
     public void setFrom(String from) {
@@ -52,7 +53,7 @@ public class Email {
     }
 
     public List<String> getTo() {
-        return to;
+        return this.to;
     }
 
     public void setTo(List<String> to) {
@@ -60,7 +61,7 @@ public class Email {
     }
 
     public List<String> getCc() {
-        return cc;
+        return this.cc;
     }
 
     public void setCc(List<String> cc) {
@@ -68,7 +69,7 @@ public class Email {
     }
 
     public String getSubject() {
-        return subject;
+        return this.subject;
     }
 
     public void setSubject(String subject) {
@@ -76,7 +77,7 @@ public class Email {
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public void setMessage(String message) {
@@ -84,19 +85,27 @@ public class Email {
     }
 
     public boolean isHtml() {
-        return isHtml;
+        return this.isHtml;
     }
 
     public void setHtml(boolean html) {
-        isHtml = html;
+        this.isHtml = html;
     }
 
-    private String[] splitByComma(String toMultiple) {
+    private static String[] splitByComma(String toMultiple) {
         String[] toSplit = toMultiple.split(",");
         return toSplit;
     }
 
     public String getToAsList() {
         return StringUtils.join(this.to, ",");
+    }
+
+    public String getImage() {
+        return this.image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }

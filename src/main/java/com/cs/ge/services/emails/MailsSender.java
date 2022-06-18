@@ -2,6 +2,9 @@ package com.cs.ge.services.emails;
 
 import com.cs.ge.dto.Email;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -10,9 +13,9 @@ import org.springframework.stereotype.Component;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.io.UnsupportedEncodingException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.springframework.mail.javamail.MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED;
 
 @Slf4j
 @Component
@@ -38,23 +41,30 @@ public class MailsSender {
     }
 
     private void sendHtmlMail(Email eParams) throws MessagingException {
-        boolean isHtml = true;
-        MimeMessage message = this.mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, MULTIPART_MODE_MIXED_RELATED,
-                UTF_8.name());
+        try {
+            boolean isHtml = true;
+            MimeMessage message = this.mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, UTF_8.name());
 
 
-        //helper.addAttachment("facebook-icon", new ClassPathResource("static/images/facebook-icon.gif"));
+            //helper.addAttachment("facebook-icon", new ClassPathResource("static/images/facebook-icon.gif"));
 
-        helper.setTo(eParams.getTo().toArray(new String[eParams.getTo().size()]));
-        helper.setReplyTo(eParams.getFrom());
-        helper.setFrom(eParams.getFrom());
-        helper.setSubject(eParams.getSubject());
-        helper.setText(eParams.getMessage(), isHtml);
-        if (eParams.getCc().size() > 0) {
-            helper.setCc(eParams.getCc().toArray(new String[eParams.getCc().size()]));
+            helper.setTo(eParams.getTo().toArray(new String[eParams.getTo().size()]));
+            helper.setReplyTo(eParams.getFrom());
+            helper.setFrom(eParams.getFrom());
+            helper.setSubject(eParams.getSubject());
+            helper.setText(eParams.getMessage(), true);
+            byte[] imageBytes = Base64.decodeBase64(eParams.getImage().getBytes("UTF-8"));
+            final InputStreamSource imageSource = new ByteArrayResource(imageBytes);
+            helper.addInline("imageResource", imageSource, "image/png");
+            if (eParams.getCc().size() > 0) {
+                helper.setCc(eParams.getCc().toArray(new String[eParams.getCc().size()]));
+            }
+            this.mailSender.send(message);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
-        this.mailSender.send(message);
+
     }
 
     private void sendPlainTextMail(Email eParams) {

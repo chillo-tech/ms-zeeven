@@ -50,22 +50,22 @@
                     <tr>
                         <td width="50%" style="text-align:left;">
                             <a href="#"
-                               style="font-weight: bold !important; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">ZEEVEN</a>
+                               style="font-weight: bold !important; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #3003e1 !important; text-decoration: none;">ZEEVEN</a>
                         </td>
                         <td width="50%" style="text-align:right;">
                             <table align="right" border="0" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="padding-left:10px;">
                                         <a href="#"
-                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">Facebook</a>
+                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #3003e1 !important; text-decoration: none;">Facebook</a>
                                     </td>
                                     <td style="padding-left:10px;">
                                         <a href="#"
-                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">LinkedIn</a>
+                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #3003e1 !important; text-decoration: none;">LinkedIn</a>
                                     </td>
                                     <td>
                                         <a href="#"
-                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">Instagram</a>
+                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #3003e1 !important; text-decoration: none;">Instagram</a>
                                     </td>
                                 </tr>
                             </table>
@@ -79,7 +79,7 @@
     <!-- Fin en-tête -->
 
     <table id="email-penrose-conteneur" width="660" align="center"
-           style="border-right:1px solid #e2e8ea; border-bottom:1px solid #e2e8ea; border-left:1px solid #e2e8ea; background-color:#2A3F54;"
+           style="border-right:1px solid #e2e8ea; border-bottom:1px solid #e2e8ea; border-left:1px solid #e2e8ea; background-color:#f4f4f4;"
            border="0" cellspacing="0" cellpadding="0">
 
         <!-- Début bloc "mise en avant" -->
@@ -98,12 +98,14 @@
                                    style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
                                    border="0" cellspacing="0" cellpadding="0">
                                 <tr>
-                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
-                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">Bonjour
-                                             <span style="text-transform: capitalize"
-                                                   th:text="${firstName}">${firstName}</span>&nbsp;
-                                            <span style="text-transform: uppercase"
-                                                  th:text="${lastName}">${lastName}</span>,
+                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : left;">
+                                        <span style="font-size:30px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#666666">Bonjour, <br/>
+                                             <span style="text-transform: capitalize; color: #3003e1"
+                                                   th:text="${firstName}">${civility}</span>
+                                            <!--span style="text-transform: capitalize"
+                                                  th:text="${firstName}">${firstName}</span-->
+                                            <span style="text-transform: uppercase; color: #3003e1"
+                                                  th:text="${lastName}">${lastName}</span>
                                         </span>
                                         <br/><br/>
                                     </td>
@@ -111,10 +113,11 @@
 
                                 <tr>
                                     <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
-                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #f4f4f4">
-                                               Vous avez été invité <span th:text="${event}"></span>.
+                                        <span style="font-size:20px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #666666">
+                                               Vous avez été invité <span style="color: #3003e1"
+                                                                          th:text="${event}">eeeee</span>.
                                         </span><br/>
-                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #f4f4f4">
+                                        <span style="font-size:20px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #666666">
                                               Voici votre carte d'accès à l'évènement,
                                         </span>
                                     </td>
@@ -122,19 +125,18 @@
                                 <tr>
                                     <td width="100%" class="resp-full-td" valign="top"
                                         style="text-align : center; padding: 20px 0">
-                                        <img th:src="'data:image/png;base64, ' + ${image}"/>
-
+                                        <img class="image" th:src="@{'data:image/jpeg;base64,'+${image}}"/>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
-                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">Cordialement,</span>
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#666666">Cordialement,</span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
-                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">
-                                            L' équipe <span style="color: #ffffff">ZEEVEN</span>
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#666666">
+                                            L' équipe <span>ZEEVEN</span>
                                         </span>
                                         <br/><br/>
                                     </td>

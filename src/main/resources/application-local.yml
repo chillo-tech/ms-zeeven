@@ -8,6 +8,8 @@ spring:
       database: zeeven
 
   mail:
+
+
       accountLink: ${app.host}/activer-mon-compte?code=
 
 
