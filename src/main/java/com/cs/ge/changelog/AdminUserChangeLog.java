@@ -10,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static java.lang.Boolean.TRUE;
 
-@ChangeUnit(order = "001", id = "createUser", author = "achille")
+@ChangeUnit(order = "003", id = "createAdmin", author = "achille")
 public class AdminUserChangeLog {
     private final MongoTemplate mongoTemplate;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Guest {
-    Profile profile;
+    private Profile profile;
     private String classe;
     private String position;
     private String ticketType;

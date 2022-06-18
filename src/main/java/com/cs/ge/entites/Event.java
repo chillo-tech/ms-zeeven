@@ -1,6 +1,7 @@
 package com.cs.ge.entites;
 
 import com.cs.ge.enums.EventStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+
 @Document("EVENEMENTS")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,7 +22,10 @@ import java.util.Set;
 @Setter
 public class Event {
     @Id
+    @JsonProperty(access = WRITE_ONLY)
     private String id;
+    private String publicId;
+    private String slug;
     private String name;
     private EventStatus status;
     private Categorie categorie;

@@ -40,6 +40,6 @@ jwt:
 logging:
   level:
     org:
-      springframework: DEBUG
+      springframework: INFO
 cors:
   urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'

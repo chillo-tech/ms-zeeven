@@ -9,10 +9,13 @@ import com.cs.ge.enums.EventStatus;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.emails.MailsService;
+import com.cs.ge.utilitaire.UtilitaireService;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,6 +25,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RequiredArgsConstructor
 @Service
@@ -47,6 +53,11 @@ public class EventService {
 
         final EventStatus status = eventStatus(event.getDates());
         event.setStatus(status);
+        String publicId = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
+        event.setPublicId(publicId);
+        String slug = UtilitaireService.makeSlug(event.getName());
+        event.setSlug(format("%s-%s", slug, publicId));
+
         event = this.eventsRepository.save(event);
 
         this.mailsService.newEvent(event);
@@ -92,8 +103,8 @@ public class EventService {
     }
 
     public Event read(final String id) {
-        return this.eventsRepository.findById(id).orElseThrow(
-                () -> new ApplicationException("Aucune enttité ne correspond au critères fournis")
+        return this.eventsRepository.findByPublicId(id).orElseThrow(
+                () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis")
         );
     }
 
@@ -104,6 +115,12 @@ public class EventService {
         Profile guestProfile = guest.getProfile();
         String guestId = UUID.randomUUID().toString();
         guestProfile.setId(guestId);
+
+        String publicId = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
+        guestProfile.setPublicId(publicId);
+        String slug = UtilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
+        guestProfile.setSlug(format("%s-%s", slug, publicId));
+
         guest.setProfile(guestProfile);
         List<Guest> guests = event.getGuests();
         if (guests == null) {
@@ -125,6 +142,12 @@ public class EventService {
         final var event = this.read(eventId);
         String guestId = UUID.randomUUID().toString();
         schedule.setId(guestId);
+
+        String publicId = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
+        schedule.setPublicId(publicId);
+        String slug = UtilitaireService.makeSlug(schedule.getTitle());
+        schedule.setSlug(format("%s-%s", slug, publicId));
+
         List<Schedule> schedules = event.getSchedules();
         if (schedules == null) {
             schedules = new ArrayList<>();
