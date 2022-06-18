@@ -11,8 +11,10 @@ spring:
     activation-url: ${app.host}/activer-mon-compte?code=
     password-url: ${app.host}/activer-mon-compte?code=
     new-password-url: ${app.host}/activer-mon-compte?code=
-    host: localhost
-    port: 25
+    host: smtp.gmail.com
+    port: 587
+    password: hnucjwtwmqaqymdr
+    username: bonjour.zeeven@gmail.com
     properties:
       mail:
         smtp:

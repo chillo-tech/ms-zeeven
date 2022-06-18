@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @RestController
@@ -56,6 +57,16 @@ public class EventController {
     public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) {
         this.eventService.addGuest(id, guest);
     }
+    
+    @PostMapping(value = "{id}/invitations")
+    public void sendInvitations(@PathVariable final String id, @RequestBody final Set<String> guestIds) {
+        this.eventService.sendInvitations(id, guestIds);
+    }
+
+    @DeleteMapping(value = "{eventId}/guest/{guestId}")
+    public void deleteGuest(@PathVariable final String eventId, @PathVariable final String guestId) {
+        this.eventService.deleteGuest(eventId, guestId);
+    }
 
     @GetMapping(value = "{id}/guest")
     public List<Guest> fetchGuests(@PathVariable final String id) {
@@ -63,7 +74,7 @@ public class EventController {
     }
 
     @PostMapping(value = "{id}/schedule")
-    public void addGuests(@PathVariable final String id, @RequestBody final Schedule schedule) {
+    public void addSchedule(@PathVariable final String id, @RequestBody final Schedule schedule) {
         this.eventService.addSchedule(id, schedule);
     }
 
@@ -71,4 +82,10 @@ public class EventController {
     public List<Schedule> fetchSchedules(@PathVariable final String id) {
         return this.eventService.schedules(id);
     }
+
+    @DeleteMapping(value = "{eventId}/schedule/{scheduleId}")
+    public void deleteSchedule(@PathVariable final String eventId, @PathVariable final String scheduleId) {
+        this.eventService.deleteSchedule(eventId, scheduleId);
+    }
+
 }

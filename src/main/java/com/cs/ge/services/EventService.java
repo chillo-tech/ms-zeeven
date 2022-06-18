@@ -10,8 +10,10 @@ import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.emails.MailsService;
 import com.cs.ge.utilitaire.UtilitaireService;
+import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -129,8 +131,28 @@ public class EventService {
         guests.add(guest);
         event.setGuests(guests);
         this.eventsRepository.save(event);
-        String guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event.getId(), guestId);
-        this.mailsService.newGuest(guestProfile, event, guestQRCODE);
+        if (guest.isSendInvitation()) {
+            this.sendInvitation(event, guestProfile);
+        }
+    }
+
+    private void sendInvitation(Event event, Profile guestProfile) {
+        String guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event.getPublicId(), guestProfile.getPublicId());
+        if (StringUtils.isNotBlank(guestProfile.getEmail()) && StringUtils.isNotEmpty(guestProfile.getEmail())) {
+            this.mailsService.newGuest(guestProfile, event, guestQRCODE);
+        }
+
+        if (StringUtils.isNotBlank(guestProfile.getPhone()) && StringUtils.isNotEmpty(guestProfile.getPhone())) {
+            this.mailsService.newGuest(guestProfile, event, guestQRCODE);
+        }
+    }
+
+    public void deleteGuest(final String eventId, final String guestId) {
+        final var event = this.read(eventId);
+        List<Guest> guests = event.getGuests();
+        guests = guests.stream().filter(currentGuest -> !currentGuest.getProfile().getPublicId().equals(guestId)).collect(Collectors.toList());
+        event.setGuests(guests);
+        this.eventsRepository.save(event);
     }
 
     public List<Guest> guests(final String id) {
@@ -157,8 +179,27 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
+    public void deleteSchedule(String eventId, String scheduleId) {
+        final var event = this.read(eventId);
+        List<Schedule> schedules = event.getSchedules();
+        schedules = schedules.stream().filter(currentSchedule -> !currentSchedule.getPublicId().equals(scheduleId)).collect(Collectors.toList());
+        event.setSchedules(schedules);
+        this.eventsRepository.save(event);
+    }
+
     public List<Schedule> schedules(String id) {
         final Event event = this.read(id);
         return event.getSchedules();
+    }
+
+    public void sendInvitations(String id, Set<String> guestIds) {
+        Event event = this.read(id);
+        List<String> guestIdsAsList = Lists.newArrayList(guestIds);
+        event.getGuests()
+                .stream()
+                .map(Guest::getProfile)
+                .filter(profile -> guestIdsAsList.contains(profile.getPublicId()))
+                .forEach(profile -> this.sendInvitation(event, profile));
+
     }
 }

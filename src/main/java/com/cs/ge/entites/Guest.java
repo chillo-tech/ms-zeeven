@@ -14,6 +14,7 @@ public class Guest {
     private String classe;
     private String position;
     private String ticketType;
+    private boolean sendInvitation;
     private String isTicketSent;
 
 }
