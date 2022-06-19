@@ -47,6 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
                 .antMatchers(POST, "/connexion").permitAll()
+                .antMatchers(POST, "/webhooks").permitAll()
                 .antMatchers(POST, "/inscription").permitAll()
                 .antMatchers(POST, "/activation").permitAll()
                 .anyRequest()
@@ -73,7 +74,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         final DaoAuthenticationProvider provider = new DaoAuthenticationProvider();

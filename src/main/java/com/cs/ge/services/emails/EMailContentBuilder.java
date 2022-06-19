@@ -10,11 +10,10 @@ import java.util.Map;
 public class EMailContentBuilder {
     private final SpringTemplateEngine templateEngine;
 
-
     public EMailContentBuilder(final SpringTemplateEngine templateEngine) {
         this.templateEngine = templateEngine;
     }
-    
+
     public String getTemplate(String template, Map<String, Object> replacements) {
         final Context context = new Context();
         context.setVariables(replacements);

@@ -40,7 +40,9 @@ jwt:
     authentication:
       path: '/login'
       refresh: '/refresh'
-
+providers:
+  whatsapp:
+    token: EAAH0r3oyib0BAOd5dMCSe0ccfBw3lhrIGTojT0kkOM5vyPiPAG183YjRK3aqt6PmnhlsosBmna73XEshvpLGQHSB0DxjOqzMYK0NW9dHpwOLHheL5RUNhm6ZATBHqhxwrwIWMJKubQqfcIZBIwomzXmsvg7vmOCub1bA8SdkPfVtphCkWS
 logging:
   level:
     org:
