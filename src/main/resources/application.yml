@@ -44,7 +44,7 @@ providers:
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
-    token: EAAIDpGRyY6MBABopmO4I5zx87zwnxdqrRLu5qdgyvMFaNVfpPki6pg6YAklgn3n8k0hZCrZAnfaYh7wE2R9CDbomveZBLIzZCLdpdlQML04rtxxleYDAiKC8wRSjc6EZCrSaOCZAU5ZAZBKRz6VXHf2QvmGZCVskdP0JecD0vStlWY9uP5R0uIqyh9k1tEyMedeAvuE595MRZBMQZDZD
+    token: EAAIDpGRyY6MBAO3RatWywGNGQfTsZBS4DZBJNM7sMsZBn7THsXovtR0ZBf8Iz6B3oxiQHQ7iiZAXPkGZB07kZA7U5BYAGHAUrtlf3ZChHR8U3IdQnRmlvXSInKCJ5EVQk0DJC7kzjECmxZAtnIcbq9gSBkocbNHqyXhleVH0nOUAPw0K5WvRm0HDGwbfMwZBilQDu4UByRSh09zAZDZD
 logging:
   level:
     org:

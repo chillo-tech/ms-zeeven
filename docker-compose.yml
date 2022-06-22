@@ -24,7 +24,7 @@ services:
       - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*" 
 
     volumes:
-      - "/Users/chillo/images/applications/zeeven/:/var/www/app/"
+      - "/var/www/images/applications/zeeven/:/var/www/images/"
     networks:
       - applications-network
 networks:
