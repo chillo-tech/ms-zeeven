@@ -1,6 +1,7 @@
 package com.cs.ge.services.emails;
 
 import com.cs.ge.dto.Email;
+import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.core.io.ByteArrayResource;
@@ -54,9 +55,11 @@ public class MailsSender {
             helper.setFrom(eParams.getFrom());
             helper.setSubject(eParams.getSubject());
             helper.setText(eParams.getMessage(), true);
-            byte[] imageBytes = Base64.decodeBase64(eParams.getImage().getBytes("UTF-8"));
-            final InputStreamSource imageSource = new ByteArrayResource(imageBytes);
-            helper.addInline("imageResource", imageSource, "image/png");
+            if (!Strings.isNullOrEmpty(eParams.getImage())) {
+                byte[] imageBytes = Base64.decodeBase64(eParams.getImage().getBytes("UTF-8"));
+                final InputStreamSource imageSource = new ByteArrayResource(imageBytes);
+                helper.addInline("imageResource", imageSource, "image/png");
+            }
             if (eParams.getCc().size() > 0) {
                 helper.setCc(eParams.getCc().toArray(new String[eParams.getCc().size()]));
             }

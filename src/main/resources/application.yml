@@ -42,7 +42,9 @@ jwt:
       refresh: '/refresh'
 providers:
   whatsapp:
-    token: EAAH0r3oyib0BAOd5dMCSe0ccfBw3lhrIGTojT0kkOM5vyPiPAG183YjRK3aqt6PmnhlsosBmna73XEshvpLGQHSB0DxjOqzMYK0NW9dHpwOLHheL5RUNhm6ZATBHqhxwrwIWMJKubQqfcIZBIwomzXmsvg7vmOCub1bA8SdkPfVtphCkWS
+    host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
+    phone: 108190935266755
+    token: EAAIDpGRyY6MBAPSNYZCs3g6MbCk6k1Nl63Pst4qOA37R2OrV0MoSS306ci25sVG6LKl4YbIZAuaWZBamS2VleykUa8zMfkEeb82vMZAdlFryTGIjGSgjWUT2ndU7f5hYtqEEyU7d1ZBoLytEN5gjjoKP6RTVlNjqYvkJmI6kBEq1sLTFSbsHv2wPKhTrYaJYoqETCrQFmTQZDZD
 logging:
   level:
     org:

@@ -6,17 +6,25 @@ import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.Utilisateur;
 import com.cs.ge.enums.EventStatus;
+import com.cs.ge.enums.Role;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.emails.MailsService;
+import com.cs.ge.services.whatsapp.TextMessageService;
+import com.cs.ge.services.whatsapp.dto.Component;
+import com.cs.ge.services.whatsapp.dto.Image;
+import com.cs.ge.services.whatsapp.dto.Language;
+import com.cs.ge.services.whatsapp.dto.Parameter;
+import com.cs.ge.services.whatsapp.dto.Template;
+import com.cs.ge.services.whatsapp.dto.Text;
+import com.cs.ge.services.whatsapp.dto.TextMessage;
 import com.cs.ge.utilitaire.UtilitaireService;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,6 +32,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -37,11 +46,22 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class EventService {
     private final EventRepository eventsRepository;
     private final MailsService mailsService;
+    private final ImageService imageService;
+    private final TextMessageService textMessageService;
     private final ValidationService validationService;
+    private final ProfileService profileService;
     private final QRCodeGeneratorService qrCodeGeneratorService;
+    @Value("${resources.images.host}")
+    private final String imagesHost;
 
     public List<Event> search() {
-        return this.eventsRepository.findAll();
+        Utilisateur authenticatedUser = this.profileService.getAuthenticateUser();
+        if (authenticatedUser.getRole().equals(Role.ADMIN)) {
+            return this.eventsRepository.findAll();
+        }
+
+        String id = authenticatedUser.getId();
+        return this.eventsRepository.findByAuthorId(id).collect(Collectors.toList());
     }
 
     public void add(Event event) {
@@ -50,8 +70,7 @@ public class EventService {
             throw new ApplicationException("Champs obligatoire");
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Utilisateur authenticatedUser = (Utilisateur) authentication.getPrincipal();
+        Utilisateur authenticatedUser = this.profileService.getAuthenticateUser();
         event.setAuthor(authenticatedUser);
 
         final EventStatus status = eventStatus(event.getDates());
@@ -119,11 +138,12 @@ public class EventService {
         String guestId = UUID.randomUUID().toString();
         guestProfile.setId(guestId);
 
-        String publicId = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
+        String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
         guestProfile.setPublicId(publicId);
         String slug = UtilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
         guestProfile.setSlug(format("%s-%s", slug, publicId));
-
+        String guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event.getPublicId(), guestProfile.getPublicId());
+        guest.setTicket(guestQRCODE);
         guest.setProfile(guestProfile);
         List<Guest> guests = event.getGuests();
         if (guests == null) {
@@ -132,19 +152,53 @@ public class EventService {
         guests.add(guest);
         event.setGuests(guests);
         this.eventsRepository.save(event);
+
+        this.imageService.saveTicketImages(event, guest);
         if (guest.isSendInvitation()) {
-            this.sendInvitation(event, guestProfile);
+            this.sendInvitation(event, guest);
         }
+
     }
 
-    private void sendInvitation(Event event, Profile guestProfile) {
-        String guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event.getPublicId(), guestProfile.getPublicId());
+    private void sendInvitation(Event event, Guest guest) {
+        Profile guestProfile = guest.getProfile();
         if (StringUtils.isNotBlank(guestProfile.getEmail()) && StringUtils.isNotEmpty(guestProfile.getEmail())) {
-            this.mailsService.newGuest(guestProfile, event, guestQRCODE);
+            this.mailsService.newGuest(guestProfile, event, guest.getTicket());
         }
 
         if (StringUtils.isNotBlank(guestProfile.getPhone()) && StringUtils.isNotEmpty(guestProfile.getPhone())) {
-            this.mailsService.newGuest(guestProfile, event, guestQRCODE);
+            Text text = new Text();
+            text.setBody("Votre invitation");
+            text.setPreview_url(false);
+
+            Template template = new Template();
+            template.setName("zeeven");
+            template.setLanguage(new Language());
+
+            Image image = new Image();
+            image.setLink(String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId()));
+            Parameter parameter = new Parameter();
+            parameter.setType("image");
+            parameter.setImage(image);
+
+            Component header = new Component();
+            header.setType("header");
+            header.setParameters(List.of(parameter));
+
+            Component body = new Component();
+            body.setType("body");
+            body.setParameters(List.of(
+                    new Parameter("text", String.format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName().toUpperCase()), null),
+                    new Parameter("text", event.getName(), null)
+            ));
+
+            template.setComponents(List.of(header, body));
+            TextMessage textMessage = new TextMessage();
+            textMessage.setTemplate(template);
+            textMessage.setMessaging_product("whatsapp");
+            textMessage.setType("template");
+            textMessage.setTo(String.format("237%s", guestProfile.getPhone()));
+            this.textMessageService.message(textMessage);
         }
     }
 
@@ -199,8 +253,7 @@ public class EventService {
         List<String> guestIdsAsList = Lists.newArrayList(guestIds);
         event.getGuests()
                 .stream()
-                .map(Guest::getProfile)
-                .filter(profile -> guestIdsAsList.contains(profile.getPublicId()))
+                .filter(guest -> guestIdsAsList.contains(guest.getProfile().getPublicId()))
                 .forEach(profile -> this.sendInvitation(event, profile));
 
     }

@@ -11,28 +11,27 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static java.lang.Boolean.TRUE;
 
-@ChangeUnit(order = "003", id = "createAdmin", author = "achille")
-public class AdminUserChangeLog {
+@ChangeUnit(order = "004", id = "createKM", author = "achille")
+public class KarenMaximeUserChangeLog {
     private final MongoTemplate mongoTemplate;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public AdminUserChangeLog(final MongoTemplate mongoTemplate,
-                              final BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public KarenMaximeUserChangeLog(final MongoTemplate mongoTemplate,
+                                    final BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.mongoTemplate = mongoTemplate;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
-
-
+    
     @Execution
     public void createUser() {
-        final Utilisateur admin = new Utilisateur();
-        admin.setRole(Role.ADMIN);
-        admin.setFirstName("admin");
-        admin.setLastName("admin");
-        admin.setEmail("bonjour.zeeven@gmail.com");
-        admin.setEnabled(TRUE);
-        admin.setPassword(this.bCryptPasswordEncoder.encode("events"));
-        this.mongoTemplate.save(admin);
+        final Utilisateur km = new Utilisateur();
+        km.setRole(Role.CUSTOMER);
+        km.setFirstName("KM");
+        km.setLastName("WAMBE");
+        km.setEmail("karen.maxime@gmail.com");
+        km.setEnabled(TRUE);
+        km.setPassword(this.bCryptPasswordEncoder.encode("karen&maxime"));
+        this.mongoTemplate.save(km);
 
     }
 

@@ -23,7 +23,8 @@ services:
       - "traefik.http.routers.service.middlewares=serviceheaders"
       - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*" 
 
-
+    volumes:
+      - "/Users/chillo/images/applications/zeeven/:/var/www/app/"
     networks:
       - applications-network
 networks:
