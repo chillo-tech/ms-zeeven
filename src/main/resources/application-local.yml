@@ -8,10 +8,11 @@ spring:
       database: zeeven
 
   mail:
-
-
       accountLink: ${app.host}/activer-mon-compte?code=
 
+resources:
+  images:
+    host: "https://api.zeeven.chillo.fr/assets"
 
 
 

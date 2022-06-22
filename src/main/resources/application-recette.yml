@@ -12,7 +12,6 @@ spring:
 
 resources:
   images:
-    folder: "images/applications/zeeven"
     host: "https://api.zeeven.chillo.fr/assets"
 
 

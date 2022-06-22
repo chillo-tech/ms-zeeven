@@ -44,10 +44,13 @@ providers:
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
-    token: EAAIDpGRyY6MBAPSNYZCs3g6MbCk6k1Nl63Pst4qOA37R2OrV0MoSS306ci25sVG6LKl4YbIZAuaWZBamS2VleykUa8zMfkEeb82vMZAdlFryTGIjGSgjWUT2ndU7f5hYtqEEyU7d1ZBoLytEN5gjjoKP6RTVlNjqYvkJmI6kBEq1sLTFSbsHv2wPKhTrYaJYoqETCrQFmTQZDZD
+    token: EAAIDpGRyY6MBABopmO4I5zx87zwnxdqrRLu5qdgyvMFaNVfpPki6pg6YAklgn3n8k0hZCrZAnfaYh7wE2R9CDbomveZBLIzZCLdpdlQML04rtxxleYDAiKC8wRSjc6EZCrSaOCZAU5ZAZBKRz6VXHf2QvmGZCVskdP0JecD0vStlWY9uP5R0uIqyh9k1tEyMedeAvuE595MRZBMQZDZD
 logging:
   level:
     org:
       springframework: INFO
 cors:
   urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'
+resources:
+  images:
+    folder: "images/applications/zeeven/images"

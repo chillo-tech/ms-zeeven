@@ -24,5 +24,6 @@ public class Profile {
     protected String firstName;
     protected String lastName;
     protected String email;
+    protected String phoneIndex;
     protected String phone;
 }

@@ -20,7 +20,7 @@ import com.cs.ge.services.whatsapp.dto.Text;
 import com.cs.ge.services.whatsapp.dto.TextMessage;
 import com.cs.ge.utilitaire.UtilitaireService;
 import com.google.common.collect.Lists;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
-@RequiredArgsConstructor
+@Slf4j
 @Service
 public class EventService {
     private final EventRepository eventsRepository;
@@ -51,8 +51,18 @@ public class EventService {
     private final ValidationService validationService;
     private final ProfileService profileService;
     private final QRCodeGeneratorService qrCodeGeneratorService;
-    @Value("${resources.images.host}")
     private final String imagesHost;
+
+    public EventService(EventRepository eventsRepository, MailsService mailsService, ImageService imageService, TextMessageService textMessageService, ValidationService validationService, ProfileService profileService, QRCodeGeneratorService qrCodeGeneratorService, @Value("${resources.images.host}") String imagesHost) {
+        this.eventsRepository = eventsRepository;
+        this.mailsService = mailsService;
+        this.imageService = imageService;
+        this.textMessageService = textMessageService;
+        this.validationService = validationService;
+        this.profileService = profileService;
+        this.qrCodeGeneratorService = qrCodeGeneratorService;
+        this.imagesHost = imagesHost;
+    }
 
     public List<Event> search() {
         Utilisateur authenticatedUser = this.profileService.getAuthenticateUser();
@@ -75,7 +85,7 @@ public class EventService {
 
         final EventStatus status = eventStatus(event.getDates());
         event.setStatus(status);
-        String publicId = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
+        String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
         event.setPublicId(publicId);
         String slug = UtilitaireService.makeSlug(event.getName());
         event.setSlug(format("%s-%s", slug, publicId));
@@ -172,11 +182,14 @@ public class EventService {
             text.setPreview_url(false);
 
             Template template = new Template();
-            template.setName("zeeven");
+            template.setName("user_ticket");
             template.setLanguage(new Language());
 
             Image image = new Image();
-            image.setLink(String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId()));
+            String link = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
+            log.info("Link information " + link);
+            image.setLink(link);
+            //image.setLink("https://media.istockphoto.com/photos/taj-mahal-mausoleum-in-agra-picture-id1146517111?k=20&m=1146517111&s=612x612&w=0&h=vHWfu6TE0R5rG6DJkV42Jxr49aEsLN0ML-ihvtim8kk=");
             Parameter parameter = new Parameter();
             parameter.setType("image");
             parameter.setImage(image);
@@ -197,7 +210,7 @@ public class EventService {
             textMessage.setTemplate(template);
             textMessage.setMessaging_product("whatsapp");
             textMessage.setType("template");
-            textMessage.setTo(String.format("237%s", guestProfile.getPhone()));
+            textMessage.setTo(String.format("%s%s", guestProfile.getPhoneIndex(), guestProfile.getPhone()));
             this.textMessageService.message(textMessage);
         }
     }
@@ -220,7 +233,7 @@ public class EventService {
         String guestId = UUID.randomUUID().toString();
         schedule.setId(guestId);
 
-        String publicId = RandomStringUtils.randomAlphanumeric(20).toUpperCase();
+        String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
         schedule.setPublicId(publicId);
         String slug = UtilitaireService.makeSlug(schedule.getTitle());
         schedule.setSlug(format("%s-%s", slug, publicId));
