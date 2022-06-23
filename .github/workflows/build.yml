@@ -105,8 +105,9 @@ jobs:
         username: ${{ secrets.RECETTE_APPLICATIONS_USERNAME }}
         password: ${{ secrets.RECETTE_APPLICATIONS_PASSWPRD }}
         key: ${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}
+
         script: |
-          docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
+          docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker rmi simachille/ms-zeeven -f
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
