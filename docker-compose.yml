@@ -15,7 +15,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=recette"
       #- "logging.level.org.springframework=TRACE"
       - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
-      - "provider.whatsapp.token=${WHATSAPP_TOKEN}"
+      - "providers.whatsapp.token=${WHATSAPP_TOKEN}"
 
     labels:
       - "traefik.enable=true"

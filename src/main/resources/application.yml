@@ -44,7 +44,6 @@ providers:
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
-    token: WHATAPPS_TOKEN
 logging:
   level:
     org:
