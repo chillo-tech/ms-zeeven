@@ -162,8 +162,9 @@ public class EventService {
         guests.add(guest);
         event.setGuests(guests);
         this.eventsRepository.save(event);
-
+        log.info("#########BEFORE SAVE IMAGE ###########");
         this.imageService.saveTicketImages(event, guest);
+        log.info("#########AFTER SAVE IMAGE ###########");
         if (guest.isSendInvitation()) {
             this.sendInvitation(event, guest);
         }
