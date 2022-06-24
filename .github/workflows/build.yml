@@ -108,5 +108,6 @@ jobs:
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker rmi simachille/ms-zeeven -f
+          echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} > /opt/applications/zeeven/ms-zeeven/.env
           export WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
