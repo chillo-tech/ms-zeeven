@@ -33,6 +33,8 @@ public class ImageService {
     public void saveTicketImages(Event event, Guest guest) {
         try {
             String location = String.format("%s/%s/events/%s/tickets/%s.jpg", System.getProperty("user.home"), this.imagesFolder, event.getPublicId(), guest.getProfile().getPublicId());
+            log.info("IMAGE LOCATION " + location);
+
             byte[] decodedBytes = Base64.getDecoder().decode(guest.getTicket());
             FileUtils.writeByteArrayToFile(new File(location), decodedBytes);
         } catch (IOException e) {
