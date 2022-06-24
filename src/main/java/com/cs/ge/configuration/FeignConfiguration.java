@@ -1,5 +1,6 @@
 package com.cs.ge.configuration;
 
+import feign.Logger;
 import feign.RequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,4 +27,8 @@ public class FeignConfiguration {
         };
     }
 
+    @Bean
+    Logger.Level feignLoggerLevel() {
+        return Logger.Level.FULL;
+    }
 }

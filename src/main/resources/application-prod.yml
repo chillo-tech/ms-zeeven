@@ -1,4 +1,4 @@
 
 resources:
   images:
-    host: "https://api.zeeven.chillo.fr/assets"
+    host: "https://api.zeeven.chillo.fr"

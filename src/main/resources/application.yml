@@ -52,4 +52,4 @@ cors:
   urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'
 resources:
   images:
-    folder: "images/applications/zeeven/images"
+    folder: "applications/zeeven/images"
