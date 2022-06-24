@@ -74,11 +74,7 @@ jobs:
 
       - name: Build with Maven
         run: mvn -Dmaven.test.skip=true clean compile package
-      
-      - name: check
-        run: |
-          ls -al 
-          ls -al target
+
       
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -94,25 +90,6 @@ jobs:
           tags: simachille/ms-zeeven:latest
           labels: ${{ steps.meta.outputs.labels }}
   
-
-
-  update-config:
-    name: "update config"
-    runs-on: ubuntu-latest
-    needs: [dockerize, copy-configs]
-    steps:
-    - name: Run container
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.RECETTE_APPLICATIONS_HOST }}
-        port: ${{ secrets.RECETTE_APPLICATIONS_PORT }}
-        username: ${{ secrets.RECETTE_APPLICATIONS_USERNAME }}
-        password: ${{ secrets.RECETTE_APPLICATIONS_PASSWPRD }}
-        key: ${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}
-
-        script: |
-          sed -i 's/WHATAPPS_TOKEN/${{ secrets.WHATSAPP_TOKEN }}/g' /opt/applications/zeeven/ms-zeeven/docker-compose.yml
-
   run-container:
     name: "Run container"
     runs-on: ubuntu-latest
@@ -131,4 +108,5 @@ jobs:
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker rmi simachille/ms-zeeven -f
+          export WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
