@@ -1,15 +1,12 @@
 package com.cs.ge.configuration;
 
-import feign.Logger;
 import feign.RequestInterceptor;
-import lombok.extern.slf4j.Slf4j;
+import feign.RequestTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
-@Slf4j
-@Configuration
-public class FeignConfiguration {
+@Component
+public class FeignConfiguration implements RequestInterceptor {
 
     private final String token;
 
@@ -17,18 +14,10 @@ public class FeignConfiguration {
         this.token = token;
     }
 
-    @Bean
-    public RequestInterceptor requestInterceptor() {
-        log.debug(this.token);
-        return requestTemplate -> {
-            requestTemplate.header("Content-Type", "application/json");
-            requestTemplate.header("Accept", "application/json");
-            requestTemplate.header("Authorization", "Bearer " + this.token);
-        };
-    }
-
-    @Bean
-    Logger.Level feignLoggerLevel() {
-        return Logger.Level.FULL;
+    @Override
+    public void apply(RequestTemplate requestTemplate) {
+        requestTemplate.header("Content-Type", "application/json");
+        requestTemplate.header("Accept", "application/json");
+        requestTemplate.header("Authorization", "Bearer " + this.token);
     }
 }

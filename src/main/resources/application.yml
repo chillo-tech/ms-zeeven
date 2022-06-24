@@ -44,12 +44,19 @@ providers:
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
-logging:
-  level:
-    org:
-      springframework: INFO
+
 cors:
   urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'
 resources:
   images:
     folder: "applications/zeeven/images"
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+logging:
+  level:
+    com.cs.ge: DEBUG
