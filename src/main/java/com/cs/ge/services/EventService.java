@@ -212,10 +212,7 @@ public class EventService {
             textMessage.setMessaging_product("whatsapp");
             textMessage.setType("template");
             textMessage.setTo(String.format("%s%s", guestProfile.getPhoneIndex(), guestProfile.getPhone()));
-            log.info("#####Before SMS#####");
-            log.info("{}", textMessage);
             this.textMessageService.message(textMessage);
-            log.info("#####After SMS#####");
 
         }
     }
