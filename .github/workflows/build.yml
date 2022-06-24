@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@master
       - name: check
         run: |
-          sed 's/WHATAPPS_TOKEN/${{ secrets.WHATSAPP_TOKEN }}/' docker-compose.yml
+          sed -i 's/WHATAPPS_TOKEN/${{ secrets.WHATSAPP_TOKEN }}/g' docker-compose.yml
           cat docker-compose.yml
       - name: copy file via ssh password
         uses: appleboy/scp-action@master
