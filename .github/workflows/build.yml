@@ -35,8 +35,11 @@ jobs:
     needs: create-folder
     steps:
       - uses: actions/checkout@master
-      - 
-        name: copy file via ssh password
+      - name: check
+        run: |
+          sed 's/WHATAPPS_TOKEN/${{ secrets.WHATSAPP_TOKEN }}/' docker-compose.yml
+          cat docker-compose.yml
+      - name: copy file via ssh password
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.RECETTE_APPLICATIONS_HOST }}
