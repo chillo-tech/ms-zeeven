@@ -16,8 +16,8 @@ import java.util.Map;
 
 @Component
 public class QRCodeGeneratorService {
-    private final int WIDTH = 250;
-    private final int HEIGHT = 250;
+    private final int WIDTH = 612;
+    private final int HEIGHT = 612;
 
     public String guestQRCODE(String guest, String event) {
         Map<String, String> elements = new HashMap();
@@ -36,7 +36,9 @@ public class QRCodeGeneratorService {
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", byteArrayOutputStream);
             return Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
         } catch (final WriterException ex) {
+            ex.printStackTrace();
         } catch (final IOException ex) {
+            ex.printStackTrace();
         }
         return null;
     }

@@ -13,7 +13,7 @@ spring:
     new-password-url: ${app.host}/activer-mon-compte?code=
     host: smtp.gmail.com
     port: 587
-    password: hnucjwtwmqaqymdr
+    password: xpmswzbclbnulucd
     username: bonjour.zeeven@gmail.com
     properties:
       mail:
@@ -44,6 +44,9 @@ providers:
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
+  twilio:
+    ACCOUNT_SID: ACcbb01f55e3469ff5eea683ebc1aac50f
+    AUTH_TOKEN: 1778b79bac3e35612ed996f5cb2531f4
 
 cors:
   urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'
@@ -60,3 +63,8 @@ feign:
 logging:
   level:
     com.cs.ge: DEBUG
+org:
+  springframework:
+    web:
+      filter:
+        CommonsRequestLoggingFilter: DEBUG
