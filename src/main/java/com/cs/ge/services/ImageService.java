@@ -2,7 +2,6 @@ package com.cs.ge.services;
 
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
-import com.cs.ge.repositories.EventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,13 +14,11 @@ import java.util.Base64;
 @Slf4j
 @Service
 public class ImageService {
-
     private final String imagesFolder;
     private final String imagesHost;
     private final String imagesRootfolder;
 
     public ImageService(
-            EventRepository eventRepository,
             @Value("${resources.images.folder}") String imagesFolder,
             @Value("${resources.images.host}") String imagesHost,
             @Value("${resources.images.root}") String imagesRootfolder
@@ -41,4 +38,5 @@ public class ImageService {
             e.printStackTrace();
         }
     }
+
 }
