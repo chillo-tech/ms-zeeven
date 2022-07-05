@@ -12,8 +12,9 @@ spring:
 
 resources:
   images:
-    host: "https://api.zeeven.chillo.fr"
-
+    host: https://api.zeeven.chillo.fr
+    root: /Users/chillo/projets/zeeven
+    folder: images
 
 
 

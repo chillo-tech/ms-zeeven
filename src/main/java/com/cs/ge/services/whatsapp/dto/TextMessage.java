@@ -16,4 +16,5 @@ public class TextMessage {
     private String type;
     private Text text;
     private Template template;
+    private Image image;
 }

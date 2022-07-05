@@ -11,4 +11,5 @@ import lombok.Setter;
 @Setter
 public class Image {
     private String link;
+    private String id;
 }

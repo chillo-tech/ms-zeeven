@@ -12,8 +12,8 @@ spring:
 
 resources:
   images:
-    host: "https://api.zeeven.chillo.fr"
-    root: "/var/www"
+    host: https://api.zeeven.chillo.fr
+    root: /var/www
 
 
 

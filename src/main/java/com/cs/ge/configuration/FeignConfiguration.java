@@ -16,7 +16,6 @@ public class FeignConfiguration implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate requestTemplate) {
-        requestTemplate.header("Content-Type", "application/json");
         requestTemplate.header("Accept", "application/json");
         requestTemplate.header("Authorization", "Bearer " + this.token);
     }
