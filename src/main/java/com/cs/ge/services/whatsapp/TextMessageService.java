@@ -14,12 +14,15 @@ public interface TextMessageService {
     @PostMapping("/messages")
     void message(@RequestBody TextMessage textMessage);
 
+    @PostMapping("/messages")
+    void mapMessage(@RequestBody String textMessage);
+
 
     @PostMapping(value = "/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     Map<String, String> image(@RequestPart String file, @RequestPart String type, @RequestPart String messaging_product);
+
     /*
     @PostMapping(value = "/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    Map<String, String> image(@RequestPart);
-
+    Map<String, String> image(@RequestPart Map<String, String> form);
      */
 }

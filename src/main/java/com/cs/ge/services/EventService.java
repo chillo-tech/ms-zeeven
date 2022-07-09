@@ -19,6 +19,8 @@ import com.cs.ge.services.whatsapp.dto.Template;
 import com.cs.ge.services.whatsapp.dto.Text;
 import com.cs.ge.services.whatsapp.dto.TextMessage;
 import com.cs.ge.utilitaire.UtilitaireService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
@@ -35,9 +37,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -105,7 +110,7 @@ public class EventService {
 
         final EventStatus status = eventStatus(event.getDates());
         event.setStatus(status);
-        String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+        String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         event.setPublicId(publicId);
         String slug = UtilitaireService.makeSlug(event.getName());
         event.setSlug(format("%s-%s", slug, publicId));
@@ -177,12 +182,12 @@ public class EventService {
         String guestId = UUID.randomUUID().toString();
         guestProfile.setId(guestId);
 
-        String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+        String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         guestProfile.setPublicId(publicId);
         String slug = UtilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
         guestProfile.setSlug(format("%s-%s", slug, publicId));
-        String guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event.getPublicId(), guestProfile.getPublicId());
-        guest.setTicket(guestQRCODE);
+        this.qrCodeGeneratorService.guestQRCODE(event, guest);
+        //guest.setTicket(guestQRCODE);
         guest.setProfile(guestProfile);
         List<Guest> guests = event.getGuests();
         if (guests == null) {
@@ -191,7 +196,7 @@ public class EventService {
         guests.add(guest);
         event.setGuests(guests);
         this.eventsRepository.save(event);
-        this.imageService.saveTicketImages(event, guest);
+        //this.imageService.saveTicketImages(event, guest);
         if (guest.isSendInvitation()) {
             this.sendInvitation(event, guest);
         }
@@ -201,7 +206,7 @@ public class EventService {
     private void sendInvitation(Event event, Guest guest) {
         Profile guestProfile = guest.getProfile();
         if (StringUtils.isNotBlank(guestProfile.getEmail()) && StringUtils.isNotEmpty(guestProfile.getEmail())) {
-            this.mailsService.newGuest(guestProfile, event, guest.getTicket());
+            //this.mailsService.newGuest(guestProfile, event, guest.getTicket());
         }
 
         if (StringUtils.isNotBlank(guestProfile.getPhone()) && StringUtils.isNotEmpty(guestProfile.getPhone())) {
@@ -240,6 +245,60 @@ public class EventService {
 
     }
 
+    private void sendMappedWhatAppMessage(Event event, Guest guest) {
+
+        Map<String, Object> language = new HashMap();
+        language.put("code", Collections.singletonMap("code", "fr"));
+
+        Map<String, Object> headerParameter = new HashMap();
+        headerParameter.put("type", "image");
+        String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
+        log.info("linkWithExtension " + linkWithExtension);
+        headerParameter.put("image", Collections.singletonMap("link", linkWithExtension));
+
+        Map<String, Object> headerParameters = new HashMap();
+        headerParameters.put("parameters", List.of(headerParameter));
+        Map<String, Object> header = new HashMap();
+        header.put("type", "header");
+        header.put("parameters", headerParameters);
+
+        Map<String, Object> fistText = new HashMap();
+        fistText.put("type", "text");
+        fistText.put("text", String.format("%s %s", guest.getProfile().getFirstName(), guest.getProfile().getLastName().toUpperCase()));
+        Map<String, Object> secondText = new HashMap();
+        secondText.put("type", "text");
+        secondText.put("text", event.getName());
+
+        Map<String, Object> bodyParameters = new HashMap();
+        bodyParameters.put("parameters", List.of(fistText, secondText));
+        Map<String, Object> body = new HashMap();
+        header.put("type", "body");
+        header.put("parameters", bodyParameters);
+
+        Map<String, Object> components = new HashMap();
+        components.put("header", header);
+        components.put("body", body);
+
+        Map<String, Object> template = new HashMap();
+        template.put("name", "user_invitation");
+        template.put("language", language);
+        template.put("components", components);
+
+        Map<String, Object> textMessage = new HashMap();
+        textMessage.put("messaging_product", "whatsapp");
+        textMessage.put("recipient_type", "individual");
+        textMessage.put("to", String.format("%s%s", guest.getProfile().getPhoneIndex(), guest.getProfile().getPhone()));
+        textMessage.put("type", "template");
+        textMessage.put("template", template);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            this.textMessageService.mapMessage(objectMapper.writeValueAsString(textMessage));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void sendWhatAppMessage(Event event, Guest guest) {
         String azureImage = "https://zeevenimages.blob.core.windows.net/images/eo9arfovirt6dxzrythf.jpeg?sp=r&st=2022-06-26T08:43:58Z&se=2022-06-26T16:43:58Z&spr=https&sv=2021-06-08&sr=b&sig=8Sr%2BcyxBFrucDoCl5l3uEC01WAtFvHz3Htvqimtqc6E%3D";
 
@@ -255,9 +314,9 @@ public class EventService {
         Image image = new Image();
         String link = String.format("%s/ticket?event=%s&guest=%s", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
         log.info("Link information " + link);
-        //image.setId("585860459640586");
+        //image.setId("775355320148280");
 
-        String linkWithExtension = String.format("%s/events/%s/tickets/%s.png", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
+        String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
         log.info("linkWithExtension " + linkWithExtension);
         image.setLink(linkWithExtension);
 
@@ -279,12 +338,11 @@ public class EventService {
 
         template.setComponents(List.of(header, body));
         TextMessage textMessage = new TextMessage();
-        //textMessage.setTemplate(template);
-        textMessage.setImage(image);
+        textMessage.setTemplate(template);
         textMessage.setMessaging_product("whatsapp");
         textMessage.setRecipient_type("individual");
-        //textMessage.setType("template");
-        textMessage.setType("image");
+        textMessage.setType("template");
+        //textMessage.setType("image");
         textMessage.setTo(String.format("%s%s", guestProfile.getPhoneIndex(), guestProfile.getPhone()));
         this.textMessageService.message(textMessage);
     }

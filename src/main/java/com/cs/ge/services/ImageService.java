@@ -34,7 +34,7 @@ public class ImageService {
         this.textMessageService = textMessageService;
     }
 
-    public void saveTicketImages(Event event, Guest guest) {
+    public Map<String, String> saveTicketImages(Event event, Guest guest) {
         try {
             String location = String.format("%s/%s/events/%s/tickets/%s.png", this.imagesRootfolder, this.imagesFolder, event.getPublicId(), guest.getProfile().getPublicId());
             log.info("IMAGE LOCATION " + location);
@@ -44,12 +44,13 @@ public class ImageService {
             form.put("messaging_product", "whatsapp");
             form.put("type", "image/png");
             form.put("file", "@" + location);
-            //Map<String, String> imageId = this.textMessageService.image("@" + location, "image/png", "whatsapp");
+            Map<String, String> imageId = this.textMessageService.image("@" + location, "image/png", "whatsapp");
             //Map<String, String> imageId = this.textMessageService.image(form);
-            //return imageId;
+            return imageId;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 }

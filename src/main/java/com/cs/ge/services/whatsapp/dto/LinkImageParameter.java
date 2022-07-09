@@ -9,6 +9,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class Image {
-    private String link;
+public class LinkImageParameter {
+    private String type;
+    private Image image;
 }
