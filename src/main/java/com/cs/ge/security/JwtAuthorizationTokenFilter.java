@@ -16,6 +16,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
 
@@ -33,7 +34,10 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws ServletException, IOException {
+        String test = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
         this.logger.debug("processing authentication for '{}'", request.getRequestURL());
+        this.logger.debug("{}", test);
 
         final String requestHeader = request.getHeader(this.tokenHeader);
 

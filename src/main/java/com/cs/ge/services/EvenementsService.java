@@ -1,12 +1,16 @@
 package com.cs.ge.services;
 
+import com.cs.ge.entites.Adresse;
+import com.cs.ge.entites.Categorie;
 import com.cs.ge.entites.Evenement;
 import com.cs.ge.entites.Guest;
+import com.cs.ge.entites.Utilisateur;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.AdresseRepository;
 import com.cs.ge.repositories.EvenementsRepository;
 import com.cs.ge.repositories.UtilisateurRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,17 +18,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+@AllArgsConstructor
 @Service
 public class EvenementsService {
     private final EvenementsRepository evenementsRepository;
-    //private final AdresseRepository adresseRepository;
-    //private final UtilisateurRepository utilisateurRepository;
+    private final AdresseRepository adresseRepository;
+    private final UtilisateurRepository utilisateurRepository;
+    private final CategorieService categorieService;
 
-    public EvenementsService(final EvenementsRepository evenementsRepository, final AdresseRepository adresseRepository, final UtilisateurRepository utilisateurRepository) {
-        this.evenementsRepository = evenementsRepository;
-        //this.adresseRepository = adresseRepository;
-        //this.utilisateurRepository = utilisateurRepository;
-    }
 
     public List<Evenement> search() {
         return this.evenementsRepository.findAll();
@@ -32,17 +33,26 @@ public class EvenementsService {
 
     public void add(final Evenement evenement) {
 
-        if (evenement.getNom() == null || evenement.getNom().trim().isEmpty()) {
+        if (evenement.getNom() == null || evenement.getNom().trim().isEmpty() || evenement.getUtilisateur() == null) {
             throw new ApplicationException("Champs obligatoire");
         }
-        //EventStatus status = eventStatus(evenement.getDateDebut(), evenement.getDateFin());
-        //evenement.setStatut(status);
+        if (evenement.getDateFin() == null) {
+            evenement.setDateFin(evenement.getDateDebut());
+        }
+        if (evenement.getHeureFin() == null) {
+            evenement.setHeureFin(evenement.getHeureFin());
+        }
+        EventStatus status = EvenementsService.eventStatus(evenement.getDateDebut(), evenement.getDateFin());
+        evenement.setStatut(status);
 
-        //Adresse adresse = adresseRepository.save(evenement.getAdresse());
-        //evenement.	setAdresse(adresse);
-
-        //Utilisateur utilisateur= utilisateurRepository.save(evenement.getUtilisateur());
-        //evenement.setUtilisateur(utilisateur);
+        if (evenement.getAdresse() != null) {
+            Adresse adresse = this.adresseRepository.save(evenement.getAdresse());
+            evenement.setAdresse(adresse);
+        }
+        Categorie categorie = this.categorieService.read(evenement.getCategorie().getLibelle());
+        evenement.setCategorie(categorie);
+        Utilisateur utilisateur = this.utilisateurRepository.save(evenement.getUtilisateur());
+        evenement.setUtilisateur(utilisateur);
         this.evenementsRepository.save(evenement);
     }
 
@@ -92,12 +102,12 @@ public class EvenementsService {
 
     public void addInvites(final String id, final Guest guest) {
         final Evenement evenement = this.read(id);
-        List<Guest> guests = evenement.getGuest();
+        List<Guest> guests = evenement.getInvites();
         if (guests == null) {
             guests = new ArrayList<>();
         }
         guests.add(guest);
-        evenement.setGuest(guests);
+        evenement.setInvites(guests);
         this.evenementsRepository.save(evenement);
     }
 }

@@ -33,6 +33,10 @@ public class CategorieService {
         this.categorieRepository.deleteById(id);
     }
 
+    public Categorie read(final String query) {
+        return this.categorieRepository.findByIdOrLibelle(query, query).orElseThrow(() -> new IllegalArgumentException("Category not found with id or label: " + query));
+    }
+
     public void updateCategorie(final String id, final Categorie categorie) {
         final Optional<Categorie> current = this.categorieRepository.findById(id);
         if (current.isPresent()) {

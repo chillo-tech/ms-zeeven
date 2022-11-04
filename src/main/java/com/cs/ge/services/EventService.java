@@ -16,10 +16,8 @@ import com.cs.ge.services.whatsapp.dto.Image;
 import com.cs.ge.services.whatsapp.dto.Language;
 import com.cs.ge.services.whatsapp.dto.Parameter;
 import com.cs.ge.services.whatsapp.dto.Template;
-import com.cs.ge.services.whatsapp.dto.Text;
 import com.cs.ge.services.whatsapp.dto.TextMessage;
 import com.cs.ge.utilitaire.UtilitaireService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.twilio.Twilio;
@@ -292,20 +290,14 @@ public class EventService {
         textMessage.put("template", template);
         ObjectMapper objectMapper = new ObjectMapper();
 
-        try {
-            this.textMessageService.mapMessage(objectMapper.writeValueAsString(textMessage));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        // this.textMessageService.mapMessage(objectMapper.writeValueAsString(textMessage));
     }
 
     private void sendWhatAppMessage(Event event, Guest guest) {
         String azureImage = "https://zeevenimages.blob.core.windows.net/images/eo9arfovirt6dxzrythf.jpeg?sp=r&st=2022-06-26T08:43:58Z&se=2022-06-26T16:43:58Z&spr=https&sv=2021-06-08&sr=b&sig=8Sr%2BcyxBFrucDoCl5l3uEC01WAtFvHz3Htvqimtqc6E%3D";
-
+        String apiImage = "https://api.zeeven.chillo.fr/events/19508513/tickets/08535166.jpg";
         Profile guestProfile = guest.getProfile();
-        Text text = new Text();
-        text.setBody("Votre invitation");
-        text.setPreview_url(false);
+
 
         Template template = new Template();
         template.setName("user_invitation");
@@ -318,7 +310,7 @@ public class EventService {
 
         String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
         log.info("linkWithExtension " + linkWithExtension);
-        image.setLink(linkWithExtension);
+        image.setLink(apiImage);
 
         //image.setLink("https://media.istockphoto.com/photos/taj-mahal-mausoleum-in-agra-picture-id1146517111?k=20&m=1146517111&s=612x612&w=0&h=vHWfu6TE0R5rG6DJkV42Jxr49aEsLN0ML-ihvtim8kk=");
         Parameter parameter = new Parameter();

@@ -18,16 +18,24 @@ public class CategoryChangeLog {
     @Execution
     public void create() {
         Categorie mariage = new Categorie();
-        mariage.setLibelle("Mariage");
+        mariage.setLibelle("WEDDING");
+        mariage.setImage("wedding.png");
         this.mongoTemplate.save(mariage);
 
         Categorie anniversaire = new Categorie();
-        anniversaire.setLibelle("Anniversaire");
+        anniversaire.setLibelle("BIRTHDATE");
+        anniversaire.setImage("birthdate.png");
         this.mongoTemplate.save(anniversaire);
 
         Categorie salon = new Categorie();
-        salon.setLibelle("Salon");
+        salon.setLibelle("EVENT");
+        salon.setImage("salon.png");
         this.mongoTemplate.save(salon);
+
+        Categorie annnonce = new Categorie();
+        annnonce.setLibelle("ANNOUNCEMENT");
+        annnonce.setImage("announcement.png");
+        this.mongoTemplate.save(annnonce);
 
     }
 
