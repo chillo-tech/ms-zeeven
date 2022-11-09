@@ -14,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.UUID;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
@@ -31,8 +30,7 @@ public class Utilisateur extends Profile implements UserDetails {
     private Boolean enabled = false;
     @JsonProperty(access = WRITE_ONLY)
     private Role role;
-    private UUID serviceKey;
-    private UUID serviceId;
+    private Secrets secrets;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

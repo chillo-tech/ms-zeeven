@@ -10,8 +10,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @AllArgsConstructor
 @Service
 public class ProfileService implements UserDetailsService {
@@ -23,8 +21,8 @@ public class ProfileService implements UserDetailsService {
         return this.utilisateurRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 
-    public Utilisateur findByServiceKeyAndServiceId(UUID serviceKey, UUID serviceId) throws UsernameNotFoundException {
-        return this.utilisateurRepository.findByServiceKeyAndServiceId(serviceKey, serviceId).orElseThrow(() -> new UsernameNotFoundException("User not found with serviceId: " + serviceId));
+    public Utilisateur findBySecretsServiceId(String serviceId) throws UsernameNotFoundException {
+        return this.utilisateurRepository.findBySecretsServiceId(serviceId).orElseThrow(() -> new UsernameNotFoundException("User not found with serviceId: " + serviceId));
     }
 
     public static Utilisateur getAuthenticateUser() {

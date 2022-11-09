@@ -7,14 +7,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
-import java.util.UUID;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
 public class ApiKeyAuthentication implements Authentication {
-    private final UUID serviceKey;
-    private final UUID serviceId;
+    private final String serviceKey;
+    private final String serviceId;
     private boolean isAuthenticated;
 
     @Override

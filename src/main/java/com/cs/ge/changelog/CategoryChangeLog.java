@@ -37,6 +37,17 @@ public class CategoryChangeLog {
         annnonce.setImage("announcement.png");
         this.mongoTemplate.save(annnonce);
 
+        Categorie information = new Categorie();
+        information.setLibelle("INFORMATION");
+        information.setImage("information.png");
+        this.mongoTemplate.save(information);
+
+
+        Categorie promotion = new Categorie();
+        promotion.setLibelle("PROMOTION");
+        promotion.setImage("promotion.png");
+        this.mongoTemplate.save(promotion);
+
     }
 
     @RollbackExecution
