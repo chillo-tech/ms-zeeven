@@ -4,3 +4,4 @@
 target/
 .sonar/
 .sonarlint/
+!target/ms-zeeven*.jar
