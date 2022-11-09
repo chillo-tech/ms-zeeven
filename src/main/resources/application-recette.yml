@@ -4,7 +4,6 @@ spring:
   data:
     mongodb:
       host: db-mongo
-      database: zeeven
   mail:
       #host:  mails.dev
       accountLink: ${app.host}/activer-mon-compte?code=

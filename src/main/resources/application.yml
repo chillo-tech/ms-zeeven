@@ -5,6 +5,9 @@ server:
 app:
   host: http://app.zeeven.com
 spring:
+  data:
+    mongodb:
+      database: db-zeeven
   application:
     name: ms-zeeven
   mail:
