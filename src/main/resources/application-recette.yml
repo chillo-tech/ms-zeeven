@@ -1,5 +1,5 @@
 app:
-  host: http://app.zeeven.chillo.fr
+  host: http://api.zeeven.chillo.fr
 spring:
   data:
     mongodb:

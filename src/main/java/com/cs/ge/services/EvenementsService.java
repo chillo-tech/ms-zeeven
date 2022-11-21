@@ -1,31 +1,34 @@
 package com.cs.ge.services;
 
 import com.cs.ge.entites.Adresse;
-import com.cs.ge.entites.Categorie;
+import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Evenement;
 import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.AdresseRepository;
 import com.cs.ge.repositories.EvenementsRepository;
-import com.cs.ge.repositories.UtilisateurRepository;
+import com.cs.ge.services.notifications.SynchroniousNotifications;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class EvenementsService {
     private final EvenementsRepository evenementsRepository;
     private final AdresseRepository adresseRepository;
-    private final UtilisateurRepository utilisateurRepository;
+    private final UtilisateursService utilisateursService;
     private final CategorieService categorieService;
-
+    private final SynchroniousNotifications synchroniousNotifications;
 
     public List<Evenement> search() {
         return this.evenementsRepository.findAll();
@@ -33,14 +36,8 @@ public class EvenementsService {
 
     public void add(final Evenement evenement) {
 
-        if (evenement.getNom() == null || evenement.getNom().trim().isEmpty() || evenement.getUtilisateur() == null) {
+        if (evenement.getNom() == null || evenement.getNom().trim().isEmpty() || evenement.getUserAccount() == null) {
             throw new ApplicationException("Champs obligatoire");
-        }
-        if (evenement.getDateFin() == null) {
-            evenement.setDateFin(evenement.getDateDebut());
-        }
-        if (evenement.getHeureFin() == null) {
-            evenement.setHeureFin(evenement.getHeureFin());
         }
         EventStatus status = EvenementsService.eventStatus(evenement.getDateDebut(), evenement.getDateFin());
         evenement.setStatut(status);
@@ -49,30 +46,12 @@ public class EvenementsService {
             Adresse adresse = this.adresseRepository.save(evenement.getAdresse());
             evenement.setAdresse(adresse);
         }
-        Categorie categorie = this.categorieService.read(evenement.getCategorie().getLibelle());
-        evenement.setCategorie(categorie);
-        Utilisateur utilisateur = this.utilisateurRepository.save(evenement.getUtilisateur());
-        evenement.setUtilisateur(utilisateur);
-        this.evenementsRepository.save(evenement);
-    }
-
-    private static EventStatus eventStatus(final Date dateDebut, final Date dateFin) {
-        final Date date = new Date();
-        EventStatus status = EventStatus.DISABLED;
-
-        if (dateDebut.before(date)) {
-            throw new ApplicationException("La date de votre évènement est invalide");
-        }
-
-        if (dateDebut.equals(date)) {
-            status = EventStatus.ACTIVE;
-        }
-
-        if (dateFin.after(date)) {
-            status = EventStatus.INCOMMING;
-        }
-
-        return status;
+        Category category = this.categorieService.read(evenement.getCategory().getLabel());
+        evenement.setCategory(category);
+        UserAccount userAccount = this.utilisateursService.readOrSave(evenement.getUserAccount());
+        evenement.setUserAccount(userAccount);
+        Evenement saved = this.evenementsRepository.save(evenement);
+        //this.synchroniousNotifications.sendConfirmationMessage(saved);
     }
 
     public void deleteEvenement(final String id) {
@@ -109,5 +88,30 @@ public class EvenementsService {
         guests.add(guest);
         evenement.setInvites(guests);
         this.evenementsRepository.save(evenement);
+    }
+
+
+    private static EventStatus eventStatus(final Date dateDebut, final Date dateFin) {
+        final Date date = new Date();
+        EventStatus status = EventStatus.DISABLED;
+
+        if (dateDebut.before(date)) {
+            throw new ApplicationException("La date de votre évènement est invalide");
+        }
+
+        if (dateDebut.equals(date)) {
+            status = EventStatus.ACTIVE;
+        }
+
+        if (dateFin.after(date)) {
+            status = EventStatus.INCOMMING;
+        }
+
+        return status;
+    }
+
+    //@Scheduled(cron = "* * * */10 * *")
+    public static void sendMessages() {
+        log.info("Envoi des messages à {}", Instant.now());
     }
 }

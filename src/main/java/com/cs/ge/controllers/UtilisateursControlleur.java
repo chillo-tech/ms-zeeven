@@ -1,6 +1,6 @@
 package com.cs.ge.controllers;
 
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.services.UtilisateursService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,13 +27,13 @@ public class UtilisateursControlleur {
     }
 
     @PostMapping
-    public void creation(@RequestBody Utilisateur utilisateur) {
-        this.utilisateursService.add(utilisateur);
+    public void creation(@RequestBody UserAccount userAccount) {
+        this.utilisateursService.add(userAccount);
     }
 
     @ResponseBody
     @GetMapping
-    public List<Utilisateur> search() {
+    public List<UserAccount> search() {
         return this.utilisateursService.search();
     }
 
@@ -49,12 +49,12 @@ public class UtilisateursControlleur {
 
     @ResponseBody
     @PutMapping(value = "/{id}")
-    public void updateUtilisateur(@PathVariable String id, @RequestBody Utilisateur utilisateur) {
-        this.utilisateursService.updateUtilisateur(id, utilisateur);
+    public void updateUtilisateur(@PathVariable String id, @RequestBody UserAccount userAccount) {
+        this.utilisateursService.updateUtilisateur(id, userAccount);
     }
 
     @GetMapping("/queryparam")
-    List<Utilisateur> search(@RequestParam("username") String username) {
+    List<UserAccount> search(@RequestParam("username") String username) {
         return this.utilisateursService.search();
     }
 }

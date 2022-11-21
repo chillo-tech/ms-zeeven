@@ -1,11 +1,11 @@
 package com.cs.ge.services;
 
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.VerificationRepository;
 import com.cs.ge.utils.Data;
-import net.bytebuddy.utility.RandomString;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -45,22 +45,22 @@ public class VerificationService {
                 () -> new ApplicationException("le code d'activation n'est pas disponible"));
     }
 
-    public Verification createCode(final Utilisateur utilisateur) {
+    public Verification createCode(final UserAccount userAccount) {
         final Verification verification = new Verification();
-        verification.setUsername(utilisateur.getUsername());
-        final String randomCode = RandomString.make(20);
+        verification.setUsername(userAccount.getUsername());
+        final String randomCode = RandomStringUtils.randomNumeric(6);
         verification.setCode(randomCode);
         verification.setDateCreation(LocalDateTime.now());
         verification.setDateExpiration(LocalDateTime.now().plusMinutes(15));
-        verification.setUtilisateur(utilisateur);
+        verification.setUserAccount(userAccount);
         return this.verificationRepository.save(verification);
     }
 
-    public void sendEmail(final Utilisateur utilisateur, final String code) throws MessagingException, IOException {
+    public void sendEmail(final UserAccount userAccount, final String code) throws MessagingException, IOException {
 
         final Map<String, Object> props = new HashMap<String, Object>();
-        props.put("firstName", utilisateur.getFirstName());
-        props.put("lastName", utilisateur.getLastName());
+        props.put("firstName", userAccount.getFirstName());
+        props.put("lastName", userAccount.getLastName());
         props.put("activationLink", String.format("%s%s", this.accountLink, code));
         props.put("code", code);
         props.put("activationLabel", "Activez votre compte");
@@ -74,7 +74,7 @@ public class VerificationService {
 
         context.setVariables(props);
         final String html = this.templateEngine.process("account", context);
-        helper.setTo(utilisateur.getEmail());
+        helper.setTo(userAccount.getEmail());
         helper.setText(html, true);
         helper.setSubject("Activez votre compte");
         helper.setFrom(Data.EMAIL_FROM);

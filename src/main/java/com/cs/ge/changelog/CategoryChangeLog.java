@@ -1,6 +1,6 @@
 package com.cs.ge.changelog;
 
-import com.cs.ge.entites.Categorie;
+import com.cs.ge.entites.Category;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -17,34 +17,34 @@ public class CategoryChangeLog {
 
     @Execution
     public void create() {
-        Categorie mariage = new Categorie();
-        mariage.setLibelle("WEDDING");
+        Category mariage = new Category();
+        mariage.setLabel("WEDDING");
         mariage.setImage("wedding.png");
         this.mongoTemplate.save(mariage);
 
-        Categorie anniversaire = new Categorie();
-        anniversaire.setLibelle("BIRTHDATE");
+        Category anniversaire = new Category();
+        anniversaire.setLabel("BIRTHDATE");
         anniversaire.setImage("birthdate.png");
         this.mongoTemplate.save(anniversaire);
 
-        Categorie salon = new Categorie();
-        salon.setLibelle("EVENT");
+        Category salon = new Category();
+        salon.setLabel("EVENT");
         salon.setImage("salon.png");
         this.mongoTemplate.save(salon);
 
-        Categorie annnonce = new Categorie();
-        annnonce.setLibelle("ANNOUNCEMENT");
+        Category annnonce = new Category();
+        annnonce.setLabel("ANNOUNCEMENT");
         annnonce.setImage("announcement.png");
         this.mongoTemplate.save(annnonce);
 
-        Categorie information = new Categorie();
-        information.setLibelle("INFORMATION");
+        Category information = new Category();
+        information.setLabel("INFORMATION");
         information.setImage("information.png");
         this.mongoTemplate.save(information);
 
 
-        Categorie promotion = new Categorie();
-        promotion.setLibelle("PROMOTION");
+        Category promotion = new Category();
+        promotion.setLabel("PROMOTION");
         promotion.setImage("promotion.png");
         this.mongoTemplate.save(promotion);
 

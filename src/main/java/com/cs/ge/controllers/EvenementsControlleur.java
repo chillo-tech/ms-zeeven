@@ -1,8 +1,8 @@
 package com.cs.ge.controllers;
 
-import com.cs.ge.entites.Evenement;
+import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
-import com.cs.ge.services.EvenementsService;
+import com.cs.ge.services.EventService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,35 +18,35 @@ import java.util.List;
 @RequestMapping(path = "evenement", produces = "application/json")
 public class EvenementsControlleur {
 
-    private final EvenementsService evenementsService;
+    private final EventService evenementsService;
 
-    public EvenementsControlleur(final EvenementsService evenementsService) {
+    public EvenementsControlleur(final EventService evenementsService) {
         this.evenementsService = evenementsService;
 
     }
 
     @GetMapping
-    public List<Evenement> Search() {
+    public List<Event> Search() {
         return this.evenementsService.search();
     }
 
     @PostMapping
-    public void add(@RequestBody final Evenement evenement) {
+    public void add(@RequestBody final Event evenement) {
         this.evenementsService.add(evenement);
     }
 
     @DeleteMapping(value = "/{id}")
     public void delete(@PathVariable final String id) {
-        this.evenementsService.deleteEvenement(id);
+        //this.evenementsService.deleteEvenement(id);
     }
 
     @PutMapping(value = "/{id}")
-    public void update(@PathVariable final String id, @RequestBody final Evenement evenement) {
-        this.evenementsService.updateEvenement(id, evenement);
+    public void update(@PathVariable final String id, @RequestBody final Event evenement) {
+        //this.evenementsService.updateEvenement(id, evenement);
     }
 
     @PostMapping(value = "{id}/invite")
     public void addInvites(@PathVariable final String id, @RequestBody final Guest guest) {
-        this.evenementsService.addInvites(id, guest);
+        // this.evenementsService.addInvites(id, guest);
     }
 }

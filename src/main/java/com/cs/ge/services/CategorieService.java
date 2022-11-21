@@ -1,6 +1,6 @@
 package com.cs.ge.services;
 
-import com.cs.ge.entites.Categorie;
+import com.cs.ge.entites.Category;
 import com.cs.ge.repositories.CategorieRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +18,14 @@ public class CategorieService {
     }
 
 
-    public void add(final Categorie categorie) { // en entrée je dois avoir quelque chose sous la forme d'un Utilisateur de type utilisateur
-        String name = categorie.getLibelle();
+    public void add(final Category category) { // en entrée je dois avoir quelque chose sous la forme d'un UserAccount de type utilisateur
+        String name = category.getLabel();
         name = name.toUpperCase();
-        categorie.setLibelle(name);
-        this.categorieRepository.save(categorie);
+        category.setLabel(name);
+        this.categorieRepository.save(category);
     }
 
-    public List<Categorie> search() {
+    public List<Category> search() {
         return this.categorieRepository.findAll();
     }
 
@@ -33,25 +33,19 @@ public class CategorieService {
         this.categorieRepository.deleteById(id);
     }
 
-    public Categorie read(final String query) {
-        return this.categorieRepository.findByIdOrLibelle(query, query).orElseThrow(() -> new IllegalArgumentException("Category not found with id or label: " + query));
+    public Category read(final String query) {
+        return this.categorieRepository.findByIdOrLabel(query, query).orElseThrow(() -> new IllegalArgumentException("Category not found with id or label: " + query));
     }
 
-    public void updateCategorie(final String id, final Categorie categorie) {
-        final Optional<Categorie> current = this.categorieRepository.findById(id);
+    public void updateCategorie(final String id, final Category category) {
+        final Optional<Category> current = this.categorieRepository.findById(id);
         if (current.isPresent()) {
-            final Categorie foundUser = current.get();
-            foundUser.setId(id);
-            foundUser.setLibelle(categorie.getLibelle());
-            foundUser.setDescription(categorie.getDescription());
-            foundUser.setDescription(categorie.getDescription());
-            this.categorieRepository.save(foundUser);
+            final Category foundCategory = current.get();
+            foundCategory.setId(id);
+            foundCategory.setLabel(category.getLabel());
+            foundCategory.setDescription(category.getDescription());
+            foundCategory.setDescription(category.getDescription());
+            this.categorieRepository.save(foundCategory);
         }
     }
-
-    // public List<Categorie> search(final String id) {
-    // return (<Categorie>) this.categorieRepository.findById(id);
-    //  }
-
-
 }

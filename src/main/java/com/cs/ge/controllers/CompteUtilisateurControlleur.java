@@ -2,14 +2,14 @@ package com.cs.ge.controllers;
 
 import com.cs.ge.entites.JwtRequest;
 import com.cs.ge.entites.JwtResponse;
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.services.UtilisateursService;
+import com.cs.ge.services.scurity.TokenService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,28 +28,23 @@ import java.io.IOException;
 public class CompteUtilisateurControlleur {
 
     private final UtilisateursService utilisateursService;
+    private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
 
-    @RequestMapping(value = "connexion", method = RequestMethod.POST)
+    @RequestMapping(value = "signin", method = RequestMethod.POST)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody final JwtRequest authenticationRequest) throws Exception {
-        this.authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
-        final String token = this.utilisateursService.connexion(authenticationRequest);
+        Authentication authentication = this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
+        final String token = this.tokenService.generateToken(authentication);
         return ResponseEntity.ok(new JwtResponse(token));
     }
 
-    private void authenticate(final String username, final String password) throws Exception {
-        try {
-            this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-        } catch (final DisabledException e) {
-            throw new Exception("USER_DISABLED", e);
-        } catch (final BadCredentialsException e) {
-            throw new Exception("INVALID_CREDENTIALS", e);
-        }
+    private void authenticate(final String username, final String password) {
+        this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
     }
 
-    @PostMapping(path = "inscription")
-    public void inscription(@RequestBody final Utilisateur utilisateur) throws MessagingException, IOException {
-        this.utilisateursService.inscription(utilisateur);
+    @PostMapping(path = "signup")
+    public void inscription(@RequestBody final UserAccount userAccount) throws MessagingException, IOException {
+        this.utilisateursService.inscription(userAccount);
     }
 
     @ResponseBody

@@ -1,6 +1,6 @@
 package com.cs.ge.controllers;
 
-import com.cs.ge.entites.Categorie;
+import com.cs.ge.entites.Category;
 import com.cs.ge.services.CategorieService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +33,13 @@ public class CategorieController {
     }
 
     @PostMapping
-    public void creation(@RequestBody final Categorie categorie) {
-        this.categorieService.add(categorie);
+    public void creation(@RequestBody final Category category) {
+        this.categorieService.add(category);
     }
 
     @ResponseBody
     @GetMapping
-    public List<Categorie> search() {
+    public List<Category> search() {
         return this.categorieService.search();
     }
 
@@ -50,12 +50,12 @@ public class CategorieController {
 
     @ResponseBody
     @PutMapping(value = "/{id}")
-    public void updateCategorie(@PathVariable final String id, @RequestBody final Categorie categorie) {
-        this.categorieService.updateCategorie(id, categorie);
+    public void updateCategorie(@PathVariable final String id, @RequestBody final Category category) {
+        this.categorieService.updateCategorie(id, category);
     }
 
     @GetMapping("/queryparam")
-    List<Categorie> search(@RequestParam("id") final String id) {
+    List<Category> search(@RequestParam("id") final String id) {
         return this.categorieService.search();
     }
 

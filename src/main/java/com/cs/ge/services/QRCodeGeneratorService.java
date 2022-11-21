@@ -51,9 +51,9 @@ public class QRCodeGeneratorService {
     }
 
     private void generateQRCODEWithQRGen(Event event, Guest guest) {
-        String location = String.format("%s/%s/events/%s/tickets/%s.jpg", this.imagesRootfolder, this.imagesFolder, event.getPublicId(), guest.getProfile().getPublicId());
+        String location = String.format("%s/%s/events/%s/tickets/%s.jpg", this.imagesRootfolder, this.imagesFolder, event.getPublicId(), guest.getPublicId());
         log.info("IMAGE LOCATION " + location);
-        String imageContent = String.format("event-%s,guest-%s", event.getPublicId(), guest.getProfile().getPublicId());
+        String imageContent = String.format("event-%s,guest-%s", event.getPublicId(), guest.getPublicId());
 
         File file = QRCode.from(imageContent).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
         //FileUtils.writeByteArrayToFile(new File(location), decodedBytes);

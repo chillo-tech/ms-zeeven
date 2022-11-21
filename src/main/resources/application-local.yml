@@ -8,7 +8,9 @@ spring:
 
   mail:
       accountLink: ${app.host}/activer-mon-compte?code=
-
+providers:
+    notifications:
+        host: http://localhost:9092
 resources:
   images:
     host: https://api.zeeven.chillo.fr

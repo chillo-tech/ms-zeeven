@@ -1,6 +1,6 @@
 package com.cs.ge.secured.providers;
 
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.secured.authentication.ApiKeyAuthentication;
 import com.cs.ge.services.ProfileService;
 import lombok.AllArgsConstructor;
@@ -23,12 +23,12 @@ public class ApiKeyAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         ApiKeyAuthentication apiKeyAuthentication = (ApiKeyAuthentication) authentication;
-        Utilisateur utilisateur = this.profileService.findBySecretsServiceId(apiKeyAuthentication.getServiceId());
+        UserAccount userAccount = this.profileService.findBySecretsServiceId(apiKeyAuthentication.getServiceId());
         final String applicationKey = apiKeyAuthentication.getServiceKey();
         PasswordValidator passwordValidator = new PasswordValidator(this.passwordRules);
         RuleResult result = passwordValidator.validate(new PasswordData(applicationKey));
         boolean isValidPassword = result.isValid();
-        if (isValidPassword && utilisateur.getSecrets().getServiceKey().equals(applicationKey)) {
+        if (isValidPassword && userAccount.getSecrets().getServiceKey().equals(applicationKey)) {
             authentication.setAuthenticated(true);
             return authentication;
         }

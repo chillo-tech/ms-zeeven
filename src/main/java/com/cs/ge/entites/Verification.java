@@ -19,16 +19,16 @@ public class Verification {
     private String username;
     private LocalDateTime dateCreation;
     private LocalDateTime dateExpiration;
-    private Utilisateur utilisateur;
+    private UserAccount userAccount;
 
     public Verification() {
     }
 
-    public Verification(String code, String username, LocalDateTime dateCreation, LocalDateTime dateExpiration, Utilisateur utilisateur) {
+    public Verification(String code, String username, LocalDateTime dateCreation, LocalDateTime dateExpiration, UserAccount userAccount) {
         this.code = code;
         this.username = username;
         this.dateCreation = dateCreation;
         this.dateExpiration = dateExpiration;
-        this.utilisateur = utilisateur;
+        this.userAccount = userAccount;
     }
 }

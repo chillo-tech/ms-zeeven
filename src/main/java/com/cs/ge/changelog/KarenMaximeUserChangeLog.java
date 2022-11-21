@@ -1,6 +1,6 @@
 package com.cs.ge.changelog;
 
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Role;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -21,10 +21,10 @@ public class KarenMaximeUserChangeLog {
         this.mongoTemplate = mongoTemplate;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
-    
+
     @Execution
     public void createUser() {
-        final Utilisateur km = new Utilisateur();
+        final UserAccount km = new UserAccount();
         km.setRole(Role.CUSTOMER);
         km.setFirstName("KM");
         km.setLastName("WAMBE");

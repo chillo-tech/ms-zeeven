@@ -10,10 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Document("CATEGORIE")
-public class Categorie {
+@Document("CATEGORY")
+public class Category {
     private String id;
-    private String libelle;
+    private String label;
     private String description;
     private String image;
 }

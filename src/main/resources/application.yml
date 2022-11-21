@@ -5,11 +5,15 @@ server:
 app:
   host: http://app.zeeven.com
 spring:
-  data:
-    mongodb:
-      database: db-zeeven
+  task:
+    scheduling:
+        pool:
+            size: 10
   application:
     name: ms-zeeven
+  data:
+    mongodb:
+      database: ${spring.application.name}
   mail:
     activation-url: ${app.host}/activer-mon-compte?code=
     password-url: ${app.host}/activer-mon-compte?code=
@@ -34,7 +38,9 @@ spring:
 mongock:
   migration-scan-package:
     - com.cs.ge.changelog
-
+rsa:
+    private-key: classpath:certificates/private.pem
+    public-key: classpath:certificates/public.pem
 jwt:
   header: 'Authorization'
   secret: 'AL_KEY'
@@ -44,6 +50,9 @@ jwt:
       path: '/login'
       refresh: '/refresh'
 providers:
+  notifications:
+    host: ms-notifications
+    base-path: api/v1
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
@@ -60,11 +69,12 @@ feign:
   client:
     config:
       default:
-        connectTimeout: 5000
-        readTimeout: 5000
+        connectTimeout: 100000
+        readTimeout: 100000
         loggerLevel: full
 logging:
   level:
+    org.springframework.security: DEBUG
     com.cs.ge: DEBUG
 org:
   springframework:

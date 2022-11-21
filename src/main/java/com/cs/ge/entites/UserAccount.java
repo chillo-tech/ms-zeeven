@@ -22,8 +22,8 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
-@Document("UTILISATEURS")
-public class Utilisateur extends Profile implements UserDetails {
+@Document("USERS")
+public class UserAccount extends Profile implements UserDetails {
     @JsonProperty(access = WRITE_ONLY)
     private String password;
     @JsonProperty(access = WRITE_ONLY)

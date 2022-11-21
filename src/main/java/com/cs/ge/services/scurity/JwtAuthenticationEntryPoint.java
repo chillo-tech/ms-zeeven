@@ -1,4 +1,4 @@
-package com.cs.ge.security;
+package com.cs.ge.services.scurity;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;

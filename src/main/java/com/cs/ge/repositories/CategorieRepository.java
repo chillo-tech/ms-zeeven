@@ -1,11 +1,11 @@
 package com.cs.ge.repositories;
 
-import com.cs.ge.entites.Categorie;
+import com.cs.ge.entites.Category;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;
 
-public interface CategorieRepository extends MongoRepository<Categorie, String> {
+public interface CategorieRepository extends MongoRepository<Category, String> {
 
-    Optional<Categorie> findByIdOrLibelle(String id, String libelle);
+    Optional<Category> findByIdOrLabel(String id, String libelle);
 }

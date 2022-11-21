@@ -1,7 +1,7 @@
 package com.cs.ge.changelog;
 
 import com.cs.ge.entites.Secrets;
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Role;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -45,11 +45,11 @@ public class AppZeevenChangeLog {
         CharacterRule lowercase = new CharacterRule(EnglishCharacterData.LowerCase, 14);
         CharacterRule digits = new CharacterRule(EnglishCharacterData.Digit, 14);
         PasswordGenerator passwordGenerator = new PasswordGenerator();
-        final Utilisateur app = new Utilisateur();
+        final UserAccount app = new UserAccount();
         app.setRole(Role.CUSTOMER);
         app.setFirstName("app");
         app.setLastName("zeeven");
-        app.setEmail("app.maxime@zeeven.fr");
+        app.setEmail("app.zeeven@zeeven.fr");
         app.setEnabled(TRUE);
         app.setPassword(this.bCryptPasswordEncoder.encode("APP@ZeeVen"));
         String serviceId = UUID.randomUUID().toString();

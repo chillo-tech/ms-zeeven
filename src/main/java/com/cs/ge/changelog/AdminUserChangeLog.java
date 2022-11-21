@@ -1,6 +1,6 @@
 package com.cs.ge.changelog;
 
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Role;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -25,7 +25,7 @@ public class AdminUserChangeLog {
 
     @Execution
     public void createUser() {
-        final Utilisateur admin = new Utilisateur();
+        final UserAccount admin = new UserAccount();
         admin.setRole(Role.ADMIN);
         admin.setFirstName("admin");
         admin.setLastName("admin");

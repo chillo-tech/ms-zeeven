@@ -1,11 +1,11 @@
 package com.cs.ge.services;
 
-import com.cs.ge.entites.JwtRequest;
-import com.cs.ge.entites.Utilisateur;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
-import com.cs.ge.security.JwtTokenUtil;
+import com.cs.ge.services.notifications.SynchroniousNotifications;
+import com.cs.ge.services.scurity.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,46 +23,60 @@ import static com.cs.ge.utils.UtilitaireService.validationChaine;
 @Service
 public class UtilisateursService {
 
-    private static final String ACCOUNT_NOT_EXISTS = "Aucun compte ne correspond à %s %s.";
+    private static final String ACCOUNT_NOT_EXISTS = "Aucun compte ne correspond aux critères fournis";
     private final UtilisateurRepository utilisateurRepository;
     private final VerificationService verificationService;
+    private final SynchroniousNotifications synchroniousNotifications;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenUtil jwtTokenUtil;
+    private final TokenService tokenService;
 
-    public UtilisateursService(final UtilisateurRepository utilisateurRepository, final VerificationService verificationService, final PasswordEncoder passwordEncoder, final JwtTokenUtil jwtTokenUtil) {
+    public UtilisateursService(
+            final UtilisateurRepository utilisateurRepository,
+            final VerificationService verificationService,
+            final SynchroniousNotifications synchroniousNotifications,
+            final PasswordEncoder passwordEncoder,
+            final TokenService tokenService
+    ) {
         this.utilisateurRepository = utilisateurRepository;
         this.verificationService = verificationService;
+        this.synchroniousNotifications = synchroniousNotifications;
         this.passwordEncoder = passwordEncoder;
-        this.jwtTokenUtil = jwtTokenUtil;
+        this.tokenService = tokenService;
+
     }
 
 
     public void activate(final String code) {
         final Verification verification = this.verificationService.getByCode(code);
-        Utilisateur utilisateur = verification.getUtilisateur();
-        utilisateur = this.utilisateurRepository.findById(utilisateur.getId()).orElseThrow(() -> new ApplicationException("aucun utilisateur pour ce code"));
-        utilisateur.setEnabled(true);
+        UserAccount userAccount = verification.getUserAccount();
+        userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun userAccount pour ce code"));
+        userAccount.setEnabled(true);
         final LocalDateTime localDateTime = verification.getDateExpiration();
         //if (localDateTime=)
-        this.utilisateurRepository.save(utilisateur);
+        this.utilisateurRepository.save(userAccount);
     }
 
     public void validationUsername(final String username) {
-        final Optional<Utilisateur> exist = this.utilisateurRepository.findById(username);
+        final Optional<UserAccount> exist = this.utilisateurRepository.findById(username);
         if (exist.isPresent()) {
             throw new ApplicationException("Username existe déjà");
         }
     }
 
-    public void add(final Utilisateur utilisateur) { // en entrée je dois avoir quelque chose sous la forme d'un Utilisateur de type utilisateur
-        this.validationUsername(utilisateur.getUsername());
-        String lastName = utilisateur.getLastName();
-        lastName = lastName.toUpperCase();
-        utilisateur.setLastName(lastName);
-        this.utilisateurRepository.save(utilisateur);
+    public UserAccount readOrSave(UserAccount userAccount) {
+        final Optional<UserAccount> exist = this.utilisateurRepository.findByPhoneOrMail(userAccount.getEmail(), userAccount.getPhoneIndex(), userAccount.getPhone());
+        return exist.orElseGet(() -> this.utilisateurRepository.save(userAccount));
     }
 
-    public List<Utilisateur> search() {
+    public void add(final UserAccount userAccount) { // en entrée je dois avoir quelque chose sous la forme d'un UserAccount de type userAccount
+        this.validationUsername(userAccount.getUsername());
+        String lastName = userAccount.getLastName();
+        lastName = lastName.toUpperCase();
+        userAccount.setLastName(lastName);
+        this.utilisateurRepository.save(userAccount);
+    }
+
+    public List<UserAccount> search() {
         return this.utilisateurRepository.findAll();
     }
 
@@ -70,67 +84,58 @@ public class UtilisateursService {
         this.utilisateurRepository.deleteById(id);
     }
 
-    public void updateUtilisateur(final String id, final Utilisateur utilisateur) {
-        final Optional<Utilisateur> current = this.utilisateurRepository.findById(id);
+    public void updateUtilisateur(final String id, final UserAccount userAccount) {
+        final Optional<UserAccount> current = this.utilisateurRepository.findById(id);
         if (current.isPresent()) {
-            final Utilisateur foundUser = current.get();
+            final UserAccount foundUser = current.get();
             foundUser.setId(id);
-            foundUser.setFirstName(utilisateur.getFirstName());
-            foundUser.setLastName(utilisateur.getLastName());
-            foundUser.setEmail(utilisateur.getEmail());
-            foundUser.setEmail(utilisateur.getPhone());
+            foundUser.setFirstName(userAccount.getFirstName());
+            foundUser.setLastName(userAccount.getLastName());
+            foundUser.setEmail(userAccount.getEmail());
+            foundUser.setEmail(userAccount.getPhone());
             this.utilisateurRepository.save(foundUser);
         }
     }
 
 
-    public void inscription(final Utilisateur utilisateur) throws MessagingException, IOException {
-        this.checkAccount(utilisateur);
-        utilisateur.setRole(CUSTOMER);
-        utilisateur.setPassword(this.passwordEncoder.encode(utilisateur.getPassword()));
-        final String encodedPassword = this.passwordEncoder.encode(utilisateur.getPassword());
-        utilisateur.setPassword(encodedPassword);
-        valEmail(utilisateur.getUsername());
-        valNumber(utilisateur.getUsername());
-        this.utilisateurRepository.save(utilisateur);
-        final Verification verification = this.verificationService.createCode(utilisateur);
-        if (utilisateur.getEmail() != null) {
-            this.verificationService.sendEmail(utilisateur, verification.getCode());
+    public void inscription(final UserAccount userAccount) throws MessagingException, IOException {
+        this.checkAccount(userAccount);
+        userAccount.setRole(CUSTOMER);
+        userAccount.setPassword(this.passwordEncoder.encode(userAccount.getPassword()));
+        final String encodedPassword = this.passwordEncoder.encode(userAccount.getPassword());
+        userAccount.setPassword(encodedPassword);
+        valEmail(userAccount.getUsername());
+        valNumber(userAccount.getUsername());
+        this.utilisateurRepository.save(userAccount);
+        final Verification verification = this.verificationService.createCode(userAccount);
+        if (userAccount.getEmail() != null) {
+            this.synchroniousNotifications.sendEmail(userAccount, verification.getCode());
         }
     }
 
-    private void checkAccount(final Utilisateur utilisateur) {
+    private void checkAccount(final UserAccount userAccount) {
         if (
-                (utilisateur.getEmail() == null || utilisateur.getEmail().trim().isEmpty())
-                        && (utilisateur.getPhone() == null || utilisateur.getPhone().trim().isEmpty())
+                (userAccount.getEmail() == null || userAccount.getEmail().trim().isEmpty())
+                        && (userAccount.getPhone() == null || userAccount.getPhone().trim().isEmpty())
         ) {
-            throw new ApplicationException("Veuillez sair l'email ou votre téléphone");
+            throw new ApplicationException("Veuillez saisir l'email ou votre téléphone");
         }
 
-        validationChaine(utilisateur.getFirstName());
-        validationChaine(utilisateur.getLastName());
-        valEmail(utilisateur.getEmail());
-        valNumber(utilisateur.getPhone());
-        final Optional<Utilisateur> userByEmail = this.utilisateurRepository.findByUsername(utilisateur.getEmail());
-        if (userByEmail.isPresent()) {
-            throw new IllegalArgumentException("Cet email est déjà utilsé");
+        validationChaine(userAccount.getFirstName());
+        validationChaine(userAccount.getLastName());
+        valEmail(userAccount.getEmail());
+        valNumber(userAccount.getPhone());
+        if (userAccount.getEmail() != null) {
+            final Optional<UserAccount> userByEmail = this.utilisateurRepository.findByEmail(userAccount.getEmail());
+            if (userByEmail.isPresent()) {
+                throw new IllegalArgumentException("Cet email est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
+            }
         }
-
-        final Optional<Utilisateur> userByPhone = this.utilisateurRepository.findByUsername(utilisateur.getPhone());
-        if (userByPhone.isPresent()) {
-            throw new IllegalArgumentException("Ce téléphone est déjà utilsé");
+        if (userAccount.getPhoneIndex() != null && userAccount.getPhone() != null) {
+            final Optional<UserAccount> userByPhone = this.utilisateurRepository.findByPhoneIndexAndPhone(userAccount.getPhone());
+            if (userByPhone.isPresent()) {
+                throw new IllegalArgumentException("Ce téléphone est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
+            }
         }
-    }
-
-    public String connexion(final JwtRequest authenticationRequest) {
-        final String usermame = authenticationRequest.getUsername();
-        final String password = authenticationRequest.getPassword();
-
-        final Optional<Utilisateur> optionalProfile = this.utilisateurRepository.findByUsername(usermame);
-        if (optionalProfile.isEmpty()) {
-            throw new IllegalArgumentException(String.format(ACCOUNT_NOT_EXISTS, "l'email", usermame));
-        }
-
-        return this.jwtTokenUtil.generateToken(optionalProfile.get());
     }
 }
