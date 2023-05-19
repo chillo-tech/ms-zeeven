@@ -25,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -411,8 +412,7 @@ public class EventService {
 
     private void handleEvent(Event event) {
         log.info("Envoi des messages pour l'evenement {}", event.getName());
-        /*
-        Set<ApplicationMessage> messages = event.getApplicationMessages()
+        Set<ApplicationMessage> messages = event.getMessages()
                 .parallelStream()
                 .filter(
                         message -> {
@@ -423,8 +423,7 @@ public class EventService {
                             return !message.isSent() && Instant.now().isAfter(calendar.toInstant());
                         })
                 .collect(Collectors.toSet());
-*/
-        event.getMessages()
+        messages
                 .parallelStream()
                 .forEach(applicationMessage -> {
                     this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage);
