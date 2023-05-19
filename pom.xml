@@ -14,7 +14,7 @@
     <name>ms-zeeven</name>
     <description>gestion de l&apos;évènement d&apos;un userAccount</description>
     <properties>
-        <java.version>17</java.version>
+        <java.version>11</java.version>
         <spring-cloud.version>2021.0.3</spring-cloud.version>
     </properties>
     <dependencies>

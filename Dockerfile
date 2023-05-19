@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:11.0.5-jre-stretch
 VOLUME /tmp
 EXPOSE 8083
 ARG APP_NAME=ms-zeeven.jar
