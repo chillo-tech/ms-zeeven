@@ -109,6 +109,6 @@ public class QRCodeGeneratorService {
             e.printStackTrace();
         }
         log.info("IMAGE LOCATION " + file.getAbsolutePath());
-        return imageContent;
+        return String.format("%s/qr-code/%s.jpg", this.imagesHost, publicId);
     }
 }
