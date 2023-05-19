@@ -4,12 +4,7 @@ import com.cs.ge.secured.filters.JwtAuthorizationTokenFilter;
 import com.cs.ge.secured.properties.RsaConfigurationProperties;
 import com.cs.ge.secured.providers.ApiKeyAuthenticationProvider;
 import com.cs.ge.services.ProfileService;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
+import com.cs.ge.services.security.TokenService;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
 import org.passay.LengthRule;
@@ -26,15 +21,11 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -52,16 +43,15 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class ZeevenSecurityConfiguration {
 
     private final ProfileService profileService;
-    private final RsaConfigurationProperties rsaConfigurationProperties;
+    private final TokenService tokenService;
     private final String tokenHeader;
 
     public ZeevenSecurityConfiguration(
             @Value("${jwt.header}") String tokenHeader,
-            ProfileService profileService,
-            RsaConfigurationProperties rsaConfigurationProperties) {
+            ProfileService profileService, TokenService tokenService) {
         this.profileService = profileService;
-        this.rsaConfigurationProperties = rsaConfigurationProperties;
         this.tokenHeader = tokenHeader;
+        this.tokenService = tokenService;
     }
 
     @Bean
@@ -77,27 +67,29 @@ public class ZeevenSecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        final JwtAuthorizationTokenFilter authenticationTokenFilter = new JwtAuthorizationTokenFilter(this.profileService, this.jwtDecoder(), this.tokenHeader);
+        final JwtAuthorizationTokenFilter authenticationTokenFilter = new JwtAuthorizationTokenFilter(this.profileService, this.tokenService, this.tokenHeader);
 
         return httpSecurity
                 .cors(Customizer.withDefaults())
                 .headers(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                //.addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests(
                         auth ->
                                 auth.mvcMatchers(POST, "/signin").permitAll()
                                         .mvcMatchers(POST, "/signup").permitAll()
+                                        .mvcMatchers(POST, "/activation").permitAll()
                                         .mvcMatchers(GET, "/ticket").permitAll()
+                                        .mvcMatchers(POST, "/qr-code").permitAll()
                                         .mvcMatchers("/webhooks").permitAll()
                                         .mvcMatchers(POST, "/activation").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
-                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
                         .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
                         .accessDeniedHandler(new BearerTokenAccessDeniedHandler()))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
                 .build();
     }
 
@@ -133,17 +125,5 @@ public class ZeevenSecurityConfiguration {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    @Bean
-    JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withPublicKey(this.rsaConfigurationProperties.getPublicKey()).build();
-    }
-
-    @Bean
-    JwtEncoder jwtEncoder() {
-        JWK jwk = new RSAKey.Builder(this.rsaConfigurationProperties.getPublicKey()).privateKey(this.rsaConfigurationProperties.getPrivateKey()).build();
-        JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
-        return new NimbusJwtEncoder(jwks);
     }
 }

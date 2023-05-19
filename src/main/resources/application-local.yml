@@ -5,8 +5,11 @@ spring:
     mongodb:
       host: localhost
       port: 27017
+      authentication-database: admin
 
   mail:
+      host: localhost
+      port: 25
       accountLink: ${app.host}/activer-mon-compte?code=
 providers:
     notifications:

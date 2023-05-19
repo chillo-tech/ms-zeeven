@@ -49,20 +49,24 @@ public class UserAccount extends Profile implements UserDetails {
         return username;
     }
 
+    @JsonProperty(access = WRITE_ONLY)
     public boolean isAccountNonExpired() {
         return this.enabled;
     }
 
+    @JsonProperty(access = WRITE_ONLY)
     @Override
     public boolean isAccountNonLocked() {
         return this.enabled;
     }
 
+    @JsonProperty(access = WRITE_ONLY)
     @Override
     public boolean isCredentialsNonExpired() {
         return this.enabled;
     }
 
+    @JsonProperty(access = WRITE_ONLY)
     @Override
     public boolean isEnabled() {
         return this.enabled;

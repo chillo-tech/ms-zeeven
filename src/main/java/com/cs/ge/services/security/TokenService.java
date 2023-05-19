@@ -1,4 +1,4 @@
-package com.cs.ge.services.scurity;
+package com.cs.ge.services.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;

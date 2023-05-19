@@ -46,7 +46,12 @@ public class EvenementsControlleur {
     }
 
     @PostMapping(value = "{id}/invite")
-    public void addInvites(@PathVariable final String id, @RequestBody final Guest guest) {
+    public void addGuest(@PathVariable final String id, @RequestBody final Guest guest) {
         // this.evenementsService.addInvites(id, guest);
+    }
+
+    @PostMapping(value = "{eventId}/invite/{guestId}")
+    public void deleteGuest(@PathVariable final String eventId, @PathVariable final String guestId) {
+        this.evenementsService.deleteGuest(eventId, guestId);
     }
 }

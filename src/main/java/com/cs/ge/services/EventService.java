@@ -1,15 +1,17 @@
 package com.cs.ge.services;
 
+import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Message;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.enums.Role;
 import com.cs.ge.exception.ApplicationException;
+import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
+import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.notifications.SynchroniousNotifications;
 import com.cs.ge.utilitaire.UtilitaireService;
 import com.google.common.collect.Lists;
@@ -17,14 +19,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -37,30 +42,39 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @Service
 public class EventService {
+    private final FeignNotifications feignNotifications;
     private final EventRepository eventsRepository;
     private final ProfileService profileService;
     private final CategorieService categorieService;
     private final UtilisateursService utilisateursService;
     private final QRCodeGeneratorService qrCodeGeneratorService;
     private final SynchroniousNotifications synchroniousNotifications;
+    private final ASynchroniousNotifications aSynchroniousNotifications;
     private final String imagesHost;
     private final String accountSid;
     private final String authToken;
 
     public EventService(
+            FeignNotifications feignNotifications,
             EventRepository eventsRepository,
             ProfileService profileService,
-            CategorieService categorieService, UtilisateursService utilisateursService, QRCodeGeneratorService qrCodeGeneratorService,
-            SynchroniousNotifications synchroniousNotifications, @Value("${resources.images.host}") String imagesHost,
+            CategorieService categorieService,
+            UtilisateursService utilisateursService,
+            QRCodeGeneratorService qrCodeGeneratorService,
+            SynchroniousNotifications synchroniousNotifications,
+            ASynchroniousNotifications aSynchroniousNotifications,
+            @Value("${resources.images.host}") String imagesHost,
             @Value("${providers.twilio.ACCOUNT_SID}") String accountSid,
             @Value("${providers.twilio.AUTH_TOKEN}") String authToken
     ) {
+        this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
         this.categorieService = categorieService;
         this.utilisateursService = utilisateursService;
         this.qrCodeGeneratorService = qrCodeGeneratorService;
         this.synchroniousNotifications = synchroniousNotifications;
+        this.aSynchroniousNotifications = aSynchroniousNotifications;
         this.imagesHost = imagesHost;
         this.authToken = authToken;
         this.accountSid = accountSid;
@@ -82,7 +96,7 @@ public class EventService {
             event.setName(String.format("%s %s %s", event.getCategory().getLabel(), event.getAuthor().getFirstName(), event.getAuthor().getLastName()).toLowerCase());
         }
 
-        UserAccount author = this.utilisateursService.readOrSave(event.getAuthor());
+        UserAccount author = this.profileService.getAuthenticateUser();
         event.setAuthor(author);
 
         //final EventStatus status = eventStatus(event.getDates());
@@ -95,12 +109,12 @@ public class EventService {
         }).collect(Collectors.toList());
         event.setGuests(guestList);
 
-        List<Message> updatedMessages = event.getMessages().parallelStream().map(message -> {
-            message.setId(UUID.randomUUID().toString());
-            return message;
+        List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().map(applicationMessage -> {
+            applicationMessage.setId(UUID.randomUUID().toString());
+            return applicationMessage;
         }).collect(Collectors.toList());
-        event.setMessages(updatedMessages);
-    
+        event.setMessages(updatedApplicationMessages);
+
         String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         event.setPublicId(publicId);
         String slug = UtilitaireService.makeSlug(event.getName());
@@ -108,8 +122,7 @@ public class EventService {
 
         Category category = this.categorieService.read(event.getCategory().getLabel());
         event.setCategory(category);
-        UserAccount userAccount = this.utilisateursService.readOrSave(event.getAuthor());
-        event.setAuthor(userAccount);
+
         event = this.eventsRepository.save(event);
         //this.synchroniousNotifications.sendConfirmationMessage(event);
         this.handleEvent(event);
@@ -173,7 +186,8 @@ public class EventService {
         final var event = this.read(eventId);
         ValidationService.checkEmail(guestProfile.getEmail());
         ValidationService.checkPhone(guestProfile.getPhone());
-        String guestId = UUID.randomUUID().toString();
+        String guestId = UUID.
+                randomUUID().toString();
         guestProfile.setId(guestId);
 
         String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
@@ -216,17 +230,17 @@ public class EventService {
             String azureImage = "https://zeevenimages.blob.core.windows.net/images/eo9arfovirt6dxzrythf.jpeg?sp=r&st=2022-06-26T08:43:58Z&se=2022-06-26T16:43:58Z&spr=https&sv=2021-06-08&sr=b&sig=8Sr%2BcyxBFrucDoCl5l3uEC01WAtFvHz3Htvqimtqc6E%3D";
             String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
             Twilio.init(this.accountSid, this.authToken);
-            Message message = null;
+            ApplicationMessage message = null;
             try {
 
-                message = Message.creator(
+                message = ApplicationMessage.creator(
                                 new com.twilio.type.PhoneNumber("whatsapp:+33761705745"),
                                 new com.twilio.type.PhoneNumber("whatsapp:+14155238886"),
                                 List.of(new URI(azureImage))).setBody("fpjzfpojzjjgpojrzfpojzpfzjpo")
                         .create();
                 System.out.println(message.getSid());
 
-                message = Message.creator(
+                message = ApplicationMessage.creator(
                                 new com.twilio.type.PhoneNumber("+33761705745"),
                                 new com.twilio.type.PhoneNumber("+18455769979"),
                                 "This is the ship that made the Kessel Run in fourteen parsecs?")
@@ -342,6 +356,8 @@ public class EventService {
         List<Guest> guests = event.getGuests();
         guests = guests.stream().filter(currentGuest -> !currentGuest.getPublicId().equals(guestId)).collect(Collectors.toList());
         event.setGuests(guests);
+
+        //TODO: Supprimper le QR CODE
         this.eventsRepository.save(event);
     }
 
@@ -393,16 +409,10 @@ public class EventService {
 
     }
 
-    public void sendMessages() {
-        log.info("Envoi des messages");
-        this.eventsRepository.queryEvents(INCOMMING)
-                .parallel().forEach(this::handleEvent);
-    }
-
     private void handleEvent(Event event) {
         log.info("Envoi des messages pour l'evenement {}", event.getName());
         /*
-        Set<Message> messages = event.getMessages()
+        Set<ApplicationMessage> messages = event.getApplicationMessages()
                 .parallelStream()
                 .filter(
                         message -> {
@@ -416,8 +426,29 @@ public class EventService {
 */
         event.getMessages()
                 .parallelStream()
-                .forEach(message -> {
-                    this.synchroniousNotifications.sendEventMessage(event, message);
+                .forEach(applicationMessage -> {
+                    this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage);
                 });
     }
+
+    public List<Object> statistics(String id) {
+        Event event = this.read(id);
+        List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
+        return statistics.stream().map(entry -> new HashMap<String, String>() {
+            {
+                put("chanel", entry.get("channel"));
+                put("creation", entry.get("creation"));
+                put("status", entry.get("status"));
+                put("eventId", event.getPublicId());
+            }
+        }).collect(Collectors.toList());
+    }
+
+    @Scheduled(cron = "0 */1 * * * *")
+    public void sendMessages() {
+        log.info("Envoi des messages");
+        this.eventsRepository.queryEvents(INCOMMING)
+                .parallel().limit(2).forEach(this::handleEvent);
+    }
+
 }

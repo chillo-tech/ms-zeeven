@@ -1,7 +1,6 @@
 package com.cs.ge.entites;
 
-import com.cs.ge.enums.Channel;
-import com.cs.ge.enums.EventStatus;
+import com.cs.ge.enums.QRCodeType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,28 +9,19 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
-
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
-@Document("EVENEMENTS")
+@Document("QR_CODE")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class Event {
+public class QRCodeEntity {
     @Id
     @JsonProperty(access = WRITE_ONLY)
     private String id;
+    private QRCodeType type;
+    private String text;
     private String publicId;
-    private String name;
-    private List<ApplicationMessage> messages;
-    private EventStatus status;
-    private List<Guest> guests;
-    private List<Channel> channels;
-    private UserAccount author;
-    private Category category;
-    private List<Profile> contacts;
-    private List<Schedule> schedules;
-    private String slug;
+    private String finalContent;
 }

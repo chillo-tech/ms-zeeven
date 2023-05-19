@@ -5,7 +5,7 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
 import com.cs.ge.services.notifications.SynchroniousNotifications;
-import com.cs.ge.services.scurity.TokenService;
+import com.cs.ge.services.security.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -89,23 +89,24 @@ public class UtilisateursService {
         if (current.isPresent()) {
             final UserAccount foundUser = current.get();
             foundUser.setId(id);
+            foundUser.setCivility(userAccount.getCivility());
             foundUser.setFirstName(userAccount.getFirstName());
             foundUser.setLastName(userAccount.getLastName());
             foundUser.setEmail(userAccount.getEmail());
-            foundUser.setEmail(userAccount.getPhone());
+            foundUser.setPhoneIndex(userAccount.getPhoneIndex());
+            foundUser.setPhone(userAccount.getPhone());
             this.utilisateurRepository.save(foundUser);
         }
     }
 
 
     public void inscription(final UserAccount userAccount) throws MessagingException, IOException {
-        this.checkAccount(userAccount);
-        userAccount.setRole(CUSTOMER);
-        userAccount.setPassword(this.passwordEncoder.encode(userAccount.getPassword()));
-        final String encodedPassword = this.passwordEncoder.encode(userAccount.getPassword());
-        userAccount.setPassword(encodedPassword);
         valEmail(userAccount.getUsername());
         valNumber(userAccount.getUsername());
+        this.checkAccount(userAccount);
+        userAccount.setRole(CUSTOMER);
+        final String encodedPassword = this.passwordEncoder.encode(userAccount.getPassword());
+        userAccount.setPassword(encodedPassword);
         this.utilisateurRepository.save(userAccount);
         final Verification verification = this.verificationService.createCode(userAccount);
         if (userAccount.getEmail() != null) {
@@ -132,7 +133,7 @@ public class UtilisateursService {
             }
         }
         if (userAccount.getPhoneIndex() != null && userAccount.getPhone() != null) {
-            final Optional<UserAccount> userByPhone = this.utilisateurRepository.findByPhoneIndexAndPhone(userAccount.getPhone());
+            final Optional<UserAccount> userByPhone = this.utilisateurRepository.findByPhoneIndexAndPhone(userAccount.getPhoneIndex(), userAccount.getPhone());
             if (userByPhone.isPresent()) {
                 throw new IllegalArgumentException("Ce téléphone est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
             }

@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Message {
+public class ApplicationMessage {
     private String id;
     private String text;
     private Date date;

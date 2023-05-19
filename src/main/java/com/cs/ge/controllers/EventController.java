@@ -57,7 +57,7 @@ public class EventController {
     public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) {
         this.eventService.addGuest(id, guest);
     }
-    
+
     @PostMapping(value = "{id}/invitations")
     public void sendInvitations(@PathVariable final String id, @RequestBody final Set<String> guestIds) {
         this.eventService.sendInvitations(id, guestIds);
@@ -87,5 +87,11 @@ public class EventController {
     public void deleteSchedule(@PathVariable final String eventId, @PathVariable final String scheduleId) {
         this.eventService.deleteSchedule(eventId, scheduleId);
     }
+
+    @GetMapping(value = "{id}/statistic")
+    public List<Object> fetchStatistic(@PathVariable final String id) {
+        return this.eventService.statistics(id);
+    }
+
 
 }

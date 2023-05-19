@@ -9,7 +9,9 @@ import java.util.Optional;
 public interface UtilisateurRepository extends MongoRepository<UserAccount, String> {
     Optional<UserAccount> findByEmail(String username);
 
-    Optional<UserAccount> findByPhoneIndexAndPhone(String username);
+    Optional<UserAccount> findByPhoneIndexAndPhone(String string, String username);
+
+    Optional<UserAccount> findByPhone(String phone);
 
 
     @Query("{$or : [{$and: [{phoneIndex: ?1},{phone: ?2}]}, {email : ?0}]}")

@@ -27,9 +27,9 @@ public class ProfileService implements UserDetailsService {
         return this.utilisateurRepository.findBySecretsServiceId(serviceId).orElseThrow(() -> new UsernameNotFoundException("User not found with serviceId: " + serviceId));
     }
 
-    public static UserAccount getAuthenticateUser() {
+    public UserAccount getAuthenticateUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (UserAccount) authentication.getPrincipal();
+        return this.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
     }
 
     private Optional<UserAccount> loadUser(final String username) {
@@ -38,10 +38,10 @@ public class ProfileService implements UserDetailsService {
         if (username != null && username.indexOf('@') > -1) {
             optionalProfile = this.utilisateurRepository.findByEmail(username);
         }
-        /*
-        if (optionalProfile.isEmpty() && authenticationRequest.getPhoneIndex() != null && authenticationRequest.getPhone() != null) {
-            optionalProfile = this.utilisateurRepository.findByPhoneIndexAndPhone(authenticationRequest.getPhone());
-        }*/
+        
+        if (optionalProfile.isEmpty()) {
+            optionalProfile = this.utilisateurRepository.findByPhone(username);
+        }
         return optionalProfile;
     }
 }

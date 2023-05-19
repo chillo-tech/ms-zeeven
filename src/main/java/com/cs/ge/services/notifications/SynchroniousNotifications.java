@@ -1,7 +1,7 @@
 package com.cs.ge.services.notifications;
 
+import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.Event;
-import com.cs.ge.entites.Message;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.feign.FeignNotifications;
 import lombok.AllArgsConstructor;
@@ -26,14 +26,14 @@ public class SynchroniousNotifications {
     FeignNotifications feignNotifications;
 
     @Async
-    public void sendEventMessage(Event event, Message message) {
+    public void sendEventMessage(Event event, ApplicationMessage applicationMessage) {
         Map<String, String> from = new HashMap();
         from.put("firstName", event.getAuthor().getFirstName());
         from.put("lastName", event.getAuthor().getLastName());
         from.put("email", event.getAuthor().getEmail());
         from.put("phoneIndex", event.getAuthor().getPhoneIndex());
         from.put("phone", event.getAuthor().getPhone());
-        String formattedMessage = SynchroniousNotifications.messageAsString(message);
+        String formattedMessage = SynchroniousNotifications.messageAsString(applicationMessage);
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("message", formattedMessage);
         params.put("eventId", event.getId());
@@ -48,7 +48,7 @@ public class SynchroniousNotifications {
                         this.put("applicationName", "ZEEVEN");
                         this.put("params", params);
                         this.put("from", from);
-                        this.put("template", "event-message.html");
+                        this.put("template", "event-applicationMessage.html");
                         this.put("to", event.getGuests());
                     }
                 }
@@ -56,9 +56,9 @@ public class SynchroniousNotifications {
     }
 
 
-    private static String messageAsString(Message message) {
+    private static String messageAsString(ApplicationMessage applicationMessage) {
 
-        String textWithVariables = message.getText();
+        String textWithVariables = applicationMessage.getText();
         Pattern pattern = Pattern.compile("\\{\\{\\w+}}");
         Matcher matcher = pattern.matcher(textWithVariables);
         int index = 0;
@@ -66,7 +66,7 @@ public class SynchroniousNotifications {
             String group = matcher.group();
             int start = matcher.start();
             int end = matcher.end();
-            textWithVariables = StringUtils.replaceOnce(textWithVariables, group, message.getInformations().get(index));
+            textWithVariables = StringUtils.replaceOnce(textWithVariables, group, applicationMessage.getInformations().get(index));
             index++;
         }
         return textWithVariables;
@@ -141,7 +141,7 @@ public class SynchroniousNotifications {
                 List.of("MAIL"),
                 new HashMap<String, Object>() {{
                     this.put("subject", "Activez votre compte");
-                    this.put("applicationName", "ZEEVEN");
+                    this.put("application", "ZEEVEN");
                     this.put("from", from);
                     this.put("template", "activation.html");
                     this.put("to", Set.of(to));
@@ -159,7 +159,7 @@ public class SynchroniousNotifications {
                 List.of("MAIL"),
                 new HashMap<String, Object>() {{
                     this.put("subject", "Nouveau compte");
-                    this.put("applicationName", "ZEEVEN");
+                    this.put("application", "ZEEVEN");
                     this.put("from", from);
                     this.put("template", "new-account.html");
                     this.put("params", params);

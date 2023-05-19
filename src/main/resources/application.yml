@@ -4,7 +4,16 @@ server:
   port: 8083
 app:
   host: http://app.zeeven.com
+  api-host: http://api.zeeven.com
 spring:
+  rabbitmq:
+    host: 212.83.180.65
+    port: 5672
+    username: rbmq_admin
+    password: administrator
+    virtual-host: prod-notifications
+    template:
+      exchange: tech.messages.exchange
   task:
     scheduling:
         pool:
