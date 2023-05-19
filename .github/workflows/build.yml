@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - creation-evenements
+      - authtification
   workflow_dispatch:
 
 env:
