@@ -13,7 +13,7 @@ services:
       # The HTTP port
       - "8083:8083"
     environment:
-      - "SPRING_PROFILES_ACTIVE=recette"
+      #- "SPRING_PROFILES_ACTIVE=recette"
       #- "logging.level.org.springframework=TRACE"
       - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
       - "providers.whatsapp.token=${WHATSAPP_TOKEN}"
