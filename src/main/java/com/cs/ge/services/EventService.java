@@ -13,7 +13,7 @@ import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.notifications.SynchroniousNotifications;
-import com.cs.ge.utilitaire.UtilitaireService;
+import com.cs.ge.utils.UtilitaireService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -54,6 +54,7 @@ public class EventService {
     private final String imagesHost;
     private final String accountSid;
     private final String authToken;
+    private final UtilitaireService utilitaireService;
 
     public EventService(
             FeignNotifications feignNotifications,
@@ -66,8 +67,8 @@ public class EventService {
             ASynchroniousNotifications aSynchroniousNotifications,
             @Value("${resources.images.host}") String imagesHost,
             @Value("${providers.twilio.ACCOUNT_SID}") String accountSid,
-            @Value("${providers.twilio.AUTH_TOKEN}") String authToken
-    ) {
+            @Value("${providers.twilio.AUTH_TOKEN}") String authToken,
+            UtilitaireService utilitaireService) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
@@ -79,6 +80,7 @@ public class EventService {
         this.imagesHost = imagesHost;
         this.authToken = authToken;
         this.accountSid = accountSid;
+        this.utilitaireService = utilitaireService;
     }
 
     public List<Event> search() {
@@ -118,7 +120,7 @@ public class EventService {
 
         String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         event.setPublicId(publicId);
-        String slug = UtilitaireService.makeSlug(event.getName());
+        String slug = this.utilitaireService.makeSlug(event.getName());
         event.setSlug(format("%s-%s", slug, publicId));
 
         Category category = this.categorieService.read(event.getCategory().getLabel());
@@ -193,7 +195,7 @@ public class EventService {
 
         String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         guestProfile.setPublicId(publicId);
-        String slug = UtilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
+        String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
         guestProfile.setSlug(format("%s-%s", slug, publicId));
         this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
         //guest.setTicket(guestQRCODE);
@@ -374,7 +376,7 @@ public class EventService {
 
         String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
         schedule.setPublicId(publicId);
-        String slug = UtilitaireService.makeSlug(schedule.getTitle());
+        String slug = this.utilitaireService.makeSlug(schedule.getTitle());
         schedule.setSlug(format("%s-%s", slug, publicId));
 
         List<Schedule> schedules = event.getSchedules();

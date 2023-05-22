@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -31,6 +32,17 @@ public class ApplicationExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ExceptionData handleIllegalArgumentException(final IllegalArgumentException exception) {
+        log.error("Erreur", exception);
+        final ExceptionData exceptionData = new ExceptionData();
+        exceptionData.setTimestamp(LocalDateTime.now());
+        exceptionData.setMessage(exception.getMessage());
+        return exceptionData;
+    }
+
+    @ExceptionHandler(IOException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ExceptionData handleIOException(final IOException exception) {
         log.error("Erreur", exception);
         final ExceptionData exceptionData = new ExceptionData();
         exceptionData.setTimestamp(LocalDateTime.now());

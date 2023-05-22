@@ -4,6 +4,7 @@ import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.repositories.QRCodeRepository;
+import com.cs.ge.utils.UtilitaireService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -25,6 +26,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.cs.ge.enums.QRCodeType.LINK;
+
 @Slf4j
 @Component
 public class QRCodeGeneratorService {
@@ -35,17 +38,19 @@ public class QRCodeGeneratorService {
     private final String imagesFolder;
     private final String imagesRootfolder;
     private final QRCodeRepository qrCodeRepository;
+    private final UtilitaireService utilitaireService;
 
     public QRCodeGeneratorService(
             QRCodeRepository qrCodeRepository,
             @Value("${resources.images.folder}") String imagesFolder,
             @Value("${resources.images.host}") String imagesHost,
-            @Value("${resources.images.root}") String imagesRootfolder
-    ) {
+            @Value("${resources.images.root}") String imagesRootfolder,
+            UtilitaireService utilitaireService) {
         this.qrCodeRepository = qrCodeRepository;
         this.imagesHost = imagesHost;
         this.imagesFolder = imagesFolder;
         this.imagesRootfolder = imagesRootfolder;
+        this.utilitaireService = utilitaireService;
     }
 
     public void guestQRCODE(Event event, Guest guest) {
@@ -91,24 +96,42 @@ public class QRCodeGeneratorService {
         return null;
     }
 
-    public String generate(QRCodeEntity qrCodeEntity) {
-        String publicId = RandomStringUtils.random(10, true, true);
-        String location = String.format("%s/%s/qr-code/%s.jpg", this.imagesRootfolder, this.imagesFolder, publicId);
-        log.info("IMAGE LOCATION " + location);
-        String imageContent = String.format("%s/qr-code/%s", this.imagesHost, publicId);
+    public String generate(QRCodeEntity qrCodeEntity) throws IOException {
+        Map<String, Object> params = this.qrCodeParamsFromType(qrCodeEntity);
+        String publicId = String.valueOf(params.get("publicId"));
+
+        String imageContent = String.valueOf(params.get("imageContent"));
         qrCodeEntity.setPublicId(publicId);
         qrCodeEntity.setFinalContent(imageContent);
         this.qrCodeRepository.save(qrCodeEntity);
 
-
         File file = QRCode.from(imageContent).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
         log.info("IMAGE LOCATION " + file.getAbsolutePath());
         try {
-            FileUtils.copyFile(file, new File(location));
+            FileUtils.copyFile(file, new File(String.valueOf(params.get("location"))));
         } catch (IOException e) {
             e.printStackTrace();
         }
         log.info("IMAGE LOCATION " + file.getAbsolutePath());
-        return String.format("%s/qr-code/%s.jpg", this.imagesHost, publicId);
+        return Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(file));
+    }
+
+    private Map<String, Object> qrCodeParamsFromType(QRCodeEntity qrCodeEntity) {
+        Map<String, Object> params = new HashMap<>();
+        String publicId = RandomStringUtils.random(10, true, true);
+
+        params.put("publicId", publicId);
+
+        if (qrCodeEntity.getType().equals(LINK)) {
+            //String imageContent = String.format("%s/qr-code/%s", this.imagesHost, publicId);
+            String imageContent = qrCodeEntity.getText().trim();
+            String name = this.utilitaireService.makeSlug(qrCodeEntity.getText());
+            String location = String.format("%s/%s/qr-code/%s.jpg", this.imagesRootfolder, this.imagesFolder, name);
+            log.info("IMAGE LOCATION " + location);
+            params.put("name", name);
+            params.put("location", location);
+            params.put("imageContent", imageContent);
+        }
+        return params;
     }
 }
