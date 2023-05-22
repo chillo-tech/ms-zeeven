@@ -60,7 +60,7 @@ jwt:
       refresh: '/refresh'
 providers:
   notifications:
-    host: ms-notifications
+    host: api.notifications.chillo.fr
     base-path: api/v1
   whatsapp:
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
