@@ -459,7 +459,6 @@ public class EventService {
 
     @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {
-        log.info("Envoi des messages");
         this.eventsRepository.queryEvents(INCOMMING)
                 .parallel().limit(2).forEach(this::handleEvent);
     }
