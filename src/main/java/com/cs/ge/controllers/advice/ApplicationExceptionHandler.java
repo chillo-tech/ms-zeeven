@@ -28,6 +28,7 @@ public class ApplicationExceptionHandler {
 
     }
 
+    
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
