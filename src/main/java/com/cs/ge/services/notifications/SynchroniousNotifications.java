@@ -50,6 +50,7 @@ public class SynchroniousNotifications {
                         this.put("from", from);
                         this.put("template", "event-applicationMessage.html");
                         this.put("to", event.getGuests());
+                        this.put("contacts", event.getGuests());
                     }
                 }
         );
@@ -99,6 +100,7 @@ public class SynchroniousNotifications {
                     this.put("from", from);
                     this.put("template", "confirmation.html");
                     this.put("to", Set.of(to));
+                    this.put("contacts", Set.of(to));
                 }}
         );
 
@@ -115,6 +117,7 @@ public class SynchroniousNotifications {
                     this.put("template", "new-message.html");
                     this.put("params", params);
                     this.put("to", Set.of(from));
+                    this.put("contacts", Set.of(from));
                 }}
         );
     }
@@ -145,6 +148,7 @@ public class SynchroniousNotifications {
                     this.put("from", from);
                     this.put("template", "activation.html");
                     this.put("to", Set.of(to));
+                    this.put("contacts", Set.of(to));
                     this.put("params", new HashMap<String, Object>() {{
                         this.put("code", code);
                     }});
@@ -164,6 +168,7 @@ public class SynchroniousNotifications {
                     this.put("template", "new-account.html");
                     this.put("params", params);
                     this.put("to", Set.of(from));
+                    this.put("contacts", Set.of(from));
                 }}
         );
     }

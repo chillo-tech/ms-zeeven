@@ -412,7 +412,8 @@ public class EventService {
 
     private void handleEvent(Event event) {
         log.info("Envoi des messages pour l'evenement {}", event.getName());
-        Set<ApplicationMessage> messages = event.getMessages()
+        List<ApplicationMessage> initialList = event.getMessages();
+        List<ApplicationMessage> messagesTosend = initialList
                 .parallelStream()
                 .filter(
                         message -> {
@@ -422,12 +423,23 @@ public class EventService {
                             calendar.set(Calendar.MINUTE, Integer.parseInt(message.getTime().split(":")[1]));
                             return !message.isSent() && Instant.now().isAfter(calendar.toInstant());
                         })
-                .collect(Collectors.toSet());
-        messages
+                .collect(Collectors.toList());
+        List<ApplicationMessage> messagesNotTosend = initialList
                 .parallelStream()
-                .forEach(applicationMessage -> {
+                .filter(item -> initialList.stream().anyMatch(o -> o.getId().equals(item.getId()))).collect(Collectors.toList());
+
+        messagesTosend = messagesTosend
+                .parallelStream()
+                .peek(applicationMessage -> {
                     this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage);
-                });
+                    applicationMessage.setSent(Boolean.TRUE);
+                })
+                .collect(Collectors.toList());
+
+        messagesTosend.addAll(messagesNotTosend);
+        event.setMessages(messagesTosend);
+        event.setStatus(EventStatus.DISABLED);
+        this.eventsRepository.save(event);
     }
 
     public List<Object> statistics(String id) {

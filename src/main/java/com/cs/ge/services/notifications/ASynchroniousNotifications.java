@@ -4,12 +4,9 @@ import com.cs.ge.dto.ApplicationNotification;
 import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Profile;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -32,6 +29,7 @@ public class ASynchroniousNotifications {
     }
 
     public void sendEventMessage(Event event, ApplicationMessage applicationMessage) {
+        log.info("ApplicationNotification du message de {}", applicationMessage.getText());
 
         String formattedMessage = this.messageAsString(applicationMessage);
         ApplicationNotification notification = new ApplicationNotification(
@@ -48,13 +46,16 @@ public class ASynchroniousNotifications {
 
         MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
-        properties.setHeader("type", "applicationMessage");
+        properties.setHeader("type", "message");
+        /*
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+
+         */
     }
 
     private Map<String, String> userAsMap(Profile profile) {
