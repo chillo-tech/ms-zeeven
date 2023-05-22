@@ -29,19 +29,22 @@ public class UtilisateursService {
     private final SynchroniousNotifications synchroniousNotifications;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final StockService stockService;
 
     public UtilisateursService(
             final UtilisateurRepository utilisateurRepository,
             final VerificationService verificationService,
             final SynchroniousNotifications synchroniousNotifications,
             final PasswordEncoder passwordEncoder,
-            final TokenService tokenService
+            final TokenService tokenService,
+            final StockService stockService
     ) {
         this.utilisateurRepository = utilisateurRepository;
         this.verificationService = verificationService;
         this.synchroniousNotifications = synchroniousNotifications;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.stockService = stockService;
 
     }
 
@@ -52,7 +55,10 @@ public class UtilisateursService {
         userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun userAccount pour ce code"));
         userAccount.setEnabled(true);
         final LocalDateTime localDateTime = verification.getDateExpiration();
-        //if (localDateTime=)
+        if (localDateTime.isAfter(LocalDateTime.now())) {
+            throw new ApplicationException("Username existe déjà");
+        }
+        userAccount.setStocks(this.stockService.generateDefaultStocks());
         this.utilisateurRepository.save(userAccount);
     }
 
