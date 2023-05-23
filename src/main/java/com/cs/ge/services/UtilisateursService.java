@@ -4,6 +4,7 @@ import com.cs.ge.entites.UserAccount;
 import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
+import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.notifications.SynchroniousNotifications;
 import com.cs.ge.services.security.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,6 +28,7 @@ public class UtilisateursService {
     private final UtilisateurRepository utilisateurRepository;
     private final VerificationService verificationService;
     private final SynchroniousNotifications synchroniousNotifications;
+    private final ASynchroniousNotifications asynchroniousNotifications;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final StockService stockService;
@@ -35,13 +37,14 @@ public class UtilisateursService {
             final UtilisateurRepository utilisateurRepository,
             final VerificationService verificationService,
             final SynchroniousNotifications synchroniousNotifications,
-            final PasswordEncoder passwordEncoder,
+            ASynchroniousNotifications asynchroniousNotifications, final PasswordEncoder passwordEncoder,
             final TokenService tokenService,
             final StockService stockService
     ) {
         this.utilisateurRepository = utilisateurRepository;
         this.verificationService = verificationService;
         this.synchroniousNotifications = synchroniousNotifications;
+        this.asynchroniousNotifications = asynchroniousNotifications;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.stockService = stockService;
@@ -116,7 +119,7 @@ public class UtilisateursService {
         this.utilisateurRepository.save(userAccount);
         final Verification verification = this.verificationService.createCode(userAccount);
         if (userAccount.getEmail() != null) {
-            this.synchroniousNotifications.sendEmail(userAccount, verification.getCode());
+            this.asynchroniousNotifications.sendEmail(userAccount, verification.getCode());
         }
     }
 

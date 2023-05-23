@@ -146,7 +146,7 @@ public class SynchroniousNotifications {
                     this.put("subject", "Activez votre compte");
                     this.put("application", "ZEEVEN");
                     this.put("from", from);
-                    this.put("template", "activation.html");
+                    this.put("template", "ze_activation.html");
                     this.put("to", Set.of(to));
                     this.put("contacts", Set.of(to));
                     this.put("params", new HashMap<String, Object>() {{
@@ -165,7 +165,7 @@ public class SynchroniousNotifications {
                     this.put("subject", "Nouveau compte");
                     this.put("application", "ZEEVEN");
                     this.put("from", from);
-                    this.put("template", "new-account.html");
+                    this.put("template", "ze_new-account.html");
                     this.put("params", params);
                     this.put("to", Set.of(from));
                     this.put("contacts", Set.of(from));
