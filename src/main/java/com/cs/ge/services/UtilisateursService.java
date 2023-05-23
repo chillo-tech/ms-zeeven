@@ -57,8 +57,8 @@ public class UtilisateursService {
         UserAccount userAccount = verification.getUserAccount();
         userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun userAccount pour ce code"));
         userAccount.setEnabled(true);
-        final LocalDateTime localDateTime = verification.getDateExpiration();
-        if (localDateTime.isAfter(LocalDateTime.now())) {
+        final LocalDateTime expiration = verification.getDateExpiration();
+        if (LocalDateTime.now().isAfter(expiration)) {
             throw new ApplicationException("Username existe déjà");
         }
         userAccount.setStocks(this.stockService.generateDefaultStocks());
