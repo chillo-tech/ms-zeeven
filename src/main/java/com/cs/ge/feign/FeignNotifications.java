@@ -22,5 +22,4 @@ public interface FeignNotifications {
 
     @GetMapping({"statistic"})
     List<Map<String, String>> getStatistic(@RequestParam String id);
-
 }
