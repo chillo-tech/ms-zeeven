@@ -56,7 +56,6 @@ public class SynchroniousNotifications {
         );
     }
 
-
     private static String messageAsString(ApplicationMessage applicationMessage) {
 
         String textWithVariables = applicationMessage.getText();
