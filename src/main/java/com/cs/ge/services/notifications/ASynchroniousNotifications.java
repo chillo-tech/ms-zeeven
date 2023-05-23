@@ -58,7 +58,7 @@ public class ASynchroniousNotifications {
                 "ZEEVEN",
                 "activation.html",
                 "Activez votre compte",
-                RandomStringUtils.random(8),
+                RandomStringUtils.random(8, true, true),
                 null,
                 new HashMap<String, String>() {{
                     this.put("code", code);
@@ -79,7 +79,7 @@ public class ASynchroniousNotifications {
                     "ZEEVEN",
                     "new-account.html",
                     "Nouveau compte",
-                    RandomStringUtils.random(8),
+                    RandomStringUtils.random(8, true, true),
                     null,
                     new HashMap<String, String>() {{
                         this.put("name", String.format("%s %s", author.getFirstName(), author.getLastName()));
