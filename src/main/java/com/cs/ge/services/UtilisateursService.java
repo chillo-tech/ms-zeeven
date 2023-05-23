@@ -59,7 +59,7 @@ public class UtilisateursService {
         userAccount.setEnabled(true);
         final LocalDateTime expiration = verification.getDateExpiration();
         if (LocalDateTime.now().isAfter(expiration)) {
-            throw new ApplicationException("Username existe déjà");
+            throw new ApplicationException("Votre compte est déjà actif");
         }
         userAccount.setStocks(this.stockService.generateDefaultStocks());
         this.utilisateurRepository.save(userAccount);
