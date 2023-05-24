@@ -99,14 +99,17 @@ public class ASynchroniousNotifications {
     public void sendEventMessage(Event event, ApplicationMessage applicationMessage) {
         log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
+        UserAccount author = event.getAuthor();
         String formattedMessage = this.messageAsString(applicationMessage);
+        Map<String, String> params = messageParameters(applicationMessage);
+        params.put("trial", String.valueOf(author.isTrial()));
         ApplicationNotification notification = new ApplicationNotification(
                 "ZEEVEN",
                 null,
                 event.getName(),
                 event.getId(),
                 applicationMessage.getText(),
-                messageParameters(applicationMessage),
+                params,
                 event.getChannels(),
                 event.getAuthor(),
                 event.getGuests()

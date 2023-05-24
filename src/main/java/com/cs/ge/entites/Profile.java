@@ -26,6 +26,7 @@ public class Profile {
     protected String email;
     protected String phoneIndex;
     protected String phone;
+    protected boolean trial;
     @DBRef
     protected List<Stock> stocks;
 
