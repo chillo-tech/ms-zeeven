@@ -97,7 +97,7 @@ public class ASynchroniousNotifications {
     }
 
     public void sendEventMessage(Event event, ApplicationMessage applicationMessage) {
-        log.info("ApplicationNotification du message de {}", applicationMessage.getText());
+        log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
         String formattedMessage = this.messageAsString(applicationMessage);
         ApplicationNotification notification = new ApplicationNotification(
@@ -115,15 +115,12 @@ public class ASynchroniousNotifications {
         MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
         properties.setHeader("type", "message");
-        /*
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
-         */
     }
 
     private Map<String, String> userAsMap(Profile profile) {

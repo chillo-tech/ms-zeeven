@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.cs.ge.enums.EventStatus.ACTIVE;
 import static com.cs.ge.enums.EventStatus.INCOMMING;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -423,24 +425,38 @@ public class EventService {
                             calendar.setTime(message.getDate());
                             calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(message.getTime().split(":")[0]));
                             calendar.set(Calendar.MINUTE, Integer.parseInt(message.getTime().split(":")[1]));
-                            return !message.isSent() && Instant.now().isAfter(calendar.toInstant());
+                            Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
+                            Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+                            boolean isSent = message.isSent();
+                            boolean send = messageDate.equals(Instant.now()) || messageDate.isAfter(now);
+                            return !isSent && send;
                         })
                 .collect(Collectors.toList());
-        List<ApplicationMessage> messagesNotTosend = initialList
-                .parallelStream()
-                .filter(item -> initialList.stream().anyMatch(o -> o.getId().equals(item.getId()))).collect(Collectors.toList());
 
         messagesTosend = messagesTosend
                 .parallelStream()
-                .peek(applicationMessage -> {
+                .map(applicationMessage -> {
                     this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage);
                     applicationMessage.setSent(Boolean.TRUE);
+                    return applicationMessage;
                 })
                 .collect(Collectors.toList());
+        List<ApplicationMessage> finalMessagesTosend1 = messagesTosend;
+        initialList = initialList.parallelStream().map(applicationMessage -> {
+            ApplicationMessage selected = finalMessagesTosend1.parallelStream().filter(messageTosend -> messageTosend.getId().equals(applicationMessage.getId())).findFirst().orElse(null);
+            if (selected == null) {
+                return applicationMessage;
+            }
+            return selected;
+        }).collect(Collectors.toList());
 
-        messagesTosend.addAll(messagesNotTosend);
-        event.setMessages(messagesTosend);
-        event.setStatus(EventStatus.DISABLED);
+        long messagesToBeSent = messagesTosend.parallelStream().filter(ApplicationMessage::isSent).count();
+        if (messagesToBeSent == 0) {
+            event.setStatus(EventStatus.DISABLED);
+        } else {
+            event.setStatus(EventStatus.ACTIVE);
+        }
+        event.setMessages(initialList);
         this.eventsRepository.save(event);
     }
 
@@ -459,7 +475,7 @@ public class EventService {
 
     @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {
-        this.eventsRepository.queryEvents(INCOMMING)
+        this.eventsRepository.findByStatusIn(List.of(INCOMMING, ACTIVE))
                 .parallel().limit(2).forEach(this::handleEvent);
     }
 

@@ -6,6 +6,9 @@ app:
   host: http://app.zeeven.com
   api-host: http://api.zeeven.com
 spring:
+  jackson:
+    serialization:
+        write-dates-as-timestamps: false
   rabbitmq:
     host: 212.83.180.65
     port: 5672

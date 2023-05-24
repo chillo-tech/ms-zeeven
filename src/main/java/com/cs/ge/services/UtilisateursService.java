@@ -118,8 +118,9 @@ public class UtilisateursService {
         userAccount.setPassword(encodedPassword);
         this.utilisateurRepository.save(userAccount);
         final Verification verification = this.verificationService.createCode(userAccount);
+        
         if (userAccount.getEmail() != null) {
-            this.asynchroniousNotifications.sendEmail(userAccount, verification.getCode());
+            //this.asynchroniousNotifications.sendEmail(userAccount, verification.getCode());
         }
     }
 
