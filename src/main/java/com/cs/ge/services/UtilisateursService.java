@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.mail.MessagingException;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,8 +59,10 @@ public class UtilisateursService {
         userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun userAccount pour ce code"));
         userAccount.setEnabled(true);
         userAccount.setTrial(false);
-        final LocalDateTime expiration = verification.getDateExpiration();
-        if (LocalDateTime.now().isAfter(expiration)) {
+
+        final LocalDateTime expiration = verification.getDateExpiration().truncatedTo(ChronoUnit.MINUTES);
+        final LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        if (now.isAfter(expiration)) {
             throw new ApplicationException("Votre compte est déjà actif ou votre code a expiré");
         }
         userAccount.setStocks(this.stockService.generateDefaultStocks());
