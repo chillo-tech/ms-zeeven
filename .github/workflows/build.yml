@@ -6,6 +6,8 @@ on:
 
 env:
   NODE_VERSION: '14.x'
+  APPLICATION_NAME: 'notifications'
+  APPLICATION_TYPE: 'ms'
 
 permissions:
   contents: read
@@ -28,12 +30,16 @@ jobs:
           sudo mkdir -p /opt/applications/zeeven/ms-zeeven
           sudo chmod ugo+rwx /opt/applications/zeeven/ms-zeeven
 
-
   copy-configs:
     name: "copy configs"
     runs-on: ubuntu-latest
     needs: create-folder
     steps:
+      - uses: actions/checkout@master
+      - name: update configs
+        run: |
+          sed -i 's|IMAGE_NAME|simachille/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}:${{ github.sha }}|' docker-compose.yml
+
       - uses: actions/checkout@master
       - name: check
         run: |
@@ -87,7 +93,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: simachille/ms-zeeven:latest
+          tags: simachille/ms-zeeven:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
   
   run-container:
@@ -107,7 +113,7 @@ jobs:
         script: |
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
-          docker rmi -f simachille/ms-zeeven:latest
+          docker rmi -f simachille/ms-zeeven:${{ github.sha }}
           echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} > /opt/applications/zeeven/ms-zeeven/.env
           export WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml pull

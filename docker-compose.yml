@@ -4,7 +4,7 @@ services:
   ms-zeeven:
     container_name: ms-zeeven
     # The official v2 Traefik docker image
-    image: simachille/ms-zeeven:latest
+    image: IMAGE_NAME
     pull_policy: always
     # Enables the web UI and tells Traefik to listen to docker
    
