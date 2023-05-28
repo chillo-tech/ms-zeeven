@@ -1,7 +1,7 @@
 package com.cs.ge.dto;
 
-import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Profile;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -36,5 +36,5 @@ public class ApplicationNotification implements Serializable {
     @JsonProperty("from")
     Profile from;
     @JsonProperty("contacts")
-    List<Guest> contacts;
+    List<UserAccount> contacts;
 }

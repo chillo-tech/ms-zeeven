@@ -5,24 +5,17 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.VerificationRepository;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.spring5.SpringTemplateEngine;
 
 import java.time.LocalDateTime;
 
 @Service
 public class VerificationService {
     private final VerificationRepository verificationRepository;
-    private final SpringTemplateEngine templateEngine;
-    private final String accountLink;
 
     public VerificationService(
-            @Value("${spring.mail.accountLink}") final String accountLink,
-            final SpringTemplateEngine templateEngine,
-            final VerificationRepository verificationRepository) {
-        this.accountLink = accountLink;
-        this.templateEngine = templateEngine;
+            final VerificationRepository verificationRepository
+    ) {
         this.verificationRepository = verificationRepository;
     }
 

@@ -12,10 +12,12 @@ import javax.mail.MessagingException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import static com.cs.ge.enums.Role.CUSTOMER;
+import static com.cs.ge.utils.Data.DEFAULT_STOCK_SIZE;
 import static com.cs.ge.utils.UtilitaireService.valEmail;
 import static com.cs.ge.utils.UtilitaireService.valNumber;
 import static com.cs.ge.utils.UtilitaireService.validationChaine;
@@ -61,6 +63,16 @@ public class UtilisateursService {
         verification.setActive(false);
         this.verificationService.updateCode(verification.getId(), verification);
         this.stockService.generateDefaultStocks(userAccount.getId());
+        this.asynchroniousNotifications.sendEmail(
+                userAccount,
+                new HashMap<String, String>() {{
+                    this.put("stock", "" + DEFAULT_STOCK_SIZE);
+                }},
+
+                "ZEEVEN",
+                "welcome.html",
+                "Notre cadeau de bienvenue"
+        );
     }
 
     public void validationUsername(final String username) {
@@ -127,7 +139,26 @@ public class UtilisateursService {
         final Verification verification = this.verificationService.createCode(userAccount);
 
         if (userAccount.getEmail() != null) {
-            //this.asynchroniousNotifications.sendEmail(userAccount, verification.getCode());
+            this.asynchroniousNotifications.sendEmail(
+                    userAccount,
+                    new HashMap<String, String>() {{
+                        this.put("code", verification.getCode());
+                    }},
+
+                    "ZEEVEN",
+                    "activation.html",
+                    "Activez votre compte"
+            );
+            this.asynchroniousNotifications.sendEmail(
+                    userAccount,
+                    new HashMap<String, String>() {{
+                        this.put("code", verification.getCode());
+                    }},
+
+                    "ZEEVEN",
+                    "new-account.html",
+                    "Nouveau compte"
+            );
         }
     }
 

@@ -19,6 +19,7 @@ import static com.cs.ge.enums.Channel.SMS;
 import static com.cs.ge.enums.Channel.WHATSAPP;
 import static com.cs.ge.enums.StockType.CREDIT;
 import static com.cs.ge.enums.StockType.DEBIT;
+import static com.cs.ge.utils.Data.DEFAULT_STOCK_SIZE;
 
 @AllArgsConstructor
 @Service
@@ -34,7 +35,7 @@ public class StockService {
                 "",
                 entry,
                 CREDIT,
-                3,
+                DEFAULT_STOCK_SIZE,
                 LocalDateTime.now()
         )).collect(Collectors.toList());
 

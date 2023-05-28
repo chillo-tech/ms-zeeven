@@ -3,7 +3,6 @@ package com.cs.ge.services.notifications;
 import com.cs.ge.dto.ApplicationNotification;
 import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.Event;
-import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -39,8 +39,22 @@ public class ASynchroniousNotifications {
     }
 
 
-    public void sendEmail(UserAccount author, String code) {
-        Guest to = new Guest();
+    public void sendEmail(
+            UserAccount author,
+            Map<String, String> parameters,
+            String appliation,
+            String template,
+            String subject
+    ) {
+
+        UserAccount exp = new UserAccount();
+        exp.setLastName("DE ZEEVEN");
+        exp.setFirstName("Marlene");
+        exp.setEmail("bonjour.zeeven@gmail.com");
+        if (author == null) {
+            author = exp;
+        }
+        UserAccount to = new UserAccount();
         if (author.getCivility() != null) {
             to.setCivility(author.getCivility());
         }
@@ -51,47 +65,24 @@ public class ASynchroniousNotifications {
         to.setPhoneIndex(author.getPhoneIndex());
 
 
-        Guest exp = new Guest();
-        exp.setLastName("DE ZEEVEN");
-        exp.setFirstName("Marlene");
-        exp.setEmail("bonjour.zeeven@gmail.com");
-
         ApplicationNotification notification = new ApplicationNotification(
-                "ZEEVEN",
-                "activation.html",
-                "Activez votre compte",
+                appliation,
+                template,
+                subject,
                 RandomStringUtils.random(8, true, true),
                 null,
-                new HashMap<String, String>() {{
-                    this.put("code", code);
-                }},
+                parameters,
                 List.of(Channel.EMAIL),
                 exp,
                 List.of(to)
         );
 
         MessageProperties properties = new MessageProperties();
-        properties.setHeader("application", "ZEEVEN");
+        properties.setHeader("application", appliation);
         properties.setHeader("type", "notification");
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
-
-            notification = new ApplicationNotification(
-                    "ZEEVEN",
-                    "new-account.html",
-                    "Nouveau compte",
-                    RandomStringUtils.random(8, true, true),
-                    null,
-                    new HashMap<String, String>() {{
-                        this.put("name", String.format("%s %s", author.getFirstName(), author.getLastName()));
-                    }},
-                    List.of(Channel.EMAIL),
-                    exp,
-                    List.of(exp)
-            );
-            this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
-
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -113,8 +104,18 @@ public class ASynchroniousNotifications {
                 params,
                 channelsToHandle,
                 event.getAuthor(),
-                event.getGuests()
-        );
+                event.getGuests().parallelStream().map(guest -> {
+                    UserAccount to = new UserAccount();
+                    if (guest.getCivility() != null) {
+                        to.setCivility(guest.getCivility());
+                    }
+                    to.setFirstName(guest.getFirstName());
+                    to.setLastName(guest.getLastName());
+                    to.setEmail(guest.getEmail());
+                    to.setPhone(guest.getPhone());
+                    to.setPhoneIndex(guest.getPhoneIndex());
+                    return to;
+                }).collect(Collectors.toList()));
 
         MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
