@@ -16,6 +16,7 @@ public class Verification {
     @Id
     private String id;
     private String code;
+    private boolean active;
     private String username;
     private LocalDateTime dateCreation;
     private LocalDateTime dateExpiration;
@@ -24,8 +25,9 @@ public class Verification {
     public Verification() {
     }
 
-    public Verification(String code, String username, LocalDateTime dateCreation, LocalDateTime dateExpiration, UserAccount userAccount) {
+    public Verification(boolean active, String code, String username, LocalDateTime dateCreation, LocalDateTime dateExpiration, UserAccount userAccount) {
         this.code = code;
+        this.active = active;
         this.username = username;
         this.dateCreation = dateCreation;
         this.dateExpiration = dateExpiration;

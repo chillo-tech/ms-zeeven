@@ -19,6 +19,6 @@ public class StocksController {
 
     @GetMapping(path = "statistics")
     public Map<Channel, Integer> statistics() {
-        return this.stockService.statistics();
+        return this.stockService.authenticatedUserStatistics();
     }
 }

@@ -7,6 +7,7 @@ import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
+import com.cs.ge.services.StockService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ASynchroniousNotifications {
     private final RabbitTemplate rabbitTemplate;
+    private final StockService stockService;
 
     public void notify(final String message) {
         log.info("ApplicationNotification du message de {}", message);
@@ -96,11 +98,10 @@ public class ASynchroniousNotifications {
 
     }
 
-    public void sendEventMessage(Event event, ApplicationMessage applicationMessage) {
+    public void sendEventMessage(Event event, ApplicationMessage applicationMessage, List<Channel> channelsToHandle) {
         log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
         UserAccount author = event.getAuthor();
-        String formattedMessage = this.messageAsString(applicationMessage);
         Map<String, String> params = messageParameters(applicationMessage);
         params.put("trial", String.valueOf(author.isTrial()));
         ApplicationNotification notification = new ApplicationNotification(
@@ -110,7 +111,7 @@ public class ASynchroniousNotifications {
                 event.getId(),
                 applicationMessage.getText(),
                 params,
-                event.getChannels(),
+                channelsToHandle,
                 event.getAuthor(),
                 event.getGuests()
         );
@@ -121,6 +122,7 @@ public class ASynchroniousNotifications {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
+
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

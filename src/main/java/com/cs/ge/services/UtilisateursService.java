@@ -5,8 +5,6 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
-import com.cs.ge.services.notifications.SynchroniousNotifications;
-import com.cs.ge.services.security.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,28 +26,22 @@ public class UtilisateursService {
     private static final String ACCOUNT_NOT_EXISTS = "Aucun compte ne correspond aux critères fournis";
     private final UtilisateurRepository utilisateurRepository;
     private final VerificationService verificationService;
-    private final SynchroniousNotifications synchroniousNotifications;
-    private final ASynchroniousNotifications asynchroniousNotifications;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
     private final StockService stockService;
+    private final ASynchroniousNotifications asynchroniousNotifications;
 
     public UtilisateursService(
             final UtilisateurRepository utilisateurRepository,
             final VerificationService verificationService,
-            final SynchroniousNotifications synchroniousNotifications,
-            ASynchroniousNotifications asynchroniousNotifications, final PasswordEncoder passwordEncoder,
-            final TokenService tokenService,
-            final StockService stockService
-    ) {
+            final PasswordEncoder passwordEncoder,
+            final StockService stockService,
+            ASynchroniousNotifications aSynchroniousNotifications) {
         this.utilisateurRepository = utilisateurRepository;
         this.verificationService = verificationService;
-        this.synchroniousNotifications = synchroniousNotifications;
-        this.asynchroniousNotifications = asynchroniousNotifications;
         this.passwordEncoder = passwordEncoder;
-        this.tokenService = tokenService;
         this.stockService = stockService;
 
+        this.asynchroniousNotifications = aSynchroniousNotifications;
     }
 
 
@@ -58,19 +50,21 @@ public class UtilisateursService {
         UserAccount userAccount = verification.getUserAccount();
         userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun userAccount pour ce code"));
         userAccount.setEnabled(true);
-        userAccount.setTrial(false);
+        userAccount.setTrial(true);
 
         final LocalDateTime expiration = verification.getDateExpiration().truncatedTo(ChronoUnit.MINUTES);
         final LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         if (now.isAfter(expiration)) {
             throw new ApplicationException("Votre compte est déjà actif ou votre code a expiré");
         }
-        userAccount.setStocks(this.stockService.generateDefaultStocks());
         this.utilisateurRepository.save(userAccount);
+        verification.setActive(false);
+        this.verificationService.updateCode(verification.getId(), verification);
+        this.stockService.generateDefaultStocks(userAccount.getId());
     }
 
     public void validationUsername(final String username) {
-        final Optional<UserAccount> exist = this.utilisateurRepository.findById(username);
+        final Optional<UserAccount> exist = this.utilisateurRepository.findByEmail(username);
         if (exist.isPresent()) {
             throw new ApplicationException("Username existe déjà");
         }
@@ -108,6 +102,15 @@ public class UtilisateursService {
             foundUser.setEmail(userAccount.getEmail());
             foundUser.setPhoneIndex(userAccount.getPhoneIndex());
             foundUser.setPhone(userAccount.getPhone());
+            this.utilisateurRepository.save(foundUser);
+        }
+    }
+
+    public void updateUtilisateurStocks(final String id, final UserAccount userAccount) {
+        final Optional<UserAccount> current = this.utilisateurRepository.findById(id);
+        if (current.isPresent()) {
+            final UserAccount foundUser = current.get();
+            foundUser.setStocks(userAccount.getStocks());
             this.utilisateurRepository.save(foundUser);
         }
     }

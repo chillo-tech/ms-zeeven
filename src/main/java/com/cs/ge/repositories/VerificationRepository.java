@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface VerificationRepository extends MongoRepository<Verification, String> {
-    Optional<Verification> findByCode(String code);
+    Optional<Verification> findByCodeAndActive(String code, boolean active);
 }
 
 

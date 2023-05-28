@@ -3,6 +3,7 @@ package com.cs.ge.services;
 import com.cs.ge.entites.Stock;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
+import com.cs.ge.enums.StockType;
 import com.cs.ge.repositories.StockRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,9 +26,10 @@ public class StockService {
     private StockRepository stockRepository;
     private ProfileService profileService;
 
-    public List<Stock> generateDefaultStocks() {
+    public List<Stock> generateDefaultStocks(String user) {
         List<Stock> stocks = List.of(SMS, WHATSAPP, EMAIL).parallelStream().map(entry -> new Stock(
                 null,
+                user,
                 "default",
                 "",
                 entry,
@@ -39,11 +41,28 @@ public class StockService {
         return this.stockRepository.saveAll(stocks);
     }
 
-    public Map<Channel, Integer> statistics() {
+    public Stock update(String user, Channel channel, Integer size, StockType type) {
+        return this.stockRepository.save(new Stock(
+                null,
+                user,
+                "default",
+                "",
+                channel,
+                type,
+                size,
+                LocalDateTime.now()));
+    }
+
+    public Map<Channel, Integer> authenticatedUserStatistics() {
         UserAccount account = this.profileService.getAuthenticateUser();
+        return getChannelsStatistics(account.getId(), List.of(SMS, WHATSAPP, EMAIL));
+    }
+
+    public Map<Channel, Integer> getChannelsStatistics(String user, List<Channel> channelList) {
         Map<Channel, Integer> stats = new HashMap<>();
-        List.of(SMS, WHATSAPP, EMAIL).parallelStream().forEach(channel -> {
-            int computed = account.getStocks()
+        List<Stock> stocks = this.stockRepository.findByUser(user);
+        channelList.parallelStream().forEach(channel -> {
+            int computed = stocks
                     .parallelStream()
                     .filter(stock -> stock.getChannel().equals(channel))
                     .reduce(0, (a, b) -> {
@@ -57,8 +76,6 @@ public class StockService {
                     }, Integer::sum);
             stats.put(channel, computed);
         });
-
-
         return stats;
     }
 }

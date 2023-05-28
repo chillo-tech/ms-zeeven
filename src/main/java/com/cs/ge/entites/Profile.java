@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.List;
 
@@ -27,7 +26,6 @@ public class Profile {
     protected String phoneIndex;
     protected String phone;
     protected boolean trial;
-    @DBRef
     protected List<Stock> stocks;
 
 }

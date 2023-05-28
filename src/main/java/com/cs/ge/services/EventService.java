@@ -6,18 +6,18 @@ import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.UserAccount;
+import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.enums.Role;
+import com.cs.ge.enums.StockType;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
-import com.cs.ge.services.notifications.SynchroniousNotifications;
 import com.cs.ge.utils.UtilitaireService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -36,8 +36,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.cs.ge.enums.EventStatus.ACTIVE;
+import static com.cs.ge.enums.EventStatus.DISABLED;
 import static com.cs.ge.enums.EventStatus.INCOMMING;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -51,12 +53,9 @@ public class EventService {
     private final CategorieService categorieService;
     private final UtilisateursService utilisateursService;
     private final QRCodeGeneratorService qrCodeGeneratorService;
-    private final SynchroniousNotifications synchroniousNotifications;
     private final ASynchroniousNotifications aSynchroniousNotifications;
-    private final String imagesHost;
-    private final String accountSid;
-    private final String authToken;
     private final UtilitaireService utilitaireService;
+    private final StockService stockService;
 
     public EventService(
             FeignNotifications feignNotifications,
@@ -65,24 +64,17 @@ public class EventService {
             CategorieService categorieService,
             UtilisateursService utilisateursService,
             QRCodeGeneratorService qrCodeGeneratorService,
-            SynchroniousNotifications synchroniousNotifications,
             ASynchroniousNotifications aSynchroniousNotifications,
-            @Value("${resources.images.host}") String imagesHost,
-            @Value("${providers.twilio.ACCOUNT_SID}") String accountSid,
-            @Value("${providers.twilio.AUTH_TOKEN}") String authToken,
-            UtilitaireService utilitaireService) {
+            UtilitaireService utilitaireService, StockService stockService) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
         this.categorieService = categorieService;
         this.utilisateursService = utilisateursService;
         this.qrCodeGeneratorService = qrCodeGeneratorService;
-        this.synchroniousNotifications = synchroniousNotifications;
         this.aSynchroniousNotifications = aSynchroniousNotifications;
-        this.imagesHost = imagesHost;
-        this.authToken = authToken;
-        this.accountSid = accountSid;
         this.utilitaireService = utilitaireService;
+        this.stockService = stockService;
     }
 
     public List<Event> search() {
@@ -110,6 +102,7 @@ public class EventService {
         List<Guest> guestList = event.getGuests().parallelStream().map(guest -> {
             guest.setId(UUID.randomUUID().toString());
             guest.setPublicId(UUID.randomUUID().toString());
+            guest.setTrial(true);
             return guest;
         }).collect(Collectors.toList());
         event.setGuests(guestList);
@@ -130,7 +123,7 @@ public class EventService {
 
         event = this.eventsRepository.save(event);
         //this.synchroniousNotifications.sendConfirmationMessage(event);
-        this.handleEvent(event);
+        //this.handleEvent(event);
     }
 
     private static EventStatus eventStatus(Set<Instant> dates) {
@@ -147,7 +140,7 @@ public class EventService {
         }
 
         if (sorted.get(0).equals(now)) {
-            status = EventStatus.ACTIVE;
+            status = ACTIVE;
         }
 
         if (sorted.get(sorted.size() - 1).isAfter(now)) {
@@ -194,6 +187,7 @@ public class EventService {
         String guestId = UUID.
                 randomUUID().toString();
         guestProfile.setId(guestId);
+        guestProfile.setTrial(true);
 
         String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         guestProfile.setPublicId(publicId);
@@ -416,8 +410,72 @@ public class EventService {
 
     private void handleEvent(Event event) {
         log.info("Envoi des messages pour l'evenement {}", event.getName());
-        List<ApplicationMessage> initialList = event.getMessages();
-        List<ApplicationMessage> messagesTosend = initialList
+
+        List<Guest> eventGuests = event.getGuests();
+        List<Channel> eventChannels = event.getChannels();
+        Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(event.getAuthor().getId(), eventChannels);
+        UserAccount author = event.getAuthor();
+        List<Channel> channelsToHandle = getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
+
+        if (channelsToHandle.size() > 0) {
+            List<ApplicationMessage> messagesToSend = this.getEventMessagesToSend(event.getMessages());
+            List<ApplicationMessage> messagesToKeep = this.getEventMessagesToKeep(event.getMessages(), messagesToSend);
+            boolean isDisabled = event.getMessages().size() == messagesToSend.size();
+            EventStatus eventStatus = ACTIVE;
+            if (isDisabled) {
+                eventStatus = DISABLED;
+            }
+            event.setStatus(eventStatus);
+            if (messagesToSend.size() > 0) {
+                List<ApplicationMessage> sentMessages = sendMessages(event, messagesToSend, channelsToHandle);
+                messagesToKeep.addAll(sentMessages);
+                event.setMessages(messagesToKeep);
+                this.updateStocks(event.getAuthor(), channelsToHandle, event.getGuests().size());
+            }
+            this.eventsRepository.save(event);
+        }
+
+    }
+
+    private List<ApplicationMessage> getEventMessagesToKeep(List<ApplicationMessage> messages, List<ApplicationMessage> messagesToSend) {
+        messages.removeAll(messagesToSend);
+        return messages;
+    }
+
+    private void updateStocks(UserAccount author, List<Channel> channelsToHandle, int consumed) {
+        channelsToHandle.parallelStream()
+                .forEach(channel -> this.stockService.update(author.getId(), channel, consumed, StockType.DEBIT));
+    }
+
+    private List<Channel> getChannelsToHandle(String email, List<Guest> eventGuests, List<Channel> eventChannels, Map<Channel, Integer> channelsStatistics) {
+        return eventChannels
+                .parallelStream().filter(channel -> {
+                    if (channelsStatistics.get(channel) >= eventGuests.size()) {
+                        log.info(
+                                "le stock {} de {} est suffisant pour envoyer des messages à {} personnes sur {} ",
+                                channelsStatistics.get(channel), email, eventGuests.size(), channel);
+                        return true;
+                    } else {
+                        log.warn(
+                                "le stock {} de {} est insuffisant pour envoyer des messages à {} personnes sur {} ",
+                                channelsStatistics.get(channel), email, eventGuests.size(), channel);
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+    }
+
+    private List<ApplicationMessage> sendMessages(Event event, List<ApplicationMessage> messagesTosend, List<Channel> channelsToHandle) {
+        return messagesTosend
+                .parallelStream()
+                .peek(applicationMessage -> {
+                    this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage, channelsToHandle);
+                    applicationMessage.setSent(Boolean.TRUE);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<ApplicationMessage> getEventMessagesToSend(List<ApplicationMessage> messages) {
+        return messages
                 .parallelStream()
                 .filter(
                         message -> {
@@ -428,36 +486,13 @@ public class EventService {
                             Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
                             Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
                             boolean isSent = message.isSent();
-                            boolean send = messageDate.equals(Instant.now()) || messageDate.isAfter(now);
+                            boolean send = now.isAfter(messageDate);
+                            if (!send) {
+                                send = messageDate.equals(Instant.now());
+                            }
                             return !isSent && send;
                         })
                 .collect(Collectors.toList());
-
-        messagesTosend = messagesTosend
-                .parallelStream()
-                .map(applicationMessage -> {
-                    this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage);
-                    applicationMessage.setSent(Boolean.TRUE);
-                    return applicationMessage;
-                })
-                .collect(Collectors.toList());
-        List<ApplicationMessage> finalMessagesTosend1 = messagesTosend;
-        initialList = initialList.parallelStream().map(applicationMessage -> {
-            ApplicationMessage selected = finalMessagesTosend1.parallelStream().filter(messageTosend -> messageTosend.getId().equals(applicationMessage.getId())).findFirst().orElse(null);
-            if (selected == null) {
-                return applicationMessage;
-            }
-            return selected;
-        }).collect(Collectors.toList());
-
-        long messagesToBeSent = messagesTosend.parallelStream().filter(ApplicationMessage::isSent).count();
-        if (messagesToBeSent == 0) {
-            event.setStatus(EventStatus.DISABLED);
-        } else {
-            event.setStatus(EventStatus.ACTIVE);
-        }
-        event.setMessages(initialList);
-        this.eventsRepository.save(event);
     }
 
     public List<Object> statistics(String id) {
@@ -475,8 +510,9 @@ public class EventService {
 
     @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {
-        this.eventsRepository.findByStatusIn(List.of(INCOMMING, ACTIVE))
-                .parallel().limit(2).forEach(this::handleEvent);
+        Stream<Event> events = this.eventsRepository
+                .findByStatusIn(List.of(INCOMMING, ACTIVE));
+        events.parallel().limit(2).forEach(this::handleEvent);
     }
 
 }
