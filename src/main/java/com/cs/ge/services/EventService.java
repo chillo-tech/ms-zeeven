@@ -417,6 +417,7 @@ public class EventService {
         UserAccount author = event.getAuthor();
         List<Channel> channelsToHandle = getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
 
+        log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
         if (channelsToHandle.size() > 0) {
             List<ApplicationMessage> messagesToSend = this.getEventMessagesToSend(event.getMessages());
             List<ApplicationMessage> messagesToKeep = this.getEventMessagesToKeep(event.getMessages(), messagesToSend);
@@ -425,6 +426,8 @@ public class EventService {
             if (isDisabled) {
                 eventStatus = DISABLED;
             }
+            log.info("Envoi des {} messages pour l'evenement {}", messagesToSend.size(), event.getName());
+            log.info("Ignore des {} messages pour l'evenement {}", messagesToKeep.size(), event.getName());
             event.setStatus(eventStatus);
             if (messagesToSend.size() > 0) {
                 List<ApplicationMessage> sentMessages = sendMessages(event, messagesToSend, channelsToHandle);
@@ -514,7 +517,7 @@ public class EventService {
     public void sendMessages() {
         Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
-        events.parallel().limit(2).forEach(this::handleEvent);
+        events.parallel().forEach(this::handleEvent);
     }
 
 }
