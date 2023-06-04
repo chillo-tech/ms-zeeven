@@ -484,17 +484,21 @@ public class EventService {
                         message -> {
                             Calendar calendar = Calendar.getInstance();
                             Date transfertDate = message.getDate();
+                            log.info("Date du message {} ", transfertDate);
                             calendar.setTime(transfertDate);
                             calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(message.getTime().split(":")[0]));
                             calendar.set(Calendar.MINUTE, Integer.parseInt(message.getTime().split(":")[1]));
                             Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
                             Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+                            log.info("Date et heure du message {} ", messageDate);
+                            log.info("Date et heure actuelle {} ", now);
                             boolean isSent = message.isSent();
                             boolean send = now.isAfter(messageDate);
                             if (!send) {
                                 send = messageDate.equals(Instant.now());
                             }
                             boolean result = !isSent && send;
+                            log.info("result {} isSent {} now {}", isSent, send, now);
                             return result;
                         })
                 .collect(Collectors.toList());
