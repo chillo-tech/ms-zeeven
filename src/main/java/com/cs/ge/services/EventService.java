@@ -34,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -482,26 +483,32 @@ public class EventService {
                 .parallelStream()
                 .filter(
                         message -> {
-                            Calendar calendar = Calendar.getInstance();
-                            Date transfertDate = message.getDate();
-                            log.info("Date du message {} ", transfertDate);
-                            calendar.setTime(transfertDate);
-                            calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(message.getTime().split(":")[0]));
-                            calendar.set(Calendar.MINUTE, Integer.parseInt(message.getTime().split(":")[1]));
-                            Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
-                            Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
-                            log.info("Date et heure du message {} ", messageDate);
-                            log.info("Date et heure actuelle {} ", now);
+                            boolean send = this.isMessageTobeSend(message.getDate(), message.getTime());
                             boolean isSent = message.isSent();
-                            boolean send = now.isAfter(messageDate);
-                            if (!send) {
-                                send = messageDate.equals(Instant.now());
-                            }
-                            boolean result = !isSent && send;
-                            log.info("result {} isSent {} now {}", isSent, send, now);
-                            return result;
+                            log.info("isSent {} send {} result {}", isSent, send, !isSent && send);
+                            return !isSent && send;
                         })
                 .collect(Collectors.toList());
+    }
+
+    private boolean isMessageTobeSend(Date date, String time) {
+
+        log.info("Date du message {} ", date);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT+2"));
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.split(":")[0]));
+        calendar.set(Calendar.MINUTE, Integer.parseInt(time.split(":")[1]));
+        Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
+
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+        boolean send = now.isAfter(messageDate);
+        if (!send) {
+            send = messageDate.equals(now);
+        }
+        log.info("result {} now {} messageDate {}", send, now, messageDate);
+        return send;
     }
 
     public List<Object> statistics(String id) {
