@@ -1,6 +1,6 @@
 server:
   servlet:
-    context-path: /api
+    context-path: /backend
   port: 8083
 app:
   host: http://app.zeeven.com

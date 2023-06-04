@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public class ASynchroniousNotifications {
         this.rabbitTemplate.convertAndSend(message);
     }
 
-
+    @Async
     public void sendEmail(
             UserAccount author,
             Map<String, String> parameters,
