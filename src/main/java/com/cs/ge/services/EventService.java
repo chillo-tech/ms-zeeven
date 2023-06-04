@@ -480,7 +480,8 @@ public class EventService {
                 .filter(
                         message -> {
                             Calendar calendar = Calendar.getInstance();
-                            calendar.setTime(message.getDate());
+                            Date transfertDate = message.getDate();
+                            calendar.setTime(transfertDate);
                             calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(message.getTime().split(":")[0]));
                             calendar.set(Calendar.MINUTE, Integer.parseInt(message.getTime().split(":")[1]));
                             Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
@@ -490,7 +491,8 @@ public class EventService {
                             if (!send) {
                                 send = messageDate.equals(Instant.now());
                             }
-                            return !isSent && send;
+                            boolean result = !isSent && send;
+                            return result;
                         })
                 .collect(Collectors.toList());
     }
