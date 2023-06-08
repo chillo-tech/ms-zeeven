@@ -502,11 +502,11 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    private boolean isMessageTobeSend(Date date, String time, String timezone) {
-        if (timezone == null) {
-            timezone = TimeZone.getDefault().getDisplayName();
+    private boolean isMessageTobeSend(Date date, String time, String messageTimezone) {
+        if (messageTimezone == null) {
+            messageTimezone = this.getTimeZone();
         }
-        TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(timezone));
+        TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(messageTimezone));
         log.info("Date du message {} position {}", date, timeZone.getDisplayName());
 
         Calendar calendar = Calendar.getInstance();
