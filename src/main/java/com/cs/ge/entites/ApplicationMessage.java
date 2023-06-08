@@ -17,6 +17,7 @@ public class ApplicationMessage {
     private String text;
     private Date date;
     private String time;
+    private String timezone;
     private boolean isSent;
 
     private List<String> informations;

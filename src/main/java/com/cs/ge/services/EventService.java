@@ -15,6 +15,7 @@ import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.utils.UtilitaireService;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -109,6 +112,11 @@ public class EventService {
         event.setGuests(guestList);
 
         List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().map(applicationMessage -> {
+            String timezone = this.getTimeZone();
+            if (Strings.isNullOrEmpty(applicationMessage.getTimezone())) {
+                timezone = applicationMessage.getTimezone();
+            }
+            applicationMessage.setTimezone(timezone);
             applicationMessage.setId(UUID.randomUUID().toString());
             return applicationMessage;
         }).collect(Collectors.toList());
@@ -483,7 +491,7 @@ public class EventService {
                 .parallelStream()
                 .filter(
                         message -> {
-                            boolean send = this.isMessageTobeSend(message.getDate(), message.getTime());
+                            boolean send = this.isMessageTobeSend(message.getDate(), message.getTime(), message.getTimezone());
                             boolean isSent = message.isSent();
                             log.info("isSent {} send {} result {}", isSent, send, !isSent && send);
                             return !isSent && send;
@@ -491,19 +499,22 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    private boolean isMessageTobeSend(Date date, String time) {
+    private boolean isMessageTobeSend(Date date, String time, String timezone) {
 
-        log.info("Date du message {} ", date);
+        TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(timezone));
+        log.info("Date du message {} position {}", date, timeZone.getDisplayName());
 
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT+2"));
+        calendar.setTimeZone(timeZone);
         calendar.setTime(date);
         calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.split(":")[0]));
         calendar.set(Calendar.MINUTE, Integer.parseInt(time.split(":")[1]));
         Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
 
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
-        boolean send = now.isAfter(messageDate);
+        ZonedDateTime zonedDateTime = now.atZone(timeZone.toZoneId());
+
+        boolean send = zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS).isAfter(messageDate);
         if (!send) {
             send = messageDate.equals(now);
         }
@@ -529,6 +540,12 @@ public class EventService {
         Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
         events.parallel().forEach(this::handleEvent);
+    }
+
+    private String getTimeZone() {
+        return ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
+                ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
+        ).getZone().getId();
     }
 
 }
