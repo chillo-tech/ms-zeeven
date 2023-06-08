@@ -491,6 +491,9 @@ public class EventService {
                 .parallelStream()
                 .filter(
                         message -> {
+                            ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
+                                    ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
+                            );
                             boolean send = this.isMessageTobeSend(message.getDate(), message.getTime(), message.getTimezone());
                             boolean isSent = message.isSent();
                             log.info("isSent {} send {} result {}", isSent, send, !isSent && send);
@@ -500,7 +503,9 @@ public class EventService {
     }
 
     private boolean isMessageTobeSend(Date date, String time, String timezone) {
-
+        if (timezone == null) {
+            timezone = TimeZone.getDefault().getDisplayName();
+        }
         TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(timezone));
         log.info("Date du message {} position {}", date, timeZone.getDisplayName());
 
