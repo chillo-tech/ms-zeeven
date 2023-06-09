@@ -67,6 +67,8 @@ public class CompteUtilisateurControlleur {
     @ResponseBody
     @PatchMapping(path = "profile/{id}")
     public void getAuthenticateUser(@PathVariable String id, @RequestBody final UserAccount userAccount) {
+
+
         this.utilisateursService.updateUtilisateur(id, userAccount);
     }
 }
