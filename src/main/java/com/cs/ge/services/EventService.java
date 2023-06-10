@@ -527,14 +527,19 @@ public class EventService {
     public List<Object> statistics(String id) {
         Event event = this.read(id);
         List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
-        return statistics.stream().map(entry -> new HashMap<String, String>() {
-            {
-                put("chanel", entry.get("channel"));
-                put("creation", entry.get("creation"));
-                put("status", entry.get("status"));
-                put("eventId", event.getPublicId());
-            }
-        }).collect(Collectors.toList());
+        return statistics.stream()
+                .filter(statistic -> {
+                    boolean exist = List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString());
+                    log.info("{} keep {}", statistic.get("status"), exist);
+                    return exist;
+                })
+                .map(entry -> new HashMap<String, String>() {
+                    {
+                        put("chanel", entry.get("channel"));
+                        put("status", entry.get("status"));
+                        put("eventId", event.getPublicId());
+                    }
+                }).collect(Collectors.toList());
     }
 
     @Scheduled(cron = "0 */1 * * * *")
