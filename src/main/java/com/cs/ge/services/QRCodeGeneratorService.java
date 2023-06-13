@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.cs.ge.enums.QRCodeType.LINK;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
 @Component
@@ -115,7 +117,7 @@ public class QRCodeGeneratorService {
         log.info("IMAGE LOCATION " + file.getAbsolutePath());
         return Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(file));
     }
-    
+
     private Map<String, Object> qrCodeParamsFromType(QRCodeEntity qrCodeEntity) {
         Map<String, Object> params = new HashMap<>();
         if (qrCodeEntity.getType().equals(LINK)) {
@@ -135,5 +137,17 @@ public class QRCodeGeneratorService {
             params.put("imageContent", imageContent);
         }
         return params;
+    }
+
+    public String content(String publicId) {
+        QRCodeEntity qrCodeEntity = this.qrCodeRepository.findByPublicId(publicId).orElseThrow(
+                () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
+        if (qrCodeEntity.getType().equals(LINK)) {
+
+            return qrCodeEntity.getText();
+
+        }
+        return null;
+
     }
 }

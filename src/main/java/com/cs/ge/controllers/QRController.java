@@ -4,6 +4,7 @@ import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.services.QRCodeGeneratorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,12 @@ public class QRController {
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
     public String add(@RequestBody final QRCodeEntity qrCodeEntity) throws IOException {
         return this.qrCodeGeneratorService.generate(qrCodeEntity);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping
+    public String get(@RequestBody final String publicId) throws IOException {
+        return this.qrCodeGeneratorService.content(publicId);
     }
 
 }

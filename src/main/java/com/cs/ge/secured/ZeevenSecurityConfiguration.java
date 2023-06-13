@@ -81,6 +81,7 @@ public class ZeevenSecurityConfiguration {
                                         .mvcMatchers(POST, "/activation").permitAll()
                                         .mvcMatchers(GET, "/ticket").permitAll()
                                         .mvcMatchers(POST, "/qr-code").permitAll()
+                                        .mvcMatchers(GET, "/qr-code").permitAll()
                                         .mvcMatchers("/webhooks").permitAll()
                                         .mvcMatchers(POST, "/activation").permitAll()
                                         .anyRequest().authenticated()
