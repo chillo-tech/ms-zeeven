@@ -16,7 +16,7 @@ providers:
         host: http://localhost:9092
 resources:
   images:
-    host: https://api.zeeven.chillo.fr
+    host: https://zeeven.fr
     root: /Users/chillo/projets/zeeven
     folder: images
 

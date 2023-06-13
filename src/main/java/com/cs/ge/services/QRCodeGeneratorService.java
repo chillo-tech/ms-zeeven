@@ -118,14 +118,16 @@ public class QRCodeGeneratorService {
 
     private Map<String, Object> qrCodeParamsFromType(QRCodeEntity qrCodeEntity) {
         Map<String, Object> params = new HashMap<>();
-        String publicId = RandomStringUtils.random(10, true, true);
-
-        params.put("publicId", publicId);
-
         if (qrCodeEntity.getType().equals(LINK)) {
-            //String imageContent = String.format("%s/qr-code/%s", this.imagesHost, publicId);
-            String imageContent = qrCodeEntity.getText().trim();
-            String name = this.utilitaireService.makeSlug(qrCodeEntity.getText());
+            String name = this.utilitaireService.makeSlug(
+                    qrCodeEntity.getText()
+                            .replaceAll("https", "")
+                            .replaceAll("http", "")
+                            .replaceAll("www", "")
+            );
+            params.put("publicId", name);
+            String imageContent = String.format("%s/go-to/%s", this.imagesHost, name);
+            //String imageContent = qrCodeEntity.getText().trim();
             String location = String.format("%s/%s/qr-code/%s.jpg", this.imagesRootfolder, this.imagesFolder, name);
             log.info("IMAGE LOCATION " + location);
             params.put("name", name);

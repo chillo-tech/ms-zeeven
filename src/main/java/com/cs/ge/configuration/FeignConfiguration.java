@@ -10,7 +10,7 @@ public class FeignConfiguration implements RequestInterceptor {
 
     private final String token;
 
-    public FeignConfiguration(@Value("${providers.whatsapp.token}") String token) {
+    public FeignConfiguration(@Value("${providers.whatsapp.token:''}") String token) {
         this.token = token;
     }
 
