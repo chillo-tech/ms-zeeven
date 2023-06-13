@@ -142,10 +142,11 @@ public class QRCodeGeneratorService {
     public String content(String publicId) {
         QRCodeEntity qrCodeEntity = this.qrCodeRepository.findByPublicId(publicId).orElseThrow(
                 () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
+        log.info(
+                "QRCODE {} est pour {} et est de type {}",
+                qrCodeEntity.getPublicId(), qrCodeEntity.getText(), qrCodeEntity.getType());
         if (qrCodeEntity.getType().equals(LINK)) {
-
             return qrCodeEntity.getText();
-
         }
         return null;
 
