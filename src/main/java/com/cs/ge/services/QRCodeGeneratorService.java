@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.cs.ge.enums.QRCodeType.LINK;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -101,12 +102,14 @@ public class QRCodeGeneratorService {
     public String generate(QRCodeEntity qrCodeEntity) throws IOException {
         Map<String, Object> params = this.qrCodeParamsFromType(qrCodeEntity);
         String publicId = String.valueOf(params.get("publicId"));
-
         String imageContent = String.valueOf(params.get("imageContent"));
         qrCodeEntity.setPublicId(publicId);
         qrCodeEntity.setFinalContent(imageContent);
+        QRCodeEntity byPublicId = this.qrCodeRepository.findByPublicId(publicId).orElse(null);
+        if(byPublicId != null) {
+            qrCodeEntity.setId(byPublicId.getId());
+        }
         this.qrCodeRepository.save(qrCodeEntity);
-
         File file = QRCode.from(imageContent).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
         log.info("IMAGE LOCATION " + file.getAbsolutePath());
         try {
