@@ -115,7 +115,7 @@ public class QRCodeGeneratorService {
         log.info("IMAGE LOCATION " + file.getAbsolutePath());
         return Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(file));
     }
-
+    
     private Map<String, Object> qrCodeParamsFromType(QRCodeEntity qrCodeEntity) {
         Map<String, Object> params = new HashMap<>();
         if (qrCodeEntity.getType().equals(LINK)) {
