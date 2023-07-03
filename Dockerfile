@@ -1,8 +1,7 @@
-FROM openjdk:11.0.5-jre-stretch
+FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 EXPOSE 8083
 ARG APP_NAME=ms-zeeven.jar
-ARG JAR_FILE=target/*.jar
-ADD ${JAR_FILE} ms-zeeven.jar
+ADD target/*.jar ms-zeeven.jar
 
 ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=recette", "/ms-zeeven.jar"]
