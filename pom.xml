@@ -117,6 +117,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20220320</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.photos.library</groupId>
             <artifactId>google-photos-library-client</artifactId>
             <version>1.7.2</version>
