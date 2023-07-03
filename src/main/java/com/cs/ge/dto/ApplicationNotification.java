@@ -1,7 +1,5 @@
 package com.cs.ge.dto;
 
-import com.cs.ge.entites.Profile;
-import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -29,12 +27,12 @@ public class ApplicationNotification implements Serializable {
     @JsonProperty("message")
     String message;
     @JsonProperty("params")
-    Map<String, String> params;
+    Map<String, List<String>> params;
 
     @JsonProperty("channels")
     List<Channel> channels;
     @JsonProperty("from")
-    Profile from;
+    MessageProfile from;
     @JsonProperty("contacts")
-    List<UserAccount> contacts;
+    List<MessageProfile> contacts;
 }

@@ -1,5 +1,5 @@
 package com.cs.ge.enums;
 
 public enum Channel {
-    SMS, WHATSAPP, EMAIL, APPLICATION
+    SMS, WHATSAPP, EMAIL, APPLICATION, QRCODE
 }

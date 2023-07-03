@@ -1,6 +1,7 @@
 package com.cs.ge.services;
 
 import com.cs.ge.entites.ApplicationMessage;
+import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
@@ -14,8 +15,8 @@ import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
+import com.cs.ge.services.qrcode.QRCodeGeneratorService;
 import com.cs.ge.utils.UtilitaireService;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -25,11 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.cs.ge.enums.EventStatus.ACTIVE;
@@ -62,14 +64,14 @@ public class EventService {
     private final StockService stockService;
 
     public EventService(
-            FeignNotifications feignNotifications,
-            EventRepository eventsRepository,
-            ProfileService profileService,
-            CategorieService categorieService,
-            UtilisateursService utilisateursService,
-            QRCodeGeneratorService qrCodeGeneratorService,
-            ASynchroniousNotifications aSynchroniousNotifications,
-            UtilitaireService utilitaireService, StockService stockService) {
+            final FeignNotifications feignNotifications,
+            final EventRepository eventsRepository,
+            final ProfileService profileService,
+            final CategorieService categorieService,
+            final UtilisateursService utilisateursService,
+            final QRCodeGeneratorService qrCodeGeneratorService,
+            final ASynchroniousNotifications aSynchroniousNotifications,
+            final UtilitaireService utilitaireService, final StockService stockService) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
@@ -82,12 +84,12 @@ public class EventService {
     }
 
     public List<Event> search() {
-        UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
+        final UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
         if (authenticatedUser.getRole().equals(Role.ADMIN)) {
             return this.eventsRepository.findAll();
         }
 
-        String id = authenticatedUser.getId();
+        final String id = authenticatedUser.getId();
         return this.eventsRepository.findByAuthorId(id).collect(Collectors.toList());
     }
 
@@ -97,13 +99,13 @@ public class EventService {
             event.setName(String.format("%s %s %s", event.getCategory().getLabel(), event.getAuthor().getFirstName(), event.getAuthor().getLastName()).toLowerCase());
         }
 
-        UserAccount author = this.profileService.getAuthenticateUser();
+        final UserAccount author = this.profileService.getAuthenticateUser();
         event.setAuthor(author);
 
         //final EventStatus status = eventStatus(event.getDates());
         event.setStatus(INCOMMING);
 
-        List<Guest> guestList = event.getGuests().parallelStream().map(guest -> {
+        final List<Guest> guestList = event.getGuests().parallelStream().map(guest -> {
             guest.setId(UUID.randomUUID().toString());
             guest.setPublicId(UUID.randomUUID().toString());
             guest.setTrial(true);
@@ -111,23 +113,18 @@ public class EventService {
         }).collect(Collectors.toList());
         event.setGuests(guestList);
 
-        List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().map(applicationMessage -> {
-            String timezone = applicationMessage.getTimezone();
-            if (Strings.isNullOrEmpty(timezone)) {
-                timezone = this.getTimeZone();
-            }
-            applicationMessage.setTimezone(timezone);
+        final List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().map(applicationMessage -> {
             applicationMessage.setId(UUID.randomUUID().toString());
             return applicationMessage;
         }).collect(Collectors.toList());
         event.setMessages(updatedApplicationMessages);
 
-        String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         event.setPublicId(publicId);
-        String slug = this.utilitaireService.makeSlug(event.getName());
+        final String slug = this.utilitaireService.makeSlug(event.getName());
         event.setSlug(format("%s-%s", slug, publicId));
 
-        Category category = this.categorieService.read(event.getCategory().getLabel());
+        final Category category = this.categorieService.read(event.getCategory().getLabel());
         event.setCategory(category);
 
         event = this.eventsRepository.save(event);
@@ -135,15 +132,15 @@ public class EventService {
         //this.handleEvent(event);
     }
 
-    private static EventStatus eventStatus(Set<Instant> dates) {
-        List<Instant> datesAsList = new ArrayList<>(dates);
-        List<Instant> sorted = datesAsList.stream()
+    private static EventStatus eventStatus(final Set<Instant> dates) {
+        final List<Instant> datesAsList = new ArrayList<>(dates);
+        final List<Instant> sorted = datesAsList.stream()
                 .distinct() // If you want only unique elements in the end List
                 .sorted()
                 .collect(Collectors.toList());
         final Date date = new Date();
         EventStatus status = EventStatus.DISABLED;
-        Instant now = Instant.now();
+        final Instant now = Instant.now();
         if (sorted.get(0).isBefore(now)) {
             throw new ApplicationException("La date de votre évènement est invalide");
         }
@@ -180,10 +177,10 @@ public class EventService {
         );
     }
 
-    public byte[] getGuestEventTicket(String guestId, String eventId) {
-        Event event = this.read(eventId);
-        Optional<Guest> optionalGuest = event.getGuests().stream().filter(g -> g.getPublicId().equals(guestId)).findFirst();
-        Guest guest = optionalGuest.orElseThrow(
+    public byte[] getGuestEventTicket(final String guestId, final String eventId) {
+        final Event event = this.read(eventId);
+        final Optional<Guest> optionalGuest = event.getGuests().stream().filter(g -> g.getPublicId().equals(guestId)).findFirst();
+        final Guest guest = optionalGuest.orElseThrow(
                 () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
 
         return null; //Base64.getDecoder().decode(guest.getTicket());
@@ -193,14 +190,14 @@ public class EventService {
         final var event = this.read(eventId);
         ValidationService.checkEmail(guestProfile.getEmail());
         ValidationService.checkPhone(guestProfile.getPhone());
-        String guestId = UUID.
+        final String guestId = UUID.
                 randomUUID().toString();
         guestProfile.setId(guestId);
         guestProfile.setTrial(true);
 
-        String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         guestProfile.setPublicId(publicId);
-        String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
+        final String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
         guestProfile.setSlug(format("%s-%s", slug, publicId));
         this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
         //guest.setTicket(guestQRCODE);
@@ -374,14 +371,14 @@ public class EventService {
         return event.getGuests();
     }
 
-    public void addSchedule(String eventId, Schedule schedule) {
+    public void addSchedule(final String eventId, final Schedule schedule) {
         final var event = this.read(eventId);
-        String guestId = UUID.randomUUID().toString();
+        final String guestId = UUID.randomUUID().toString();
         schedule.setId(guestId);
 
-        String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+        final String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
         schedule.setPublicId(publicId);
-        String slug = this.utilitaireService.makeSlug(schedule.getTitle());
+        final String slug = this.utilitaireService.makeSlug(schedule.getTitle());
         schedule.setSlug(format("%s-%s", slug, publicId));
 
         List<Schedule> schedules = event.getSchedules();
@@ -393,7 +390,7 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
-    public void deleteSchedule(String eventId, String scheduleId) {
+    public void deleteSchedule(final String eventId, final String scheduleId) {
         final var event = this.read(eventId);
         List<Schedule> schedules = event.getSchedules();
         schedules = schedules.stream().filter(currentSchedule -> !currentSchedule.getPublicId().equals(scheduleId)).collect(Collectors.toList());
@@ -401,15 +398,15 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
-    public List<Schedule> schedules(String id) {
+    public List<Schedule> schedules(final String id) {
         final Event event = this.read(id);
         return event.getSchedules();
     }
 
     @Async
-    public void sendInvitations(String id, Set<String> guestIds) {
-        Event event = this.read(id);
-        List<String> guestIdsAsList = Lists.newArrayList(guestIds);
+    public void sendInvitations(final String id, final Set<String> guestIds) {
+        final Event event = this.read(id);
+        final List<String> guestIdsAsList = Lists.newArrayList(guestIds);
         event.getGuests()
                 .stream()
                 .filter(guest -> guestIdsAsList.contains(guest.getPublicId()))
@@ -417,20 +414,20 @@ public class EventService {
 
     }
 
-    private void handleEvent(Event event) {
+    private void handleEvent(final Event event) {
         log.info("Envoi des messages pour l'evenement {}", event.getName());
 
-        List<Guest> eventGuests = event.getGuests();
-        List<Channel> eventChannels = event.getChannels();
-        Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(event.getAuthor().getId(), eventChannels);
-        UserAccount author = event.getAuthor();
-        List<Channel> channelsToHandle = getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
+        final List<Guest> eventGuests = event.getGuests();
+        final List<Channel> eventChannels = event.getChannels();
+        final Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(event.getAuthor().getId(), eventChannels);
+        final UserAccount author = event.getAuthor();
+        final List<Channel> channelsToHandle = this.getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
 
         log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
         if (channelsToHandle.size() > 0) {
-            List<ApplicationMessage> messagesToSend = this.getEventMessagesToSend(event.getMessages());
-            List<ApplicationMessage> messagesToKeep = this.getEventMessagesToKeep(event.getMessages(), messagesToSend);
-            boolean isDisabled = event.getMessages().size() == messagesToSend.size();
+            final List<ApplicationMessage> messagesToSend = this.getEventMessagesToSend(event.getMessages());
+            final List<ApplicationMessage> messagesToKeep = this.getEventMessagesToKeep(event.getMessages(), messagesToSend);
+            final boolean isDisabled = event.getMessages().size() == messagesToSend.size();
             EventStatus eventStatus = ACTIVE;
             if (isDisabled) {
                 eventStatus = DISABLED;
@@ -439,7 +436,7 @@ public class EventService {
             log.info("Ignore des {} messages pour l'evenement {}", messagesToKeep.size(), event.getName());
             event.setStatus(eventStatus);
             if (messagesToSend.size() > 0) {
-                List<ApplicationMessage> sentMessages = sendMessages(event, messagesToSend, channelsToHandle);
+                final List<ApplicationMessage> sentMessages = this.sendMessages(event, messagesToSend, channelsToHandle);
                 messagesToKeep.addAll(sentMessages);
                 event.setMessages(messagesToKeep);
                 this.updateStocks(event.getAuthor(), channelsToHandle, event.getGuests().size());
@@ -449,17 +446,17 @@ public class EventService {
 
     }
 
-    private List<ApplicationMessage> getEventMessagesToKeep(List<ApplicationMessage> messages, List<ApplicationMessage> messagesToSend) {
+    private List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
         messages.removeAll(messagesToSend);
         return messages;
     }
 
-    private void updateStocks(UserAccount author, List<Channel> channelsToHandle, int consumed) {
+    private void updateStocks(final UserAccount author, final List<Channel> channelsToHandle, final int consumed) {
         channelsToHandle.parallelStream()
-                .forEach(channel -> this.stockService.update(author.getId(), channel, consumed, StockType.DEBIT));
+                .forEach(channel -> this.stockService.update(author.getId(), channel, null, null, consumed, StockType.DEBIT));
     }
 
-    private List<Channel> getChannelsToHandle(String email, List<Guest> eventGuests, List<Channel> eventChannels, Map<Channel, Integer> channelsStatistics) {
+    private List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
         return eventChannels
                 .parallelStream().filter(channel -> {
                     if (channelsStatistics.get(channel) >= eventGuests.size()) {
@@ -476,75 +473,85 @@ public class EventService {
                 }).collect(Collectors.toList());
     }
 
-    private List<ApplicationMessage> sendMessages(Event event, List<ApplicationMessage> messagesTosend, List<Channel> channelsToHandle) {
+    private List<ApplicationMessage> sendMessages(final Event event, final List<ApplicationMessage> messagesTosend, final List<Channel> channelsToHandle) {
         return messagesTosend
                 .parallelStream()
                 .peek(applicationMessage -> {
-                    this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage, channelsToHandle);
-                    applicationMessage.setSent(Boolean.TRUE);
+                    final List<ApplicationMessageSchedule> schedules = applicationMessage.getSchedules();
+                    final ApplicationMessageSchedule firstScheduleToHandle = schedules.parallelStream().filter(schedule -> !schedule.isHandled()).findFirst().orElse(null);
+                    if (firstScheduleToHandle != null) {
+                        final int firstScheduleToHandleIndex = IntStream.range(0, schedules.size())
+                                .filter(i -> firstScheduleToHandle.isHandled() == schedules.get(i).isHandled())
+                                .findFirst().orElse(-1);
+                        this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage, channelsToHandle);
+
+                        firstScheduleToHandle.setHandled(true);
+                        firstScheduleToHandle.setHandledDate(LocalDateTime.now());
+                        schedules.set(firstScheduleToHandleIndex, firstScheduleToHandle);
+                        applicationMessage.setSchedules(schedules);
+                    }
+
                 })
                 .collect(Collectors.toList());
     }
 
-    private List<ApplicationMessage> getEventMessagesToSend(List<ApplicationMessage> messages) {
+    private List<ApplicationMessage> getEventMessagesToSend(final List<ApplicationMessage> messages) {
         return messages
                 .parallelStream()
-                .filter(
-                        message -> {
-                            boolean send = this.isMessageTobeSend(message.getDate(), message.getTime(), message.getTimezone());
-                            boolean isSent = message.isSent();
-                            log.info("isSent {} send {} result {}", isSent, send, !isSent && send);
-                            return !isSent && send;
-                        })
+                .filter(message -> {
+                    if (message.getSchedules() == null) {
+                        message.setSchedules(new ArrayList<>());
+                    }
+                    return this.isMessageTobeSend(message.getSchedules());
+                })
                 .collect(Collectors.toList());
     }
 
-    private boolean isMessageTobeSend(Date date, String time, String messageTimezone) {
-        if (messageTimezone == null) {
-            messageTimezone = this.getTimeZone();
+    private boolean isMessageTobeSend(final List<ApplicationMessageSchedule> schedules) {
+        final ApplicationMessageSchedule firstScheduleToHandle = schedules.parallelStream().filter(schedule -> !schedule.isHandled()).findFirst().orElse(null);
+        if (firstScheduleToHandle == null) {
+            return false;
         }
-        TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(messageTimezone));
-        log.info("Date du message {} position {}", date, timeZone.getDisplayName());
+        if (firstScheduleToHandle.getTimezone() == null) {
+            firstScheduleToHandle.setTimezone(this.getTimeZone());
+        }
+        final TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(firstScheduleToHandle.getTimezone()));
+        log.info("Date du message {} position {}", firstScheduleToHandle.getDate(), timeZone.getDisplayName());
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(timeZone);
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.split(":")[0]));
-        calendar.set(Calendar.MINUTE, Integer.parseInt(time.split(":")[1]));
-        Instant messageDate = calendar.toInstant().truncatedTo(ChronoUnit.MINUTES);
+        final Instant firstScheduleToHandleDate = firstScheduleToHandle.getDate().atZone(timeZone.toZoneId()).toInstant().truncatedTo(ChronoUnit.MINUTES);
 
-        Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
-        ZonedDateTime zonedDateTime = now.atZone(timeZone.toZoneId());
+        final Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+        final ZonedDateTime zonedDateTime = now.atZone(timeZone.toZoneId());
 
-        boolean send = zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS).isAfter(messageDate);
+        boolean send = zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS).isAfter(firstScheduleToHandleDate);
         if (!send) {
-            send = messageDate.equals(now);
+            send = firstScheduleToHandleDate.equals(now);
         }
-        log.info("result {} now {} messageDate {}", send, now, messageDate);
+        log.info("result {} now {} messageDate {}", send, now, firstScheduleToHandleDate);
         return send;
     }
 
-    public List<Object> statistics(String id) {
-        Event event = this.read(id);
-        List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
+    public List<Object> statistics(final String id) {
+        final Event event = this.read(id);
+        final List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
         return statistics.stream()
                 .filter(statistic -> {
-                    boolean exist = List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString());
+                    final boolean exist = List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString());
                     log.info("{} keep {}", statistic.get("status"), exist);
                     return exist;
                 })
                 .map(entry -> new HashMap<String, String>() {
                     {
-                        put("chanel", entry.get("channel"));
-                        put("status", entry.get("status"));
-                        put("eventId", event.getPublicId());
+                        this.put("chanel", entry.get("channel"));
+                        this.put("status", entry.get("status"));
+                        this.put("eventId", event.getPublicId());
                     }
                 }).collect(Collectors.toList());
     }
 
     @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {
-        Stream<Event> events = this.eventsRepository
+        final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
         events.parallel().forEach(this::handleEvent);
     }

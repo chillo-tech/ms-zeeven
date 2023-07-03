@@ -2,6 +2,7 @@ package com.cs.ge.controllers;
 
 import com.cs.ge.entites.Category;
 import com.cs.ge.services.CategorieService;
+import jakarta.activation.FileTypeMap;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.activation.FileTypeMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

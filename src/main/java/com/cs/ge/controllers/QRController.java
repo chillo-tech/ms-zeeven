@@ -1,7 +1,7 @@
 package com.cs.ge.controllers;
 
 import com.cs.ge.entites.QRCodeEntity;
-import com.cs.ge.services.QRCodeGeneratorService;
+import com.cs.ge.services.qrcode.QRCodeGeneratorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +34,8 @@ public class QRController {
 
     @GetMapping(value = "/{publicId}")
     public ResponseEntity<Object> get(@PathVariable final String publicId) throws IOException {
-        String url = this.qrCodeGeneratorService.content(publicId);
-        RedirectView redirectView = new RedirectView();
+        final String url = this.qrCodeGeneratorService.content(publicId);
+        final RedirectView redirectView = new RedirectView();
         redirectView.setUrl(url);
         return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(URI.create(url)).build();
     }

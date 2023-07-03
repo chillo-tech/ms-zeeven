@@ -2,7 +2,6 @@ package com.cs.ge.repositories;
 
 
 import com.cs.ge.entites.QRCodeEntity;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;

@@ -1,6 +1,10 @@
 app:
   host: http://localhost:3000
 spring:
+  rabbitmq:
+    virtual-host: /
+    template:
+       exchange: tech.messages.exchangelocal
   data:
     mongodb:
       host: localhost
@@ -12,11 +16,18 @@ spring:
       port: 25
       accountLink: ${app.host}/activer-mon-compte?code=
 providers:
+    front:
+        host: http://localhost:3000
     notifications:
         host: http://localhost:9092
+    stripe:
+        key:
+            public: pk_test_51NNd5WJvlFvDQObkKQS5AfMHOIGt1IVkTTwAdVRKBifcoUWjAJkDvNg7uUNLmrwMRVhaVMO0GA7vxN9R2K2wvDKF00lOaAoI4l
+            secret: sk_test_51NNd5WJvlFvDQObkwuxh22npjD9OyspeAWJRDqWtZ0IbktaJ17Ud1nQUGhFMOcIxYxs4iIn0unO6JFL3CUAidS9V00UNez0vKp
+            webhooksecret: whsec_5e6a034ebb9a4180950842f3c76b6c8a4d0287308fb25d38b3f6ffa76fe87e2e
 resources:
   images:
-    host: https://zeeven.fr
+    host: https://344f-2a01-cb08-811f-5f00-7508-1507-e314-7da2.eu.ngrok.io
     root: /Users/chillo/projets/zeeven
     folder: images
 

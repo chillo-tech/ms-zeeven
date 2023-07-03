@@ -47,18 +47,18 @@ public class ZeevenSecurityConfiguration {
     private final String tokenHeader;
 
     public ZeevenSecurityConfiguration(
-            @Value("${jwt.header}") String tokenHeader,
-            ProfileService profileService, TokenService tokenService) {
+            @Value("${jwt.header}") final String tokenHeader,
+            final ProfileService profileService, final TokenService tokenService) {
         this.profileService = profileService;
         this.tokenHeader = tokenHeader;
         this.tokenService = tokenService;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
+    public AuthenticationManager authenticationManager(final HttpSecurity httpSecurity) throws Exception {
+        final AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.authenticationProvider(new ApiKeyAuthenticationProvider(this.passwordRules(), this.profileService));
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        final DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setUserDetailsService(this.profileService);
         daoAuthenticationProvider.setPasswordEncoder(this.bCryptPasswordEncoder());
         authenticationManagerBuilder.authenticationProvider(daoAuthenticationProvider);
@@ -66,7 +66,7 @@ public class ZeevenSecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain securityFilterChain(final HttpSecurity httpSecurity) throws Exception {
         final JwtAuthorizationTokenFilter authenticationTokenFilter = new JwtAuthorizationTokenFilter(this.profileService, this.tokenService, this.tokenHeader);
 
         return httpSecurity
@@ -74,16 +74,17 @@ public class ZeevenSecurityConfiguration {
                 .headers(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 //.addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeRequests(
+                .authorizeHttpRequests(
                         auth ->
-                                auth.mvcMatchers(POST, "/signin").permitAll()
-                                        .mvcMatchers(POST, "/signup").permitAll()
-                                        .mvcMatchers(POST, "/activation").permitAll()
-                                        .mvcMatchers(GET, "/ticket").permitAll()
-                                        .mvcMatchers(POST, "/qr-code").permitAll()
-                                        .mvcMatchers(GET, "/qr-code/**").permitAll()
-                                        .mvcMatchers("/webhooks").permitAll()
-                                        .mvcMatchers(POST, "/activation").permitAll()
+                                auth.requestMatchers(POST, "/signin").permitAll()
+                                        .requestMatchers(POST, "/signup").permitAll()
+                                        .requestMatchers(POST, "/activation").permitAll()
+                                        .requestMatchers(GET, "/ticket").permitAll()
+                                        .requestMatchers(POST, "/qr-code").permitAll()
+                                        .requestMatchers(GET, "/qr-code/**").permitAll()
+                                        .requestMatchers("/webhooks").permitAll()
+                                        .requestMatchers(POST, "/webhooks/stripe").permitAll()
+                                        .requestMatchers(POST, "/activation").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
@@ -101,7 +102,7 @@ public class ZeevenSecurityConfiguration {
 
     @Bean
     public List<Rule> passwordRules() {
-        List<Rule> rules = new ArrayList<>();
+        final List<Rule> rules = new ArrayList<>();
         //Rule 1: Password length should be in between
         //40 and 52 characters
         rules.add(new LengthRule(40, 52));
@@ -119,11 +120,11 @@ public class ZeevenSecurityConfiguration {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        final CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("*");
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

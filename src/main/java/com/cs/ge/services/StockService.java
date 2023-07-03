@@ -5,6 +5,7 @@ import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.StockType;
 import com.cs.ge.repositories.StockRepository;
+import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -42,12 +43,17 @@ public class StockService {
         return this.stockRepository.saveAll(stocks);
     }
 
-    public Stock update(String user, Channel channel, Integer size, StockType type) {
+    public Stock update(String user, Channel channel, String label, String description, Integer size, StockType type) {
+        String defaultLabel = "default";
+        if (Strings.isNullOrEmpty(label)) {
+            label = defaultLabel;
+        }
+       
         return this.stockRepository.save(new Stock(
                 null,
                 user,
-                "default",
-                "",
+                label,
+                description,
                 channel,
                 type,
                 size,

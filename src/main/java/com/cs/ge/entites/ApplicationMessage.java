@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
 import java.util.List;
 
 @AllArgsConstructor
@@ -15,11 +14,7 @@ import java.util.List;
 public class ApplicationMessage {
     private String id;
     private String text;
-    private Date date;
-    private String time;
-    private String timezone;
-    private boolean isSent;
-
     private List<String> informations;
+    private List<ApplicationMessageSchedule> schedules;
 
 }

@@ -2,6 +2,8 @@ package com.cs.ge.controllers.advice;
 
 import com.cs.ge.dto.ExceptionData;
 import com.cs.ge.exception.ApplicationException;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.exception.StripeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -28,7 +30,19 @@ public class ApplicationExceptionHandler {
 
     }
 
-    
+    @ExceptionHandler({StripeException.class, SignatureVerificationException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ExceptionData handleStripeException(final StripeException stripeException) {
+        log.error("Erreur", stripeException);
+        final ExceptionData exceptionData = new ExceptionData();
+        exceptionData.setTimestamp(LocalDateTime.now());
+        exceptionData.setMessage("Une erreur est survenue lors de votre paiment veuilez nous contacter");
+        return exceptionData;
+
+    }
+
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody

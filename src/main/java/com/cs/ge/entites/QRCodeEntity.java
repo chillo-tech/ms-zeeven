@@ -9,6 +9,9 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 @Document("QR_CODE")
@@ -20,8 +23,15 @@ public class QRCodeEntity {
     @Id
     @JsonProperty(access = WRITE_ONLY)
     private String id;
+    private boolean enabled = true;
     private QRCodeType type;
-    private String text;
+    private Map<String, String> data;
+    private Map<String, String> attributes;
     private String publicId;
+    private String name;
     private String finalContent;
+    private String tempContent;
+    private String user;
+    private LocalDateTime creation = LocalDateTime.now();
+    private LocalDateTime update;
 }

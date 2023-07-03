@@ -5,10 +5,10 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
+import jakarta.mail.MessagingException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -37,7 +37,7 @@ public class UtilisateursService {
             final VerificationService verificationService,
             final PasswordEncoder passwordEncoder,
             final StockService stockService,
-            ASynchroniousNotifications aSynchroniousNotifications) {
+            final ASynchroniousNotifications aSynchroniousNotifications) {
         this.utilisateurRepository = utilisateurRepository;
         this.verificationService = verificationService;
         this.passwordEncoder = passwordEncoder;
@@ -65,8 +65,8 @@ public class UtilisateursService {
         this.stockService.generateDefaultStocks(userAccount.getId());
         this.asynchroniousNotifications.sendEmail(
                 userAccount,
-                new HashMap<String, String>() {{
-                    this.put("stock", "" + DEFAULT_STOCK_SIZE);
+                new HashMap<String, List<String>>() {{
+                    this.put("stock", List.of("" + DEFAULT_STOCK_SIZE));
                 }},
 
                 "ZEEVEN",
@@ -82,7 +82,7 @@ public class UtilisateursService {
         }
     }
 
-    public UserAccount readOrSave(UserAccount userAccount) {
+    public UserAccount readOrSave(final UserAccount userAccount) {
         final Optional<UserAccount> exist = this.utilisateurRepository.findByPhoneOrMail(userAccount.getEmail(), userAccount.getPhoneIndex(), userAccount.getPhone());
         return exist.orElseGet(() -> this.utilisateurRepository.save(userAccount));
     }
@@ -141,8 +141,8 @@ public class UtilisateursService {
         if (userAccount.getEmail() != null) {
             this.asynchroniousNotifications.sendEmail(
                     userAccount,
-                    new HashMap<String, String>() {{
-                        this.put("code", verification.getCode());
+                    new HashMap<String, List<String>>() {{
+                        this.put("code", List.of(verification.getCode()));
                     }},
 
                     "ZEEVEN",
@@ -151,8 +151,8 @@ public class UtilisateursService {
             );
             this.asynchroniousNotifications.sendEmail(
                     userAccount,
-                    new HashMap<String, String>() {{
-                        this.put("code", verification.getCode());
+                    new HashMap<String, List<String>>() {{
+                        this.put("code", List.of(verification.getCode()));
                     }},
 
                     "ZEEVEN",

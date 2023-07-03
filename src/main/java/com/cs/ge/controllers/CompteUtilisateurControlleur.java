@@ -6,6 +6,7 @@ import com.cs.ge.entites.UserAccount;
 import com.cs.ge.services.ProfileService;
 import com.cs.ge.services.UtilisateursService;
 import com.cs.ge.services.security.TokenService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.mail.MessagingException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -38,7 +38,7 @@ public class CompteUtilisateurControlleur {
 
     @PostMapping(value = "signin", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody final JwtRequest authenticationRequest) throws Exception {
-        Authentication authentication = this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
+        final Authentication authentication = this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
         final String token = this.tokenService.generateToken(authentication);
         return ResponseEntity.ok(new JwtResponse(token));
     }
@@ -48,7 +48,7 @@ public class CompteUtilisateurControlleur {
     }
 
     @PostMapping(path = "signup", consumes = APPLICATION_JSON_VALUE)
-    public void inscription(@RequestBody final UserAccount userAccount) throws MessagingException, IOException {
+    public void inscription(@RequestBody final UserAccount userAccount) throws IOException, MessagingException {
         this.utilisateursService.inscription(userAccount);
     }
 
@@ -66,7 +66,7 @@ public class CompteUtilisateurControlleur {
 
     @ResponseBody
     @PatchMapping(path = "profile/{id}")
-    public void getAuthenticateUser(@PathVariable String id, @RequestBody final UserAccount userAccount) {
+    public void getAuthenticateUser(@PathVariable final String id, @RequestBody final UserAccount userAccount) {
 
 
         this.utilisateursService.updateUtilisateur(id, userAccount);
