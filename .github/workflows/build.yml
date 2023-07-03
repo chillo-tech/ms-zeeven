@@ -110,6 +110,7 @@ jobs:
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker rmi -f simachille/ms-zeeven:${{ github.sha }}
+          rm -f /opt/applications/zeeven/ms-zeeven/.env
           echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
@@ -118,3 +119,4 @@ jobs:
           echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml pull
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
+          rm -f /opt/applications/zeeven/ms-zeeven/.env
