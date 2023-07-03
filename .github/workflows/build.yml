@@ -110,11 +110,11 @@ jobs:
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
           docker rmi -f simachille/ms-zeeven:${{ github.sha }}
-          echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} > /opt/applications/zeeven/ms-zeeven/.env
-          echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} > /opt/applications/zeeven/ms-zeeven/.env
-          echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} > /opt/applications/zeeven/ms-zeeven/.env
-          echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} > /opt/applications/zeeven/ms-zeeven/.env
-          echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} > /opt/applications/zeeven/ms-zeeven/.env
-          echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} > /opt/applications/zeeven/ms-zeeven/.env
+          echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml pull
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
