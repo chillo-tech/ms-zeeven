@@ -16,6 +16,8 @@ resources:
     host: https://zeeven.fr
     root: /var/www
 
+org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+
 
 
 

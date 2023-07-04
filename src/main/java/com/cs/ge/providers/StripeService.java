@@ -13,10 +13,12 @@ import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
+import com.stripe.model.WebhookEndpoint;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.PriceCreateParams;
 import com.stripe.param.ProductCreateParams;
+import com.stripe.param.WebhookEndpointCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,6 +40,8 @@ public class StripeService {
 
     private final String webhooksecretToken;
     private final String front;
+    private final String appHost;
+    private final String contextPath;
     private final ProfileService profileService;
     private final StockService stockService;
     private final PaymentRepository paymentRepository;
@@ -44,15 +49,22 @@ public class StripeService {
 
     public StripeService(
             @Value("${providers.stripe.key.secret}") final String secretToken,
+            @Value("${app.host}") final String appHost,
             @Value("${providers.stripe.key.webhooksecret}") final String webhooksecretToken,
             @Value("${providers.front.host}") final String front,
-            final ProfileService profileService, final StockService stockService, final PaymentRepository paymentRepository, final ASynchroniousNotifications aSynchroniousNotifications) {
+            @Value("${server.servlet.context-path}") final String contextPath,
+            final ProfileService profileService,
+            final StockService stockService,
+            final PaymentRepository paymentRepository,
+            final ASynchroniousNotifications aSynchroniousNotifications
+    ) {
+        Stripe.apiKey = secretToken;
+        this.appHost = appHost;
+        this.contextPath = contextPath;
         this.profileService = profileService;
         this.stockService = stockService;
         this.paymentRepository = paymentRepository;
         this.aSynchroniousNotifications = aSynchroniousNotifications;
-        Stripe.apiKey = secretToken;
-
         this.webhooksecretToken = webhooksecretToken;
         this.front = front;
     }
@@ -72,6 +84,19 @@ public class StripeService {
     }
 
     private Map<String, String> getPaymentLink(final ApplicationPayment payment, final String email) throws StripeException {
+
+        final WebhookEndpointCreateParams webhooksparams =
+                WebhookEndpointCreateParams.builder()
+                        .setUrl(String.format("%s%s/webhooks/stripe", this.appHost, this.contextPath))
+                        .addAllEnabledEvent(Arrays.asList(
+                                WebhookEndpointCreateParams.EnabledEvent.CHARGE__FAILED,
+                                WebhookEndpointCreateParams.EnabledEvent.CHARGE__SUCCEEDED))
+                        .build();
+
+        final WebhookEndpoint webhookEndpoint = WebhookEndpoint.create(webhooksparams);
+
+        log.info("Stripe webhook {}", webhookEndpoint.getUrl());
+
         SessionCreateParams.Mode mode = SessionCreateParams.Mode.PAYMENT;
         if (Objects.equals("BILLING", payment.getType())) {
             mode = SessionCreateParams.Mode.SUBSCRIPTION;
