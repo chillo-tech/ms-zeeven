@@ -7,7 +7,6 @@ services:
     image: IMAGE_NAME
     pull_policy: always
     # Enables the web UI and tells Traefik to listen to docker
-   
     restart: always
     ports:
       # The HTTP port
