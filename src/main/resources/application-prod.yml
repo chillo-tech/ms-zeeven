@@ -2,7 +2,7 @@ app:
   host: http://api.zeeven.chillo.fr
 spring:
   rabbitmq:
-    host: rabbitmq-1
+    host: 212.83.180.65
   data:
     mongodb:
       host: db-zeeven
