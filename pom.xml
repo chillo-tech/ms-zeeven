@@ -178,6 +178,18 @@
                 </excludes>
             </configuration>
         </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>2.0.1</version>
+            <configuration>
+              <goals>install</goals>
+              <providerImplementations>
+                <git>git</git>
+              </providerImplementations>
+            </configuration>
+            
+          </plugin>
         </plugins>
     </build>
     <repositories>
