@@ -21,6 +21,7 @@ services:
       - "providers.stripe.key.public=${STRIPE_PUBLIC_KEY}"
       - "providers.stripe.key.secret=${STRIPE_SECRET_KEY}"
       - "providers.stripe.key.webhooksecret=${STRIPE_WEBHOOKSECRET_KEY}"
+      - "providers.iplocation.key=${PROD_IPLOCATION_API_KEY}"
 
     labels:
       - "traefik.enable=true"

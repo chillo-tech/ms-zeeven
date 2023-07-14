@@ -415,7 +415,7 @@ public class EventService {
     }
 
     private void handleEvent(final Event event) {
-        log.info("Envoi des messages pour l'evenement {}", event.getName());
+        log.info("Gestion des messages pour l'evenement {}", event.getName());
 
         final List<Guest> eventGuests = event.getGuests();
         final List<Channel> eventChannels = event.getChannels();
@@ -432,8 +432,6 @@ public class EventService {
             if (isDisabled) {
                 eventStatus = DISABLED;
             }
-            log.info("Envoi des {} messages pour l'evenement {}", messagesToSend.size(), event.getName());
-            log.info("Ignore des {} messages pour l'evenement {}", messagesToKeep.size(), event.getName());
             event.setStatus(eventStatus);
             if (messagesToSend.size() > 0) {
                 final List<ApplicationMessage> sentMessages = this.sendMessages(event, messagesToSend, channelsToHandle);
@@ -458,19 +456,7 @@ public class EventService {
 
     private List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
         return eventChannels
-                .parallelStream().filter(channel -> {
-                    if (channelsStatistics.get(channel) >= eventGuests.size()) {
-                        log.info(
-                                "le stock {} de {} est suffisant pour envoyer des messages à {} personnes sur {} ",
-                                channelsStatistics.get(channel), email, eventGuests.size(), channel);
-                        return true;
-                    } else {
-                        log.warn(
-                                "le stock {} de {} est insuffisant pour envoyer des messages à {} personnes sur {} ",
-                                channelsStatistics.get(channel), email, eventGuests.size(), channel);
-                        return false;
-                    }
-                }).collect(Collectors.toList());
+                .parallelStream().filter(channel -> channelsStatistics.get(channel) >= eventGuests.size()).collect(Collectors.toList());
     }
 
     private List<ApplicationMessage> sendMessages(final Event event, final List<ApplicationMessage> messagesTosend, final List<Channel> channelsToHandle) {
@@ -527,7 +513,6 @@ public class EventService {
         if (!send) {
             send = firstScheduleToHandleDate.equals(now);
         }
-        log.info("result {} now {} messageDate {}", send, now, firstScheduleToHandleDate);
         return send;
     }
 
@@ -535,11 +520,7 @@ public class EventService {
         final Event event = this.read(id);
         final List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
         return statistics.stream()
-                .filter(statistic -> {
-                    final boolean exist = List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString());
-                    log.info("{} keep {}", statistic.get("status"), exist);
-                    return exist;
-                })
+                .filter(statistic -> List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString()))
                 .map(entry -> new HashMap<String, String>() {
                     {
                         this.put("chanel", entry.get("channel"));

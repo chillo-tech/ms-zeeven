@@ -62,6 +62,9 @@ jwt:
       path: '/login'
       refresh: '/refresh'
 providers:
+  iplocation:
+    host: https://api.ipgeolocation.io
+    base-path: ipgeo
   notifications:
     host: ms-notifications:27192
     base-path: api/v1

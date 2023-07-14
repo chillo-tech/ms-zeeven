@@ -1,4 +1,7 @@
 on:
+  push:
+    branches:
+      - feature/*
   workflow_dispatch:
 
 env:
@@ -14,19 +17,20 @@ jobs:
     name: Create folder
     runs-on: ubuntu-latest
     steps:
-      - name: Create folder
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
-          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
-          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
-          script: |
-            sudo mkdir -p /opt/applications/zeeven/ms-zeeven
-            sudo chmod ugo+rwx /opt/applications/zeeven/ms-zeeven
+    - name: Create folder
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.RECETTE_APPLICATIONS_HOST }}
+        port: ${{ secrets.RECETTE_APPLICATIONS_PORT }}
+        username: ${{ secrets.RECETTE_APPLICATIONS_USERNAME }}
+        password: ${{ secrets.RECETTE_APPLICATIONS_PASSWPRD }}
+        key: ${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}
+        script: |
+          sudo mkdir -p /opt/applications/zeeven/ms-zeeven
+          sudo chmod ugo+rwx /opt/applications/zeeven/ms-zeeven
 
   copy-configs:
-    name: 'copy configs'
+    name: "copy configs"
     runs-on: ubuntu-latest
     needs: create-folder
     steps:
@@ -39,11 +43,12 @@ jobs:
       - name: copy file via ssh password
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
-          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
-          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
-          source: 'docker-compose.yml'
+          host: ${{ secrets.RECETTE_APPLICATIONS_HOST }}
+          port: ${{ secrets.RECETTE_APPLICATIONS_PORT }}
+          username: ${{ secrets.RECETTE_APPLICATIONS_USERNAME }}
+          password: ${{ secrets.RECETTE_APPLICATIONS_PASSWPRD }}
+          key: ${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
           target: '/opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}'
   generate-tags:
     runs-on: ubuntu-latest
@@ -57,7 +62,6 @@ jobs:
           cat pom.xml
   dockerize:
     runs-on: ubuntu-latest
-    needs: [generate-tags]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -95,29 +99,31 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   run-container:
-    name: 'Run container'
+    name: "Run container"
     runs-on: ubuntu-latest
     needs: [dockerize, copy-configs]
     steps:
-      - name: Run container
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
-          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
-          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+    - name: Run container
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.RECETTE_APPLICATIONS_HOST }}
+        port: ${{ secrets.RECETTE_APPLICATIONS_PORT }}
+        username: ${{ secrets.RECETTE_APPLICATIONS_USERNAME }}
+        password: ${{ secrets.RECETTE_APPLICATIONS_PASSWPRD }}
+        key: ${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}
 
-          script: |
-            docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
-            docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
-            docker rmi -f simachille/ms-zeeven:${{ github.sha }}
-            rm -f /opt/applications/zeeven/ms-zeeven/.env
-            echo WHATSAPP_TOKEN=${{ secrets.PROD_WHATSAPP_TOKEN }} >> /opt/applications/zeeven/ms-zeeven/.env
-            echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
-            echo ZEEVEN_HOST=${{ secrets.PROD_ZEEVEN_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
-            echo STRIPE_PUBLIC_KEY=${{ secrets.PROD_STRIPE_PUBLIC_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
-            echo STRIPE_SECRET_KEY=${{ secrets.PROD_STRIPE_SECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
-            echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
-            docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml pull
-            docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
-            rm -f /opt/applications/zeeven/ms-zeeven/.env
+        script: |
+          docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml rm -f
+          docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml stop
+          docker rmi -f simachille/ms-zeeven:${{ github.sha }}
+          rm -f /opt/applications/zeeven/ms-zeeven/.env
+          echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo PROD_IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml pull
+          docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
+          rm -f /opt/applications/zeeven/ms-zeeven/.env

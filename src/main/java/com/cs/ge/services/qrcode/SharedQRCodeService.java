@@ -4,21 +4,27 @@ import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.utils.UtilitaireService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @AllArgsConstructor
 public abstract class SharedQRCodeService {
     private final UtilitaireService utilitaireService;
+    private final Environment environment;
 
     protected Map<String, Object> qrCodeParamsFromType(final QRCodeEntity qrCodeEntity, final String imagesHost, final String imagesRootfolder, final String imagesFolder) {
         final Map<String, Object> params = new HashMap<>();
         final String slug = this.slugFromType(qrCodeEntity);
-
+        String path = "go-to";
+        if (Objects.equals(this.environment.getActiveProfiles()[0], "local")) {
+            path = "qr-code";
+        }
         params.put("publicId", String.format("%s", slug));
-        final String tempContent = String.format("%s/go-to/%s", imagesHost, slug);
+        final String tempContent = String.format("%s/%s/%s", imagesHost, path, slug);
         final String location = String.format("%s/%s/qr-code/%s.jpg", imagesRootfolder, imagesFolder, slug);
         params.put("location", location);
         params.put("name", slug.replaceAll("-", " "));

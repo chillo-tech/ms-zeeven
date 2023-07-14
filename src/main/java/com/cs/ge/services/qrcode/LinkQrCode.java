@@ -3,6 +3,7 @@ package com.cs.ge.services.qrcode;
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.utils.UtilitaireService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -11,8 +12,8 @@ import java.util.Map;
 @Component
 public class LinkQrCode extends SharedQRCodeService {
 
-    public LinkQrCode(final UtilitaireService utilitaireService) {
-        super(utilitaireService);
+    public LinkQrCode(final UtilitaireService utilitaireService, final Environment environment) {
+        super(utilitaireService, environment);
     }
 
     @Override

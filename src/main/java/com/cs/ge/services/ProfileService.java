@@ -23,22 +23,21 @@ public class ProfileService implements UserDetailsService {
         return this.loadUser(username).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 
-    public UserAccount findBySecretsServiceId(String serviceId) throws UsernameNotFoundException {
+    public UserAccount findBySecretsServiceId(final String serviceId) throws UsernameNotFoundException {
         return this.utilisateurRepository.findBySecretsServiceId(serviceId).orElseThrow(() -> new UsernameNotFoundException("User not found with serviceId: " + serviceId));
     }
 
     public UserAccount getAuthenticateUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return this.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
     }
 
-    private Optional<UserAccount> loadUser(final String username) {
-
+    public Optional<UserAccount> loadUser(final String username) {
         Optional<UserAccount> optionalProfile = Optional.empty();
         if (username != null && username.indexOf('@') > -1) {
             optionalProfile = this.utilisateurRepository.findByEmail(username);
         }
-        
+
         if (optionalProfile.isEmpty()) {
             optionalProfile = this.utilisateurRepository.findByPhone(username);
         }

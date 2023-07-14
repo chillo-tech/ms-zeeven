@@ -3,6 +3,7 @@ package com.cs.ge.services.qrcode;
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.utils.UtilitaireService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -26,8 +27,8 @@ public class VcardQrCode extends SharedQRCodeService {
                     "URL:%s\r\n" +
                     "END:VCARD";
 
-    public VcardQrCode(final UtilitaireService utilitaireService) {
-        super(utilitaireService);
+    public VcardQrCode(final UtilitaireService utilitaireService, final Environment environment) {
+        super(utilitaireService, environment);
     }
 
     @Override

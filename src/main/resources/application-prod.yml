@@ -13,7 +13,7 @@ spring:
 
 resources:
   images:
-    host: https://app.zeeven.fr
+    host: https://zeeven.fr
     root: /var/www
 
 org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG

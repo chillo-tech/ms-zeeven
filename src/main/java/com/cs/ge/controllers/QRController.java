@@ -1,6 +1,7 @@
 package com.cs.ge.controllers;
 
 import com.cs.ge.entites.QRCodeEntity;
+import com.cs.ge.entites.QRCodeStatistic;
 import com.cs.ge.services.qrcode.QRCodeGeneratorService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,9 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
@@ -36,16 +39,27 @@ public class QRController {
         return this.qrCodeGeneratorService.generate(qrCodeEntity);
     }
 
+    @GetMapping
+    public List<QRCodeEntity> search() throws IOException {
+        return this.qrCodeGeneratorService.search();
+    }
+
     @GetMapping(value = "/{publicId}")
     public ResponseEntity<Object> get(@PathVariable final String publicId, @RequestHeader final Map<String, String> headers) throws IOException {
-        headers.forEach((key, value) -> {
-            log.info(String.format("Header '%s' = %s", key, value));
-        });
-
-        final String url = this.qrCodeGeneratorService.content(publicId);
+        final String url = this.qrCodeGeneratorService.content(publicId, headers);
         final RedirectView redirectView = new RedirectView();
         redirectView.setUrl(url);
         return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(URI.create(url)).build();
+    }
+
+    @GetMapping(value = "/private/{id}")
+    public QRCodeEntity userQrCode(@PathVariable final String id) {
+        return this.qrCodeGeneratorService.read(id);
+    }
+
+    @GetMapping(value = "/private/{id}/statistics")
+    public Stream<QRCodeStatistic> statistics(@PathVariable final String id) {
+        return this.qrCodeGeneratorService.statistics(id);
     }
 
 }
