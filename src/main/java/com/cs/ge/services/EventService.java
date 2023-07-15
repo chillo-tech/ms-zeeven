@@ -415,7 +415,6 @@ public class EventService {
     }
 
     private void handleEvent(final Event event) {
-        log.info("Gestion des messages pour l'evenement {}", event.getName());
 
         final List<Guest> eventGuests = event.getGuests();
         final List<Channel> eventChannels = event.getChannels();
