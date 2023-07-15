@@ -149,16 +149,6 @@ public class UtilisateursService {
                     "activation.html",
                     "Activez votre compte"
             );
-            this.asynchroniousNotifications.sendEmail(
-                    userAccount,
-                    new HashMap<String, List<String>>() {{
-                        this.put("code", List.of(verification.getCode()));
-                    }},
-
-                    "ZEEVEN",
-                    "new-account.html",
-                    "Nouveau compte"
-            );
         }
     }
 
