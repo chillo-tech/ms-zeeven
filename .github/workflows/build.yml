@@ -117,8 +117,8 @@ jobs:
           echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> /opt/applications/zeeven/ms-zeeven/.env
-          echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
-          echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_PUBLIC_KEY=${{ secrets.PROD_STRIPE_PUBLIC_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+          echo STRIPE_SECRET_KEY=${{ secrets.PROD_STRIPE_SECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo PROD_IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo PROD_BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
