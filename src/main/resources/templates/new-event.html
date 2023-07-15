@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Responsive & Flat - Un kit pour newsletters gratuit et libre</title>
+    <style type="text/css" media="screen">
+
+        .ExternalClass * {
+            line-height: 100%
+        }
+
+        /* Début style responsive (via media queries) */
+
+        @media only screen and (max-width: 480px) {
+            *[id=email-penrose-conteneur] {
+                width: 100% !important;
+            }
+
+            table[class=resp-full-table] {
+                width: 100% !important;
+                clear: both;
+            }
+
+            td[class=resp-full-td] {
+                width: 100% !important;
+                clear: both;
+            }
+
+            img[class="email-penrose-img-header"] {
+                width: 100% !important;
+                max-width: 340px !important;
+            }
+        }
+
+        /* Fin style responsive */
+
+    </style>
+
+</head>
+<body style="background-color:#ecf0f1">
+<div align="center" style="background-color:#ecf0f1;">
+
+    <!-- Début en-tête -->
+
+    <table id="email-penrose-conteneur" width="660" align="center" style="padding:20px 0px;" border="0" cellspacing="0"
+           cellpadding="0">
+        <tr>
+            <td>
+                <table width="660" class="resp-full-table" align="center" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td width="50%" style="text-align:left;">
+                            <a href="#"
+                               style="font-weight: bold !important; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">ZEEVEN</a>
+                        </td>
+                        <td width="50%" style="text-align:right;">
+                            <table align="right" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="padding-left:10px;">
+                                        <a th:href="@{${facebookLink}}"
+                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">Facebook</a>
+                                    </td>
+                                    <td style="padding-left:10px;">
+                                        <a th:href="@{${linkedinLink}}"
+                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">LinkedIn</a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{${instagramLink}}"
+                                           style="font-weight: bold !important; padding-left:5px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #2A3F54 !important; text-decoration: none;">Instagram</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Fin en-tête -->
+
+    <table id="email-penrose-conteneur" width="660" align="center"
+           style="border-right:1px solid #e2e8ea; border-bottom:1px solid #e2e8ea; border-left:1px solid #e2e8ea; background-color:#2A3F54;"
+           border="0" cellspacing="0" cellpadding="0">
+
+        <!-- Début bloc "mise en avant" -->
+
+        <!-- Fin bloc "mise en avant" -->
+        <!-- Début article 1 -->
+
+        <tr>
+            <td style="border-bottom: 1px solid #e2e8ea">
+                <table width="660" class="resp-full-table" align="center" border="0" cellspacing="0" cellpadding="0"
+                       style="padding:20px;">
+                    <tr>
+                        <td width="100%">
+
+                            <table class="resp-full-table"
+                                   style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                                   border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">Bonjour
+                                             <span style="text-transform: capitalize"
+                                                   th:text="${firstName}">${firstName}</span>&nbsp;
+                                            <span style="text-transform: uppercase"
+                                                  th:text="${lastName}">${lastName}</span>,
+                                        </span>
+                                        <br/><br/>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #f4f4f4">
+                                               Votre annonce a bien été créée.
+                                        </span><br/>
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color: #f4f4f4">
+                                              Pour ajouter des invités,
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
+                                        <br/>
+                                        <h5 style="font-family: HelveticaNeue-Light,Helvetica Neue Light,Helvetica Neue,Helvetica,Arial,Lucida Grande,sans-serif;line-height:1.1;color:#000;font-weight:900;font-size:17px;margin:0 0 15px;padding:0">
+                                            <a th:href="@{${activationLink}}"
+                                               style="font-family:Helvetica Neue,Helvetica,Helvetica,Arial,sans-serif;color:#17a2b8;margin:0;padding:0"
+                                               target="_blank"
+                                            >
+                                               <span
+                                                       th:text="${activationLabel}">Connectez vous à votre compte</span>&nbsp;
+                                            </a>
+                                        </h5>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">Nous vous remercions pour votre confiance,</span>
+                                        <br/>
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">Cordialement,</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="100%" class="resp-full-td" valign="top" style="text-align : justify;">
+                                        <span style="font-size:16px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#f4f4f4">
+                                            L' équipe <span style="color: #ffffff">ZEEVEN</span>
+                                        </span>
+                                        <br/><br/>
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Fin article 1 -->
+
+
+    </table>
+
+    <!-- Début footer -->
+
+    <table id="email-penrose-conteneur" width="600" align="center" style="padding:20px 0px;" border="0" cellspacing="0"
+           cellpadding="0">
+        <tr>
+            <td>
+                <table width="600" class="resp-full-table" align="center" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td width="100%" class="resp-full-td" style="text-align: center;">
+                            <span style="font-size:12px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#aeb2b3; padding-top: 50px">
+                            Cet email vous a été transmis par le site  <a th:href="@{${applicationLink}}"
+
+                                                                          style="font-size:12px; font-family:'Helvetica Neue', helvetica, arial, sans-serif; color:#aeb2b3; padding-top: 50px; text-decoration: underline">zeeven.com</a>.
+                            </span>
+
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Fin footer -->
+
+</div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+app:
+  host: https://api.zeeven.chillo.fr
+spring:
+  rabbitmq:
+    host: 192.168.1.101
+  data:
+    mongodb:
+      host: db-zeeven
+  mail:
+      #host:  mails.dev
+      accountLink: ${app.host}/activer-mon-compte?code=
+
+
+resources:
+  images:
+    host: https://zeeven.fr
+    root: /var/www
+
+org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+
+
+
+
+

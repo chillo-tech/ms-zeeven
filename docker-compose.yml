@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ms-zeeven:
+    container_name: ms-zeeven
+    # The official v2 Traefik docker image
+    image: IMAGE_NAME
+    pull_policy: always
+    # Enables the web UI and tells Traefik to listen to docker
+    restart: always
+    ports:
+      # The HTTP port
+      - "8083:8083"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=prod"
+      - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
+      - "providers.whatsapp.token=${WHATSAPP_TOKEN}"
+      - "providers.front.host=${ZEEVEN_HOST}"
+      - "providers.notifications.host=${NOTIFICATIONS_HOST}"
+      - "providers.stripe.key.public=${STRIPE_PUBLIC_KEY}"
+      - "providers.stripe.key.secret=${STRIPE_SECRET_KEY}"
+      - "providers.stripe.key.webhooksecret=${STRIPE_WEBHOOKSECRET_KEY}"
+      - "providers.iplocation.key=${PROD_IPLOCATION_API_KEY}"
+      - "providers.backoffice.token=${PROD_BACKOFFICE_API_KEY}"
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ms-zeeven.rule=Headers(`X-Host`, `api.zeeven.chillo.fr`)"
+      - "traefik.docker.network=applications-network"
+      - "traefik.http.routers.service.middlewares=serviceheaders"
+      - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*" 
+
+    volumes:
+      - "/var/www/:/var/www/"
+    networks:
+      - applications-network
+networks:
+  applications-network:
+    external: true
+    name: applications-network
