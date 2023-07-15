@@ -451,12 +451,19 @@ public class EventService {
 
     private void updateStocks(final UserAccount author, final List<Channel> channelsToHandle, final int consumed) {
         channelsToHandle.parallelStream()
-                .forEach(channel -> this.stockService.update(author.getId(), channel, null, null, consumed, StockType.DEBIT));
+                .forEach(channel -> this.stockService
+                        .update(author.getId(), null, null, consumed, channel, StockType.DEBIT));
     }
 
     private List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
         return eventChannels
-                .parallelStream().filter(channel -> channelsStatistics.get(channel) >= eventGuests.size()).collect(Collectors.toList());
+                .parallelStream().filter(channel -> {
+                    if (channelsStatistics != null && channelsStatistics.size() > 0) {
+                        return channelsStatistics.get(channel) != null && channelsStatistics.get(channel) >= eventGuests.size();
+                    } else {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
     }
 
     private List<ApplicationMessage> sendMessages(final Event event, final List<ApplicationMessage> messagesTosend, final List<Channel> channelsToHandle) {

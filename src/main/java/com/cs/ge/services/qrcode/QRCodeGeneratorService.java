@@ -6,7 +6,7 @@ import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.entites.QRCodeStatistic;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.QRCodeType;
-import com.cs.ge.feign.IPGeolocation;
+import com.cs.ge.feign.FeignIPGeolocation;
 import com.cs.ge.repositories.QRCodeRepository;
 import com.cs.ge.repositories.QRCodeStatisticRepository;
 import com.cs.ge.services.ProfileService;
@@ -62,7 +62,7 @@ public class QRCodeGeneratorService {
     private final LinkQrCode linkQrCode;
     private final WIFIQrCode wifiQrCode;
     private final VcardQrCode vcardQrCode;
-    private final IPGeolocation ipGeolocation;
+    private final FeignIPGeolocation ipGeolocation;
 
     public QRCodeGeneratorService(
             @Value("${resources.images.folder}") final String imagesFolder,
@@ -74,7 +74,7 @@ public class QRCodeGeneratorService {
             final LinkQrCode linkQrCode,
             final WIFIQrCode wifiQrCode,
             final VcardQrCode vcardQrCode,
-            final IPGeolocation ipGeolocation
+            final FeignIPGeolocation ipGeolocation
     ) {
         this.profileService = profileService;
         this.qrCodeRepository = qrCodeRepository;

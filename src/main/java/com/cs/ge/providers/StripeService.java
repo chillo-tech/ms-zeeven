@@ -25,6 +25,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,7 @@ public class StripeService {
     private final StockService stockService;
     private final PaymentRepository paymentRepository;
     private final ASynchroniousNotifications aSynchroniousNotifications;
+    private final Environment environment;
 
     public StripeService(
             @Value("${providers.stripe.key.secret}") final String secretToken,
@@ -56,8 +58,9 @@ public class StripeService {
             final ProfileService profileService,
             final StockService stockService,
             final PaymentRepository paymentRepository,
-            final ASynchroniousNotifications aSynchroniousNotifications
-    ) {
+            final ASynchroniousNotifications aSynchroniousNotifications,
+            final Environment environment) {
+        this.environment = environment;
         Stripe.apiKey = secretToken;
         this.appHost = appHost;
         this.contextPath = contextPath;
@@ -85,17 +88,18 @@ public class StripeService {
 
     private Map<String, String> getPaymentLink(final ApplicationPayment payment, final String email) throws StripeException {
 
-        final WebhookEndpointCreateParams webhooksparams =
-                WebhookEndpointCreateParams.builder()
-                        .setUrl(String.format("%s%s/webhooks/stripe", this.appHost, this.contextPath))
-                        .addAllEnabledEvent(Arrays.asList(
-                                WebhookEndpointCreateParams.EnabledEvent.CHARGE__FAILED,
-                                WebhookEndpointCreateParams.EnabledEvent.CHARGE__SUCCEEDED))
-                        .build();
+        if (!Objects.equals(this.environment.getActiveProfiles()[0], "local")) {
 
-        final WebhookEndpoint webhookEndpoint = WebhookEndpoint.create(webhooksparams);
+            final WebhookEndpointCreateParams.Builder builder = WebhookEndpointCreateParams.builder()
+                    .addAllEnabledEvent(Arrays.asList(
+                            WebhookEndpointCreateParams.EnabledEvent.CHARGE__FAILED,
+                            WebhookEndpointCreateParams.EnabledEvent.CHARGE__SUCCEEDED));
 
-        log.info("Stripe webhook {}", webhookEndpoint.getUrl());
+            builder.setUrl(String.format("%s%s/webhooks/stripe", this.appHost, this.contextPath));
+            final WebhookEndpointCreateParams webhooksparams = builder.build();
+            WebhookEndpoint.create(webhooksparams);
+        }
+
 
         SessionCreateParams.Mode mode = SessionCreateParams.Mode.PAYMENT;
         if (Objects.equals("BILLING", payment.getType())) {
@@ -128,7 +132,6 @@ public class StripeService {
                         )
                         .build();
         final Session session = Session.create(params);
-        log.info("Stripe session id {}", session.getId());
         return Map.of("id", session.getId(), "url", session.getUrl());
 
 
@@ -138,7 +141,6 @@ public class StripeService {
 
         try {
             final Event event = Webhook.constructEvent(body, signature, this.webhooksecretToken);
-            log.info("Stripe event id {}", event.getId());
             if (Objects.equals("checkout.session.completed", event.getType())) {
                 final EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
                 if (dataObjectDeserializer.getObject().isPresent()) {
@@ -155,7 +157,7 @@ public class StripeService {
                         this.sendPaiementNotifications(payment);
                         //@TODO enregistrer la vente dans le backoffice
                         //@TODO enregistrer Récupérer les crédits du backoffice pour incrémenter le stock du user
-                        this.stockService.update(payment.getUserId(), payment.getChannel(), payment.getProductName(), null, payment.getCredits(), StockType.CREDIT);
+                        this.stockService.update(payment.getUserId(), payment, null, 5, payment.getChannel(), StockType.CREDIT);
                     }
                 }
             }

@@ -62,6 +62,9 @@ jwt:
       path: '/login'
       refresh: '/refresh'
 providers:
+  backoffice:
+    host: https://backoffice.zeeven.chillo.fr
+    base-path: items
   iplocation:
     host: https://api.ipgeolocation.io
     base-path: ipgeo

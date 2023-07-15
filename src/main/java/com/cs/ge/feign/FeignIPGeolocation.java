@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
-@FeignClient(name = "IPGeolocation", url = "${providers.iplocation.host}/${providers.iplocation.base-path}/?apiKey=${providers.iplocation.key}")
-public interface IPGeolocation {
+@FeignClient(name = "FeignIPGeolocation", url = "${providers.iplocation.host}/${providers.iplocation.base-path}/?apiKey=${providers.iplocation.key}")
+public interface FeignIPGeolocation {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> ipgeo(
+    Map<String, Object> ipgeo(
             @RequestParam(name = "ip") String ip
     );
 

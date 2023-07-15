@@ -13,7 +13,6 @@ services:
       - "8083:8083"
     environment:
       - "SPRING_PROFILES_ACTIVE=prod"
-      #- "logging.level.org.springframework=TRACE"
       - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
       - "providers.whatsapp.token=${WHATSAPP_TOKEN}"
       - "providers.front.host=${ZEEVEN_HOST}"
@@ -22,6 +21,7 @@ services:
       - "providers.stripe.key.secret=${STRIPE_SECRET_KEY}"
       - "providers.stripe.key.webhooksecret=${STRIPE_WEBHOOKSECRET_KEY}"
       - "providers.iplocation.key=${PROD_IPLOCATION_API_KEY}"
+      - "providers.backoffice.token=${PROD_BACKOFFICE_API_KEY}"
 
     labels:
       - "traefik.enable=true"

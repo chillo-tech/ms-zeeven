@@ -18,5 +18,4 @@ public class MsZeevenApplication {
     public static void main(final String[] args) {
         SpringApplication.run(MsZeevenApplication.class, args);
     }
-
 }
