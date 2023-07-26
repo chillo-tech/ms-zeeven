@@ -1,6 +1,7 @@
 package com.cs.ge.services;
 
 import com.cs.ge.entites.Category;
+import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.CategorieRepository;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class CategorieService {
     }
 
     public Category read(final String query) {
-        return this.categorieRepository.findByIdOrLabel(query, query).orElseThrow(() -> new IllegalArgumentException("Category not found with id or label: " + query));
+        return this.categorieRepository.findByIdOrLabel(query, query).orElseThrow(() -> new ApplicationException("Category not found with id or label: " + query));
     }
 
     public void updateCategorie(final String id, final Category category) {

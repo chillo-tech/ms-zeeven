@@ -1,7 +1,12 @@
 package com.cs.ge.secured.filters;
 
+import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.services.security.TokenService;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,10 +16,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
     private final String tokenHeader;
 
-    public JwtAuthorizationTokenFilter(final UserDetailsService userDetailsService, TokenService tokenService, final String tokenHeader) {
+    public JwtAuthorizationTokenFilter(final UserDetailsService userDetailsService, final TokenService tokenService, final String tokenHeader) {
         this.userDetailsService = userDetailsService;
         this.tokenService = tokenService;
         this.tokenHeader = tokenHeader;
@@ -34,7 +35,7 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws ServletException, IOException {
-        String test = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        final String test = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 
         this.logger.debug("processing authentication for '{}'", request.getRequestURL());
         this.logger.debug("{}", test);
@@ -47,7 +48,7 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
             authToken = requestHeader.substring(7);
             try {
                 username = this.tokenService.getUsernameFromToken(authToken);
-            } catch (final IllegalArgumentException e) {
+            } catch (final ApplicationException e) {
                 this.logger.error("an error occured during getting username from token", e);
             } catch (final ExpiredJwtException e) {
                 this.logger.warn("the token is expired and not valid anymore", e);

@@ -5,6 +5,10 @@ server:
 app:
   host: http://app.zeeven.com
   api-host: http://api.zeeven.com
+  administrator:
+      email: marlene.dechillo@gmail.com
+      firstname: Marlene
+      lastname: "DE ZEEVEN"
 spring:
   jackson:
     serialization:

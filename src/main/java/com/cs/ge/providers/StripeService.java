@@ -171,12 +171,14 @@ public class StripeService {
         final UserDetails userDetails = this.profileService.loadUserByUsername(payment.getUserEmail());
         final String amount = String.valueOf(this.getTTC(payment.getAmountHT(), payment.getTva()));
         this.aSynchroniousNotifications.sendEmail(
+                null,
                 (UserAccount) userDetails,
                 Map.of("publicId", List.of(payment.getPublicId()), "amount", List.of(amount)),
                 "ZEEVEN",
                 "payment-confirmation.html",
                 "Votre paiement");
         this.aSynchroniousNotifications.sendEmail(
+                null,
                 null,
                 Map.of(
                         "publicId", List.of(payment.getPublicId()),

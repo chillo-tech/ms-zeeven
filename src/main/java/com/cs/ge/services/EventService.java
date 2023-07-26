@@ -26,11 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -478,7 +478,7 @@ public class EventService {
                         this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage, channelsToHandle);
 
                         firstScheduleToHandle.setHandled(true);
-                        firstScheduleToHandle.setHandledDate(LocalDateTime.now());
+                        firstScheduleToHandle.setHandledDate(Instant.now());
                         schedules.set(firstScheduleToHandleIndex, firstScheduleToHandle);
                         applicationMessage.setSchedules(schedules);
                     }
@@ -524,8 +524,22 @@ public class EventService {
 
     public List<Object> statistics(final String id) {
         final Event event = this.read(id);
+        final List<Channel> channels = event.getChannels();
+
+        final List<Object> queuedMessagesSatisticts = new ArrayList<>();
+        channels.parallelStream().forEach(channel -> queuedMessagesSatisticts.addAll(
+                Collections.nCopies(event.getGuests().size(), new HashMap<String, String>() {
+                    {
+                        this.put("chanel", channel.name());
+                        this.put("status", "QUEUED");
+                        this.put("eventId", event.getPublicId());
+                    }
+                })
+        ));
+
         final List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
-        return statistics.stream()
+
+        final List<Object> staticsData = statistics.stream()
                 .filter(statistic -> List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString()))
                 .map(entry -> new HashMap<String, String>() {
                     {
@@ -534,6 +548,9 @@ public class EventService {
                         this.put("eventId", event.getPublicId());
                     }
                 }).collect(Collectors.toList());
+        queuedMessagesSatisticts.addAll(staticsData);
+
+        return queuedMessagesSatisticts;
     }
 
     @Scheduled(cron = "0 */1 * * * *")
