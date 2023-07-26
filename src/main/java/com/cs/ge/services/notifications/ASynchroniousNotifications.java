@@ -8,17 +8,16 @@ import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
-import com.cs.ge.services.StockService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -33,20 +32,29 @@ import java.util.stream.Stream;
 
 
 @Service
-@AllArgsConstructor
 @Slf4j
 public class ASynchroniousNotifications {
     private final RabbitTemplate rabbitTemplate;
-    private final StockService stockService;
+    private final String administratorFirstname;
+    private final String administratorLastname;
+    private final String administratoremail;
 
-    public void notify(final String message) {
-        log.info("ApplicationNotification du message de {}", message);
-        this.rabbitTemplate.convertAndSend(message);
+    public ASynchroniousNotifications(final RabbitTemplate rabbitTemplate,
+                                      @Value("${app.administrator.firstname}") final String administratorFirstname,
+                                      @Value("${app.administrator.lastname}") final String administratorLastname,
+                                      @Value("${app.administrator.email}") final String administratoremail
+    ) {
+        this.rabbitTemplate = rabbitTemplate;
+        this.administratorFirstname = administratorFirstname;
+        this.administratorLastname = administratorLastname;
+        this.administratoremail = administratoremail;
     }
+
 
     @Async
     public void sendEmail(
             UserAccount author,
+            UserAccount recipient,
             final Map<String, List<String>> parameters,
             final String appliation,
             final String template,
@@ -54,11 +62,14 @@ public class ASynchroniousNotifications {
     ) {
 
         final UserAccount exp = new UserAccount();
-        exp.setLastName("DE ZEEVEN");
-        exp.setFirstName("Marlene");
-        exp.setEmail("bonjour.zeeven@gmail.com");
+        exp.setLastName(this.administratorLastname);
+        exp.setFirstName(this.administratorFirstname);
+        exp.setEmail(this.administratoremail);
         if (author == null) {
             author = exp;
+        }
+        if (recipient == null) {
+            recipient = exp;
         }
         final MessageProfile expProfile = this.getUserInfos(
                 author.getId(),
@@ -72,14 +83,14 @@ public class ASynchroniousNotifications {
         );
 
         final MessageProfile to = this.getUserInfos(
-                author.getId(),
-                author.getCivility(),
-                author.getFirstName(),
-                author.getLastName(),
-                author.getEmail(),
-                author.getPhone(),
-                author.getPhoneIndex(),
-                author.isTrial()
+                recipient.getId(),
+                recipient.getCivility(),
+                recipient.getFirstName(),
+                recipient.getLastName(),
+                recipient.getEmail(),
+                recipient.getPhone(),
+                recipient.getPhoneIndex(),
+                recipient.isTrial()
         );
 
 
@@ -97,7 +108,7 @@ public class ASynchroniousNotifications {
 
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("application", appliation);
-        properties.setHeader("type", "notification");
+        properties.setHeader("type", "message");
         try {
             final ObjectMapper objectMapper = new ObjectMapper();
             this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));

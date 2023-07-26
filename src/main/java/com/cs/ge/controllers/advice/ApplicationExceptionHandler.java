@@ -30,6 +30,18 @@ public class ApplicationExceptionHandler {
 
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ExceptionData handleIllegalArgumentException(final IllegalArgumentException illegalArgumentException) {
+        log.error("Erreur", illegalArgumentException);
+        final ExceptionData exceptionData = new ExceptionData();
+        exceptionData.setTimestamp(LocalDateTime.now());
+        exceptionData.setMessage(illegalArgumentException.getMessage());
+        return exceptionData;
+
+    }
+
     @ExceptionHandler({StripeException.class, SignatureVerificationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
@@ -40,18 +52,6 @@ public class ApplicationExceptionHandler {
         exceptionData.setMessage("Une erreur est survenue lors de votre paiment veuilez nous contacter");
         return exceptionData;
 
-    }
-
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
-    public ExceptionData handleIllegalArgumentException(final IllegalArgumentException exception) {
-        log.error("Erreur", exception);
-        final ExceptionData exceptionData = new ExceptionData();
-        exceptionData.setTimestamp(LocalDateTime.now());
-        exceptionData.setMessage(exception.getMessage());
-        return exceptionData;
     }
 
     @ExceptionHandler(IOException.class)

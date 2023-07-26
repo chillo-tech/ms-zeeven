@@ -1,5 +1,6 @@
 package com.cs.ge.secured.authentication;
 
+import com.cs.ge.exception.ApplicationException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -42,7 +43,7 @@ public class ApiKeyAuthentication implements Authentication {
     }
 
     @Override
-    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+    public void setAuthenticated(final boolean isAuthenticated) throws ApplicationException {
         this.isAuthenticated = isAuthenticated;
     }
 

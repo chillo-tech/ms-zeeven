@@ -5,15 +5,14 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
-import jakarta.mail.MessagingException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.cs.ge.enums.Role.CUSTOMER;
@@ -64,6 +63,7 @@ public class UtilisateursService {
         this.verificationService.updateCode(verification.getId(), verification);
         this.stockService.generateDefaultStocks(userAccount.getId());
         this.asynchroniousNotifications.sendEmail(
+                null,
                 userAccount,
                 new HashMap<String, List<String>>() {{
                     this.put("stock", List.of("" + DEFAULT_STOCK_SIZE));
@@ -72,6 +72,18 @@ public class UtilisateursService {
                 "ZEEVEN",
                 "welcome.html",
                 "Notre cadeau de bienvenue"
+        );
+
+        final Map<String, List<String>> params = new HashMap<String, List<String>>();
+        params.put("name", List.of(String.format("%s %s", userAccount.getFirstName(), userAccount.getLastName())));
+        this.asynchroniousNotifications.sendEmail(
+                null,
+                null,
+                params,
+
+                "ZEEVEN",
+                "new-account.html",
+                "Nouveau compte"
         );
     }
 
@@ -128,7 +140,7 @@ public class UtilisateursService {
     }
 
 
-    public void inscription(final UserAccount userAccount) throws MessagingException, IOException {
+    public void inscription(final UserAccount userAccount) throws ApplicationException {
         valEmail(userAccount.getUsername());
         valNumber(userAccount.getUsername());
         this.checkAccount(userAccount);
@@ -140,6 +152,7 @@ public class UtilisateursService {
 
         if (userAccount.getEmail() != null) {
             this.asynchroniousNotifications.sendEmail(
+                    null,
                     userAccount,
                     new HashMap<String, List<String>>() {{
                         this.put("code", List.of(verification.getCode()));
@@ -148,16 +161,6 @@ public class UtilisateursService {
                     "ZEEVEN",
                     "activation.html",
                     "Activez votre compte"
-            );
-            this.asynchroniousNotifications.sendEmail(
-                    userAccount,
-                    new HashMap<String, List<String>>() {{
-                        this.put("code", List.of(verification.getCode()));
-                    }},
-
-                    "ZEEVEN",
-                    "new-account.html",
-                    "Nouveau compte"
             );
         }
     }
@@ -177,13 +180,13 @@ public class UtilisateursService {
         if (userAccount.getEmail() != null) {
             final Optional<UserAccount> userByEmail = this.utilisateurRepository.findByEmail(userAccount.getEmail());
             if (userByEmail.isPresent()) {
-                throw new IllegalArgumentException("Cet email est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
+                throw new ApplicationException("Cet email est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
             }
         }
         if (userAccount.getPhoneIndex() != null && userAccount.getPhone() != null) {
             final Optional<UserAccount> userByPhone = this.utilisateurRepository.findByPhoneIndexAndPhone(userAccount.getPhoneIndex(), userAccount.getPhone());
             if (userByPhone.isPresent()) {
-                throw new IllegalArgumentException("Ce téléphone est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
+                throw new ApplicationException("Ce téléphone est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
             }
         }
     }
