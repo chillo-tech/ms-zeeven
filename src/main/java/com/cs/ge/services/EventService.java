@@ -6,6 +6,7 @@ import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Schedule;
+import com.cs.ge.entites.Table;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.EventStatus;
@@ -16,6 +17,7 @@ import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.qrcode.QRCodeGeneratorService;
+import com.cs.ge.services.shared.SharedService;
 import com.cs.ge.utils.UtilitaireService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,7 @@ public class EventService {
     private final ASynchroniousNotifications aSynchroniousNotifications;
     private final UtilitaireService utilitaireService;
     private final StockService stockService;
+    private final SharedService sharedService;
 
     public EventService(
             final FeignNotifications feignNotifications,
@@ -71,7 +74,7 @@ public class EventService {
             final UtilisateursService utilisateursService,
             final QRCodeGeneratorService qrCodeGeneratorService,
             final ASynchroniousNotifications aSynchroniousNotifications,
-            final UtilitaireService utilitaireService, final StockService stockService) {
+            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
@@ -81,6 +84,7 @@ public class EventService {
         this.aSynchroniousNotifications = aSynchroniousNotifications;
         this.utilitaireService = utilitaireService;
         this.stockService = stockService;
+        this.sharedService = sharedService;
     }
 
     public List<Event> search() {
@@ -401,6 +405,39 @@ public class EventService {
     public List<Schedule> schedules(final String id) {
         final Event event = this.read(id);
         return event.getSchedules();
+    }
+
+    public List<Table> tables(final String id) {
+        final Event event = this.read(id);
+        return event.getTables();
+    }
+
+    public void addTable(final String eventId, final Table table) {
+        final var event = this.read(eventId);
+        table.setId(UUID.randomUUID().toString());
+        table.setSlug(this.sharedService.toSlug(table.getName()));
+        final List<Table> tables = event.getTables();
+
+        final Table exists = tables.stream().filter(currentTable -> currentTable.getSlug().equals(table.getSlug())).findFirst().orElse(null);
+        if (exists == null) {
+            final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+            table.setPublicId(publicId);
+
+            tables.add(table);
+            event.setTables(tables);
+            this.eventsRepository.save(event);
+        }
+        //TODO Renvoyer et afficher un messaage indiquant que la table existe déjà
+    }
+
+    public void deleteTable(final String eventId, final String tableId) {
+        final var event = this.read(eventId);
+        List<Table> tables = event.getTables();
+        tables = tables.stream().filter(currentTable -> !currentTable.getPublicId().equals(tableId)).collect(Collectors.toList());
+        event.setTables(tables);
+
+        //TODO: Supprimper le QR CODE
+        this.eventsRepository.save(event);
     }
 
     @Async

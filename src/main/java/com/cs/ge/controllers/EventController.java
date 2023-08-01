@@ -3,6 +3,7 @@ package com.cs.ge.controllers;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Schedule;
+import com.cs.ge.entites.Table;
 import com.cs.ge.services.EventService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -58,19 +59,35 @@ public class EventController {
         this.eventService.addGuest(id, guest);
     }
 
-    @PostMapping(value = "{id}/invitations")
-    public void sendInvitations(@PathVariable final String id, @RequestBody final Set<String> guestIds) {
-        this.eventService.sendInvitations(id, guestIds);
-    }
-
     @DeleteMapping(value = "{eventId}/guest/{guestId}")
     public void deleteGuest(@PathVariable final String eventId, @PathVariable final String guestId) {
         this.eventService.deleteGuest(eventId, guestId);
     }
 
+    @PostMapping(value = "{id}/invitations")
+    public void sendInvitations(@PathVariable final String id, @RequestBody final Set<String> guestIds) {
+        this.eventService.sendInvitations(id, guestIds);
+    }
+
+
     @GetMapping(value = "{id}/guest")
     public List<Guest> fetchGuests(@PathVariable final String id) {
         return this.eventService.guests(id);
+    }
+
+    @GetMapping(value = "{id}/table")
+    public List<Table> fetchTables(@PathVariable final String id) {
+        return this.eventService.tables(id);
+    }
+
+    @PostMapping(value = "{eventId}/table")
+    public void addTable(@PathVariable final String eventId, @RequestBody final Table table) {
+        this.eventService.addTable(eventId, table);
+    }
+
+    @DeleteMapping(value = "{eventId}/table/{tableId}")
+    public void deleteTable(@PathVariable final String eventId, @PathVariable final String tableId) {
+        this.eventService.deleteTable(eventId, tableId);
     }
 
     @PostMapping(value = "{id}/schedule")
