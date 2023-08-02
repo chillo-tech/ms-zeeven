@@ -3,6 +3,7 @@ package com.cs.ge.controllers;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Schedule;
+import com.cs.ge.entites.Table;
 import com.cs.ge.services.EventService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -93,5 +94,8 @@ public class EventController {
         return this.eventService.statistics(id);
     }
 
-
+    @GetMapping(value = "{id}/table")
+    public List<Table> fetchTables(@PathVariable final String id) {
+        return this.eventService.tables(id);
+    }
 }

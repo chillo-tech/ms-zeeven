@@ -1,12 +1,6 @@
 package com.cs.ge.services;
 
-import com.cs.ge.entites.ApplicationMessage;
-import com.cs.ge.entites.ApplicationMessageSchedule;
-import com.cs.ge.entites.Category;
-import com.cs.ge.entites.Event;
-import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Schedule;
-import com.cs.ge.entites.UserAccount;
+import com.cs.ge.entites.*;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.enums.Role;
@@ -181,7 +175,7 @@ public class EventService {
         final Event event = this.read(eventId);
         final Optional<Guest> optionalGuest = event.getGuests().stream().filter(g -> g.getPublicId().equals(guestId)).findFirst();
         final Guest guest = optionalGuest.orElseThrow(
-                () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
+                () -> new ResponseStatusException(NOT_FOUND, "Aucune entité ne correspond au critères fournis"));
 
         return null; //Base64.getDecoder().decode(guest.getTicket());
     }
@@ -369,6 +363,11 @@ public class EventService {
     public List<Guest> guests(final String id) {
         final Event event = this.read(id);
         return event.getGuests();
+    }
+
+    public List<Table> tables(final String id){
+        final Event event = this.read(id);
+        return event.getTables();
     }
 
     public void addSchedule(final String eventId, final Schedule schedule) {

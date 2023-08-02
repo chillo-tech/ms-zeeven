@@ -28,6 +28,7 @@ public class Event {
     private List<ApplicationMessage> messages;
     private EventStatus status;
     private List<Guest> guests;
+    private List<Table> tables;
     private List<Channel> channels;
     private UserAccount author;
     private Category category;

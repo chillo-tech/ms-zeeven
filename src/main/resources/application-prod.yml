@@ -5,7 +5,7 @@ spring:
     host: 192.168.1.101
   data:
     mongodb:
-      host: db-zeeven
+      host: ms-zeeven
   mail:
       #host:  mails.dev
       accountLink: ${app.host}/activer-mon-compte?code=

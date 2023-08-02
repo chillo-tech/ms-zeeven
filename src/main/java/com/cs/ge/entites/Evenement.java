@@ -33,6 +33,7 @@ public class Evenement {
     private String message;
     private EventStatus statut;
     private List<Guest> invites;
+    private List<Table> tables;
     private List<Channel> channels;
     private UserAccount userAccount;
     private Map<String, String> variables;
