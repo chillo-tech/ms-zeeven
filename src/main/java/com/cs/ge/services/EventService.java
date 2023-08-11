@@ -455,6 +455,23 @@ public class EventService {
         guests = guests.stream().filter(currentGuest -> !currentGuest.getPublicId().equals(guestId)).collect(Collectors.toList());
         event.setGuests(guests);
 
+        final Plan plan = event.getPlan();
+
+        final Map<String, Guest> planContacts = plan.getContacts();
+        planContacts.remove(guestId);
+        plan.setContacts(planContacts);
+
+        final Map<String, Table> planTables = plan.getTables();
+        planTables.keySet().forEach(key -> {
+            final Table table = planTables.get(key);
+            final Set<String> contactIds = table.getContactIds();
+            contactIds.remove(guestId);
+            table.setContactIds(contactIds);
+            planTables.replace(key, table);
+        });
+        plan.setTables(planTables);
+
+        event.setPlan(plan);
         //TODO: Supprimper le QR CODE
         this.eventsRepository.save(event);
     }
