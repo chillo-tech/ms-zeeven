@@ -36,4 +36,5 @@ public class Event {
     private List<Profile> contacts = new ArrayList<>();
     private List<Schedule> schedules = new ArrayList<>();
     private String slug;
+    private Plan plan;
 }

@@ -2,6 +2,7 @@ package com.cs.ge.controllers;
 
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
+import com.cs.ge.entites.Plan;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.Table;
 import com.cs.ge.services.EventService;
@@ -57,6 +58,11 @@ public class EventController {
     @PostMapping(value = "{id}/guest")
     public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) {
         this.eventService.addGuest(id, guest);
+    }
+
+    @PostMapping(value = "{id}/plan")
+    public void addPlan(@PathVariable final String id, @RequestBody final Plan plan) {
+        this.eventService.addPlan(id, plan);
     }
 
     @DeleteMapping(value = "{eventId}/guest/{guestId}")

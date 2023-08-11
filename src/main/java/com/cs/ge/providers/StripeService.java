@@ -176,6 +176,7 @@ public class StripeService {
                 Map.of("publicId", List.of(payment.getPublicId()), "amount", List.of(amount)),
                 "ZEEVEN",
                 "payment-confirmation.html",
+                null,
                 "Votre paiement");
         this.aSynchroniousNotifications.sendEmail(
                 null,
@@ -187,6 +188,7 @@ public class StripeService {
                 ),
                 "ZEEVEN",
                 "internal-payment-notification.html",
+                null,
                 "Nouveau paiement"
         );
     }

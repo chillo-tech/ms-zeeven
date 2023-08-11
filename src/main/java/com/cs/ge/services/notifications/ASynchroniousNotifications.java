@@ -58,6 +58,7 @@ public class ASynchroniousNotifications {
             final Map<String, List<String>> parameters,
             final String appliation,
             final String template,
+            final String message,
             final String subject
     ) {
 
@@ -99,7 +100,7 @@ public class ASynchroniousNotifications {
                 template,
                 subject,
                 RandomStringUtils.random(8, true, true),
-                null,
+                message,
                 parameters,
                 List.of(Channel.EMAIL),
                 expProfile,

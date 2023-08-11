@@ -5,6 +5,7 @@ import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
+import com.cs.ge.entites.Plan;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.Table;
 import com.cs.ge.entites.UserAccount;
@@ -35,13 +36,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -55,6 +59,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @Service
 public class EventService {
+    public static final String DEFAULT_TABLE_NAME = "Contacts";
     private final FeignNotifications feignNotifications;
     private final EventRepository eventsRepository;
     private final ProfileService profileService;
@@ -97,7 +102,46 @@ public class EventService {
         return this.eventsRepository.findByAuthorId(id).collect(Collectors.toList());
     }
 
+    private Map<String, Object> getDefaultData(final List<Guest> guestList) {
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String id = UUID.randomUUID().toString();
+        final Table tableWithoutContact = this.getDefaultTable();
+        final Plan plan = new Plan();
+        plan.setId(id);
+        plan.setPublicId(publicId);
+        if (guestList == null) {
+            plan.setContacts(new HashMap<>());
+        } else {
+            tableWithoutContact.setContactIds(guestList.stream().map(Guest::getPublicId).collect(Collectors.toSet()));
+            final Map<String, Guest> newPlanContacts = guestList.stream().collect(Collectors.toMap(Guest::getPublicId, Function.identity()));
+            plan.setContacts(newPlanContacts);
+        }
+
+        plan.setTables(Map.of(tableWithoutContact.getPublicId(), tableWithoutContact));
+        plan.setTablesOrder(Set.of(tableWithoutContact.getPublicId()));
+
+        return Map.of(
+                "plan", plan,
+                "table", tableWithoutContact
+        );
+    }
+
+    private Table getDefaultTable() {
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String id = UUID.randomUUID().toString();
+        final Table table = new Table();
+        table.setId(id);
+        table.setPublicId(publicId);
+        table.setDeletable(false);
+        table.setName(DEFAULT_TABLE_NAME);
+        table.setType("CLASSIQUE");
+        table.setSlug(this.sharedService.toSlug(table.getName()));
+        return table;
+    }
+
     public void add(Event event) {
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String id = UUID.randomUUID().toString();
 
         if (event.getName() == null) {
             event.setName(String.format("%s %s %s", event.getCategory().getLabel(), event.getAuthor().getFirstName(), event.getAuthor().getLastName()).toLowerCase());
@@ -106,24 +150,25 @@ public class EventService {
         final UserAccount author = this.profileService.getAuthenticateUser();
         event.setAuthor(author);
 
-        //final EventStatus status = eventStatus(event.getDates());
-        event.setStatus(INCOMMING);
-
         final List<Guest> guestList = event.getGuests().parallelStream().map(guest -> {
+            guest.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
             guest.setId(UUID.randomUUID().toString());
-            guest.setPublicId(UUID.randomUUID().toString());
             guest.setTrial(true);
             return guest;
         }).collect(Collectors.toList());
         event.setGuests(guestList);
 
-        final List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().map(applicationMessage -> {
-            applicationMessage.setId(UUID.randomUUID().toString());
-            return applicationMessage;
-        }).collect(Collectors.toList());
+        final Map<String, Object> initialData = this.getDefaultData(guestList);
+
+        //final EventStatus status = eventStatus(event.getDates());
+        event.setStatus(INCOMMING);
+        final Table initialTable = (Table) initialData.get("table");
+        event.setTables(List.of(initialTable));
+        event.setPlan((Plan) initialData.get("plan"));
+
+        final List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().peek(applicationMessage -> applicationMessage.setId(id)).collect(Collectors.toList());
         event.setMessages(updatedApplicationMessages);
 
-        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         event.setPublicId(publicId);
         final String slug = this.utilitaireService.makeSlug(event.getName());
         event.setSlug(format("%s-%s", slug, publicId));
@@ -132,9 +177,24 @@ public class EventService {
         event.setCategory(category);
 
         event = this.eventsRepository.save(event);
+        final String eventName = event.getName();
+        /*
+        this.aSynchroniousNotifications.sendEmail(
+                null,
+                event.getAuthor(),
+                new HashMap<String, List<String>>() {{
+                    this.put("event", Collections.singletonList(eventName));
+                }},
+
+                "ZEEVEN",
+                "welcome.html",
+                null,
+                "Notre cadeau de bienvenue"
+        );
+         */
         //this.synchroniousNotifications.sendConfirmationMessage(event);
-        //this.handleEvent(event);
     }
+
 
     private static EventStatus eventStatus(final Set<Instant> dates) {
         final List<Instant> datesAsList = new ArrayList<>(dates);
@@ -194,12 +254,11 @@ public class EventService {
         final var event = this.read(eventId);
         ValidationService.checkEmail(guestProfile.getEmail());
         ValidationService.checkPhone(guestProfile.getPhone());
-        final String guestId = UUID.
-                randomUUID().toString();
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String guestId = UUID.randomUUID().toString();
         guestProfile.setId(guestId);
         guestProfile.setTrial(true);
 
-        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         guestProfile.setPublicId(publicId);
         final String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
         guestProfile.setSlug(format("%s-%s", slug, publicId));
@@ -211,15 +270,45 @@ public class EventService {
         }
         guests.add(guestProfile);
         event.setGuests(guests);
-        this.eventsRepository.save(event);
-        //this.imageService.saveTicketImages(event, guest);
-        /*
-        if (guest.isSendInvitation()) {
-            this.sendInvitation(event, guest);
+
+        // Mis à jour des plans
+        Plan plan = event.getPlan();
+        if (plan == null) {
+            plan = (Plan) this.getDefaultData(null).get("plan");
         }
 
-         */
+        final Map<String, Guest> planContacts = plan.getContacts();
+        final List<Guest> guestList = planContacts.keySet().parallelStream().map(key -> planContacts.get(key)).collect(Collectors.toList());
+        guestList.add(guestProfile);
+        final Map<String, Guest> newPlanContacts = guestList.stream().collect(Collectors.toMap(Guest::getPublicId, Function.identity()));
+        plan.setContacts(newPlanContacts);
 
+        final Map<String, Table> planTables = plan.getTables();
+        final List<Table> tableList = planTables.keySet().parallelStream().map(key -> planTables.get(key)).collect(Collectors.toList());
+        final int index = IntStream.range(0, tableList.size())
+                .filter(i -> DEFAULT_TABLE_NAME.equals(tableList.get(i).getName()))
+                .findFirst().orElse(-1);
+
+
+        Table defaultTable = this.getDefaultTable();
+        if (index > -1) {
+            defaultTable = tableList.get(index);
+        }
+        Set<String> contactIds = defaultTable.getContactIds();
+        if (contactIds == null) {
+            contactIds = new HashSet<>();
+        }
+        contactIds.add(publicId);
+        defaultTable.setContactIds(contactIds);
+        if (index > -1) {
+            tableList.set(index, defaultTable);
+        } else {
+            tableList.add(defaultTable);
+        }
+
+        final Map<String, Table> newPlanTables = tableList.stream().collect(Collectors.toMap(Table::getPublicId, Function.identity()));
+        plan.setTables(newPlanTables);
+        this.eventsRepository.save(event);
     }
 
     /*
@@ -417,7 +506,6 @@ public class EventService {
         table.setId(UUID.randomUUID().toString());
         table.setSlug(this.sharedService.toSlug(table.getName()));
         final List<Table> tables = event.getTables();
-
         final Table exists = tables.stream().filter(currentTable -> currentTable.getSlug().equals(table.getSlug())).findFirst().orElse(null);
         if (exists == null) {
             final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
@@ -425,6 +513,21 @@ public class EventService {
 
             tables.add(table);
             event.setTables(tables);
+
+            Plan plan = event.getPlan();
+            if (plan == null) {
+                plan = (Plan) this.getDefaultData(null).get("plan");
+            }
+            final Map<String, Table> planTables = plan.getTables();
+            final List<Table> tableList = planTables.keySet().parallelStream().map(planTables::get).collect(Collectors.toList());
+            tableList.add(table);
+            final Map<String, Table> newPlanTables = tableList.stream().collect(Collectors.toMap(Table::getPublicId, Function.identity()));
+            plan.setTables(newPlanTables);
+
+            final Set<String> tablesOrder = plan.getTablesOrder();
+            tablesOrder.add(table.getPublicId());
+            plan.setTablesOrder(tablesOrder);
+            event.setPlan(plan);
             this.eventsRepository.save(event);
         }
         //TODO Renvoyer et afficher un messaage indiquant que la table existe déjà
@@ -433,11 +536,41 @@ public class EventService {
     public void deleteTable(final String eventId, final String tableId) {
         final var event = this.read(eventId);
         List<Table> tables = event.getTables();
-        tables = tables.stream().filter(currentTable -> !currentTable.getPublicId().equals(tableId)).collect(Collectors.toList());
-        event.setTables(tables);
+        final Optional<Table> tableToDeleteAsOptional = tables.stream().filter(currentTable -> currentTable.getPublicId().equals(tableId)).findFirst();
+        if (tableToDeleteAsOptional.isPresent() && tableToDeleteAsOptional.get().isDeletable()) {
 
-        //TODO: Supprimper le QR CODE
-        this.eventsRepository.save(event);
+            tables = tables.stream().filter(currentTable -> !currentTable.getPublicId().equals(tableId)).collect(Collectors.toList());
+            event.setTables(tables);
+
+            final Plan plan = event.getPlan();
+
+            Set<String> tablesOrder = plan.getTablesOrder();
+            tablesOrder = tablesOrder.stream().filter(itemId -> !itemId.equals(tableId)).collect(Collectors.toSet());
+            plan.setTablesOrder(tablesOrder);
+
+            final Map<String, Table> planTables = plan.getTables();
+            final Table tableToDelete = planTables.get(tableId);
+            final Set<String> contactIdsFromTableToDelete = tableToDelete.getContactIds();
+
+            final Optional<String> defaultTableKey = planTables.entrySet()
+                    .stream()
+                    .filter(entry -> Objects.equals(entry.getValue().getName(), DEFAULT_TABLE_NAME))
+                    .map(Map.Entry::getKey)
+                    .findFirst();
+
+            if (defaultTableKey.isPresent()) {
+                final Table defaultTable = planTables.get(defaultTableKey.get());
+                contactIdsFromTableToDelete.addAll(defaultTable.getContactIds());
+                defaultTable.setContactIds(contactIdsFromTableToDelete);
+                planTables.replace(defaultTableKey.get(), defaultTable);
+            }
+            planTables.remove(tableId);
+            plan.setTables(planTables);
+            event.setPlan(plan);
+
+            //TODO: Supprimper le QR CODE
+            this.eventsRepository.save(event);
+        }
     }
 
     @Async
@@ -573,21 +706,33 @@ public class EventService {
                     }
                 })
         ));
+        try {
 
-        final List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
+            final List<Map<String, String>> statistics = this.feignNotifications.getStatistic(event.getId());
 
-        final List<Object> staticsData = statistics.stream()
-                .filter(statistic -> List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString()))
-                .map(entry -> new HashMap<String, String>() {
-                    {
-                        this.put("chanel", entry.get("channel"));
-                        this.put("status", entry.get("status"));
-                        this.put("eventId", event.getPublicId());
-                    }
-                }).collect(Collectors.toList());
-        queuedMessagesSatisticts.addAll(staticsData);
+            final List<Object> staticsData = statistics.stream()
+                    .filter(statistic -> List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString()))
+                    .map(entry -> new HashMap<String, String>() {
+                        {
+                            this.put("chanel", entry.get("channel"));
+                            this.put("status", entry.get("status"));
+                            this.put("eventId", event.getPublicId());
+                        }
+                    }).collect(Collectors.toList());
+            queuedMessagesSatisticts.addAll(staticsData);
+        } catch (final Exception exception) {
+            log.error("{}", exception);
+        }
 
         return queuedMessagesSatisticts;
+    }
+
+    public void addPlan(final String id, final Plan plan) {
+        final Event event = this.read(id);
+        plan.setId(UUID.randomUUID().toString());
+        plan.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+        event.setPlan(plan);
+        this.eventsRepository.save(event);
     }
 
     @Scheduled(cron = "0 */1 * * * *")
