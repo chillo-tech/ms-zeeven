@@ -6,6 +6,7 @@ import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Plan;
+import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.Table;
 import com.cs.ge.entites.UserAccount;
@@ -28,6 +29,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -250,7 +252,7 @@ public class EventService {
         return null; //Base64.getDecoder().decode(guest.getTicket());
     }
 
-    public void addGuest(final String eventId, final Guest guestProfile) {
+    public void addGuest(final String eventId, final Guest guestProfile) throws IOException {
         final var event = this.read(eventId);
         ValidationService.checkEmail(guestProfile.getEmail());
         ValidationService.checkPhone(guestProfile.getPhone());
@@ -262,8 +264,8 @@ public class EventService {
         guestProfile.setPublicId(publicId);
         final String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
         guestProfile.setSlug(format("%s-%s", slug, publicId));
-        this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
-        //guest.setTicket(guestQRCODE);
+        final QRCodeEntity guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
+        guestProfile.setQrCode(guestQRCODE);
         List<Guest> guests = event.getGuests();
         if (guests == null) {
             guests = new ArrayList<>();

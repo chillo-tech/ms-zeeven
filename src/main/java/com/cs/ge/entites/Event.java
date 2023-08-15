@@ -26,15 +26,14 @@ public class Event {
     private String id;
     private String publicId;
     private String name;
-    private List<ApplicationMessage> messages = new ArrayList<>();
     private EventStatus status;
-    private List<Guest> guests;
-    private List<Table> tables = new ArrayList<>();
-    private List<Channel> channels = new ArrayList<>();
     private UserAccount author;
     private Category category;
-    private List<Profile> contacts = new ArrayList<>();
-    private List<Schedule> schedules = new ArrayList<>();
     private String slug;
     private Plan plan;
+    private List<Guest> guests;
+    private List<Channel> channels = new ArrayList<>();
+    private List<ApplicationMessage> messages = new ArrayList<>();
+    private List<Table> tables = new ArrayList<>();
+    private List<Schedule> schedules = new ArrayList<>();
 }
