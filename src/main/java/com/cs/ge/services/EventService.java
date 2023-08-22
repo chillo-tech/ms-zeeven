@@ -5,10 +5,12 @@ import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
+import com.cs.ge.entites.Invitation;
 import com.cs.ge.entites.Plan;
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.Table;
+import com.cs.ge.entites.Template;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.EventStatus;
@@ -664,7 +666,13 @@ public class EventService {
                         final int firstScheduleToHandleIndex = IntStream.range(0, schedules.size())
                                 .filter(i -> firstScheduleToHandle.isHandled() == schedules.get(i).isHandled())
                                 .findFirst().orElse(-1);
-                        this.aSynchroniousNotifications.sendEventMessage(event, applicationMessage, channelsToHandle);
+                        this.aSynchroniousNotifications.sendEventMessage(
+                                event,
+                                applicationMessage,
+                                channelsToHandle,
+                                null,
+                                new HashMap<>()
+                        );
 
                         firstScheduleToHandle.setHandled(true);
                         firstScheduleToHandle.setHandledDate(Instant.now());
@@ -754,17 +762,46 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
+    private String getTimeZone() {
+        return ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
+                ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
+        ).getZone().getId();
+    }
+
+    public void addInvitation(final String id, final Invitation invitation) {
+        final Event event = this.read(id);
+        final Template template = invitation.getTemplate();
+        Set<Schedule> schedules = template.getSchedules();
+        if (schedules != null) {
+            schedules = schedules.parallelStream().peek(schedule -> {
+                schedule.setId(UUID.randomUUID().toString());
+                schedule.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+            }).collect(Collectors.toSet());
+            template.setSchedules(schedules);
+        }
+
+        template.setId(UUID.randomUUID().toString());
+        template.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+        invitation.setTemplate(template);
+
+        invitation.setId(UUID.randomUUID().toString());
+        invitation.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+        event.setInvitation(invitation);
+        this.eventsRepository.save(event);
+    }
+
+    public void deleteInvitation(final String eventId, final String invitattionId) {
+        final var event = this.read(eventId);
+        event.setInvitation(new Invitation());
+        this.eventsRepository.save(event);
+    }
+
+
     @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
         events.parallel().forEach(this::handleEvent);
-    }
-
-    private String getTimeZone() {
-        return ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
-                ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
-        ).getZone().getId();
     }
 
 }

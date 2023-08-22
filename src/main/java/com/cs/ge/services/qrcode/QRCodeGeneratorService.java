@@ -137,11 +137,11 @@ public class QRCodeGeneratorService {
         qrCodeEntity.setName(valueOf(params.get("name")));
         qrCodeEntity.setFinalContent(valueOf(params.get("finalContent")));
         File file = QRCode.from(valueOf(params.get("finalContent")))
-                .withColor(0xFFFFFFFF, 0xFF062C60)
+                .withColor(0xFF000000, 0xFFFFFFFF)
                 .to(JPG)
                 .withSize(QRCODE_WIDTH, QRCODE_HEIGHT)
                 .file();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+        if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
             final UserAccount author = this.profileService.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
             qrCodeEntity.setTempContent(valueOf(params.get("tempContent")));
             qrCodeEntity.setTrack(true);

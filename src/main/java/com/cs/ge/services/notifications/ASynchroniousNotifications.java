@@ -119,7 +119,13 @@ public class ASynchroniousNotifications {
 
     }
 
-    public void sendEventMessage(final Event event, final ApplicationMessage applicationMessage, final List<Channel> channelsToHandle) {
+    public void sendEventMessage(
+            final Event event,
+            final ApplicationMessage applicationMessage,
+            final List<Channel> channelsToHandle,
+            final String template,
+            final Map<String, List<String>> extraParams
+    ) {
         log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
         final UserAccount author = event.getAuthor();
@@ -127,7 +133,7 @@ public class ASynchroniousNotifications {
         params.put("trial", List.of(String.valueOf(author.isTrial())));
         final ApplicationNotification notification = new ApplicationNotification(
                 "ZEEVEN",
-                null,
+                template,
                 event.getName(),
                 event.getId(),
                 applicationMessage.getText(),
@@ -141,7 +147,6 @@ public class ASynchroniousNotifications {
         properties.setHeader("type", "message");
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(notification);
-        final ObjectMapper objectMapper = new ObjectMapper();
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
 
     }
@@ -244,4 +249,12 @@ public class ASynchroniousNotifications {
         return parameters;
     }
 
+    public void sendInvitationMessage(final Map<String, Object> messageParameters) {
+        final MessageProperties messageProperties = new MessageProperties();
+        messageProperties.setHeader("application", "ZEEVEN");
+        messageProperties.setHeader("type", "invitation");
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(messageParameters);
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
+    }
 }

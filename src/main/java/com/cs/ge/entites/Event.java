@@ -31,6 +31,7 @@ public class Event {
     private Category category;
     private String slug;
     private Plan plan;
+    private Invitation invitation;
     private List<Guest> guests;
     private List<Channel> channels = new ArrayList<>();
     private List<ApplicationMessage> messages = new ArrayList<>();

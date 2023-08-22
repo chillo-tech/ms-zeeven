@@ -2,6 +2,7 @@ package com.cs.ge.entites;
 
 import com.cs.ge.enums.QRCodeType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 public class QRCodeEntity {
     @Id
     private String id;
