@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class InvitationService {
     private final QRCodeGeneratorService qrCodeGeneratorService;
     private final ASynchroniousNotifications aSynchroniousNotifications;
 
-    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "0 */10 * * * *")
     public void sendInvitations() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
@@ -46,35 +47,36 @@ public class InvitationService {
     private void handleEvent(final Event event) {
         final List<Guest> guests = event.getGuests();
         final Invitation invitation = event.getInvitation();
-        guests.subList(0, 1).parallelStream().forEach(guest -> {
-            final QRCodeEntity qrCodeEntity = QRCodeEntity
-                    .builder()
-                    .type(QRCodeType.TEXT)
-                    .data(Map.of("url", String.format("%s|%s|%s", event.getPublicId(), invitation.getPublicId(), guest.getPublicId())))
-                    .build();
+        if (invitation.getSend().isAfter(Instant.now())) {
+            guests.subList(0, 1).parallelStream().forEach(guest -> {
+                final QRCodeEntity qrCodeEntity = QRCodeEntity
+                        .builder()
+                        .type(QRCodeType.TEXT)
+                        .data(Map.of("url", String.format("%s|%s|%s", event.getPublicId(), invitation.getPublicId(), guest.getPublicId())))
+                        .build();
 
-            try {
-                final String qrcode = this.qrCodeGeneratorService.generate(qrCodeEntity);
-                final Map<String, Object> messageParameters = Map.of(
-                        "eventId", event.getPublicId(),
-                        "eventName", event.getName(),
-                        "image", qrcode,
-                        "guest", guest,
-                        "author", event.getAuthor(),
-                        "application", "ZEEVEN",
-                        "notificationTemplate", invitation.getTemplate().getName(),
-                        "whatsappTemplateName", "ze_invitation",
-                        "invitation", invitation,
-                        "channels", event.getInvitation().getChannels()
-                );
-                this.generateTicket(qrcode);
-                //this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
+                try {
+                    final String qrcode = this.qrCodeGeneratorService.generate(qrCodeEntity);
+                    final Map<String, Object> messageParameters = Map.of(
+                            "eventId", event.getPublicId(),
+                            "eventName", event.getName(),
+                            "image", qrcode,
+                            "guest", guest,
+                            "author", event.getAuthor(),
+                            "application", "ZEEVEN",
+                            "notificationTemplate", invitation.getTemplate().getName(),
+                            "whatsappTemplateName", "ze_invitation",
+                            "invitation", invitation,
+                            "channels", event.getInvitation().getChannels()
+                    );
+                    this.generateTicket(qrcode);
+                    //this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
+                } catch (final IOException e) {
+                    e.printStackTrace();
+                }
 
-        });
-
+            });
+        }
     }
 
     private void generateTicket(final String qrcodeAsTring) {
