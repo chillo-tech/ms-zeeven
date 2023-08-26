@@ -37,4 +37,6 @@ public class Event {
     private List<ApplicationMessage> messages = new ArrayList<>();
     private List<Table> tables = new ArrayList<>();
     private List<Schedule> schedules = new ArrayList<>();
+    private EventParams params = new EventParams();
+
 }

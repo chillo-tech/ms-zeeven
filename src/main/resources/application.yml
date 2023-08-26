@@ -5,8 +5,13 @@ server:
 app:
   host: http://app.zeeven.com
   api-host: http://api.zeeven.com
+  images-host: https://files.chillo.fr
+  invitations:
+    exchange: tech.invitations.exchange
+  files:
+    exchange: tech.files.exchange
   administrator:
-      email: marlene.dechillo@gmail.com
+      email: accueil@chillo.tech
       firstname: Marlene
       lastname: "DE ZEEVEN"
 spring:

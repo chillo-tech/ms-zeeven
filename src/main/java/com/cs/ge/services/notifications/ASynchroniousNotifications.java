@@ -37,16 +37,25 @@ public class ASynchroniousNotifications {
     private final RabbitTemplate rabbitTemplate;
     private final String administratorFirstname;
     private final String administratorLastname;
+    private final String applicationFilesExchange;
+    private final String applicationFilesVhost;
+    private final String applicationInvitationsExchange;
     private final String administratoremail;
 
     public ASynchroniousNotifications(final RabbitTemplate rabbitTemplate,
                                       @Value("${app.administrator.firstname}") final String administratorFirstname,
                                       @Value("${app.administrator.lastname}") final String administratorLastname,
+                                      @Value("${app.files.exchange}") final String applicationFilesExchange,
+                                      @Value("${app.files.virtual-host}") final String applicationFilesVhost,
+                                      @Value("${app.invitations.exchange}") final String applicationInvitationsExchange,
                                       @Value("${app.administrator.email}") final String administratoremail
     ) {
         this.rabbitTemplate = rabbitTemplate;
         this.administratorFirstname = administratorFirstname;
         this.administratorLastname = administratorLastname;
+        this.applicationFilesExchange = applicationFilesExchange;
+        this.applicationFilesVhost = applicationFilesVhost;
+        this.applicationInvitationsExchange = applicationInvitationsExchange;
         this.administratoremail = administratoremail;
     }
 
@@ -255,6 +264,15 @@ public class ASynchroniousNotifications {
         messageProperties.setHeader("type", "invitation");
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(messageParameters);
+        this.rabbitTemplate.setExchange(this.applicationInvitationsExchange);
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
+    }
+
+    public void senFile(final Map<String, Object> messageParameters) {
+        final MessageProperties messageProperties = new MessageProperties();
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(messageParameters);
+        this.rabbitTemplate.setExchange(this.applicationFilesExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
     }
 }
