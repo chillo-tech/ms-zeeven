@@ -9,6 +9,7 @@ app:
   invitations:
     exchange: tech.invitations.exchange
   files:
+    virtual-host: prod-notifications
     exchange: tech.files.exchange
   administrator:
       email: accueil@chillo.tech
