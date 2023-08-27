@@ -20,10 +20,6 @@ spring:
     serialization:
         write-dates-as-timestamps: false
   rabbitmq:
-    host: 212.83.180.65
-    port: 5672
-    username: rbmq_admin
-    password: administrator
     virtual-host: prod-notifications
     template:
       exchange: tech.messages.exchange

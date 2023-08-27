@@ -122,6 +122,13 @@ jobs:
           echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo RECETTE_IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
           echo RECETTE_BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }} >> /opt/applications/zeeven/ms-zeeven/.env
+
+
+          echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+          echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+          echo RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+          echo RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml pull
           docker compose -f /opt/applications/zeeven/ms-zeeven/docker-compose.yml up -d
           rm -f /opt/applications/zeeven/ms-zeeven/.env
