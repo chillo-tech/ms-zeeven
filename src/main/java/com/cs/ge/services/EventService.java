@@ -807,7 +807,7 @@ public class EventService {
     }
 
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 */10 * * * *")
     public void sendMessages() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
