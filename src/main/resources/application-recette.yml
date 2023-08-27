@@ -1,8 +1,6 @@
 app:
   host: http://api.zeeven.chillo.fr
 spring:
-  rabbitmq:
-    host: rabbitmq-1
   data:
     mongodb:
       host: db-mongo

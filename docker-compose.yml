@@ -12,7 +12,7 @@ services:
       # The HTTP port
       - "8083:8083"
     environment:
-      - "SPRING_PROFILES_ACTIVE=prod"
+      - "SPRING_PROFILES_ACTIVE=recette"
       - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
       - "providers.whatsapp.token=${WHATSAPP_TOKEN}"
       - "providers.front.host=${ZEEVEN_HOST}"
@@ -22,6 +22,10 @@ services:
       - "providers.stripe.key.webhooksecret=${STRIPE_WEBHOOKSECRET_KEY}"
       - "providers.iplocation.key=${PROD_IPLOCATION_API_KEY}"
       - "providers.backoffice.token=${PROD_BACKOFFICE_API_KEY}"
+      - "spring.rabbitmq.host=${RABBITMQ_IP}"
+      - "spring.rabbitmq.port=${RABBITMQ_PORT}"
+      - "spring.rabbitmq.password=${RABBITMQ_PASSWORD}"
+      - "spring.rabbitmq.username=${RABBITMQ_USERNAME}"
 
     labels:
       - "traefik.enable=true"

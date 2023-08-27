@@ -34,7 +34,7 @@ public abstract class SharedQRCodeService {
 
     private String slugFromType(final QRCodeEntity qrCodeEntity) {
         return switch (qrCodeEntity.getType()) {
-            case LINK -> this.utilitaireService.makeSlug(
+            case LINK, TEXT -> this.utilitaireService.makeSlug(
                     qrCodeEntity.getData().get("url")
                             .replaceAll("https", "")
                             .replaceAll("http", "")

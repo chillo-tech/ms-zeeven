@@ -71,6 +71,7 @@ public class UtilisateursService {
 
                 "ZEEVEN",
                 "welcome.html",
+                null,
                 "Notre cadeau de bienvenue"
         );
 
@@ -83,6 +84,7 @@ public class UtilisateursService {
 
                 "ZEEVEN",
                 "new-account.html",
+                null,
                 "Nouveau compte"
         );
     }
@@ -160,6 +162,7 @@ public class UtilisateursService {
 
                     "ZEEVEN",
                     "activation.html",
+                    null,
                     "Activez votre compte"
             );
         }

@@ -18,7 +18,6 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import lombok.extern.slf4j.Slf4j;
-import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,21 +41,24 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.cs.ge.enums.QRCodeType.TEXT;
+import static com.cs.ge.utils.Data.QRCODE_HEIGHT;
 import static com.cs.ge.utils.Data.QRCODE_STATISTICS_KEY;
+import static com.cs.ge.utils.Data.QRCODE_WIDTH;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
+import static net.glxn.qrgen.core.image.ImageType.JPG;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
 @Component
 public class QRCodeGeneratorService {
-    private final int WIDTH = 500;
-    private final int HEIGHT = 500;
+
 
     private final ProfileService profileService;
     private final String imagesHost;
     private final String imagesFolder;
-    private final String imagesRootfolder;
+    private final String imagesRootFolder;
     private final QRCodeRepository qrCodeRepository;
     private final QRCodeStatisticRepository qrCodeStatisticRepository;
     private final LinkQrCode linkQrCode;
@@ -67,7 +69,7 @@ public class QRCodeGeneratorService {
     public QRCodeGeneratorService(
             @Value("${resources.images.folder}") final String imagesFolder,
             @Value("${resources.images.host}") final String imagesHost,
-            @Value("${resources.images.root}") final String imagesRootfolder,
+            @Value("${resources.images.root}") final String imagesRootFolder,
             final QRCodeStatisticRepository qrCodeStatisticRepository,
             final ProfileService profileService,
             final QRCodeRepository qrCodeRepository,
@@ -80,7 +82,7 @@ public class QRCodeGeneratorService {
         this.qrCodeRepository = qrCodeRepository;
         this.imagesHost = imagesHost;
         this.imagesFolder = imagesFolder;
-        this.imagesRootfolder = imagesRootfolder;
+        this.imagesRootFolder = imagesRootFolder;
         this.qrCodeStatisticRepository = qrCodeStatisticRepository;
         this.wifiQrCode = wifiQrCode;
         this.linkQrCode = linkQrCode;
@@ -88,30 +90,27 @@ public class QRCodeGeneratorService {
         this.ipGeolocation = ipGeolocation;
     }
 
-    public void guestQRCODE(final Event event, final Guest guest) {
-        final Map<String, String> elements = new HashMap();
-        elements.put("guest", "guest");
-        elements.put("event", "event");
-        //this.generateQRCODEWithQRCodeWriter(elements);
-        this.generateQRCODEWithQRGen(event, guest);
+    public QRCodeEntity guestQRCODE(final Event event, final Guest guest) throws IOException {
+        return this.generateQRCODEWithQRGen(event, guest);
     }
 
-    private void generateQRCODEWithQRGen(final Event event, final Guest guest) {
-        final String location = format("%s/%s/events/%s/tickets/%s.jpg", this.imagesRootfolder, this.imagesFolder, event.getPublicId(), guest.getPublicId());
-        log.info("IMAGE LOCATION " + location);
-        final String imageContent = format("event-%s,guest-%s", event.getPublicId(), guest.getPublicId());
+    private QRCodeEntity generateQRCODEWithQRGen(final Event event, final Guest guest) throws IOException {
+        final String imageContent = format("event-%s|event-%s|guest-%s", event.getName(), event.getPublicId(), guest.getPublicId());
 
-        final File file = QRCode.from(imageContent).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
-        //FileUtils.writeByteArrayToFile(new File(location), decodedBytes);
-        log.info("IMAGE LOCATION " + file.getAbsolutePath());
-        try {
-            FileUtils.copyFile(file, new File(location));
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
-        log.info("IMAGE LOCATION " + file.getAbsolutePath());
+        final QRCodeEntity qrCodeEntity = new QRCodeEntity();
+        qrCodeEntity.setFinalContent(imageContent);
+        qrCodeEntity.setName(imageContent);
+        qrCodeEntity.setType(TEXT);
+        final Map<String, Object> params = this.qrCodeParamsFromType(qrCodeEntity);
+        final String publicId = valueOf(params.get("publicId"));
+        qrCodeEntity.setPublicId(publicId);
+        qrCodeEntity.setLocation(params.get("location").toString());
+        qrCodeEntity.setFinalContent(valueOf(params.get("finalContent")));
+        final File file = QRCode.from(valueOf(params.get("finalContent"))).to(JPG).withSize(QRCODE_WIDTH, QRCODE_HEIGHT).file();
 
-
+        final String qrCodeImage = this.getFileContent(params.get("location").toString(), file);
+        qrCodeEntity.setFile(qrCodeImage);
+        return qrCodeEntity;
     }
 
     private String generateQRCODEWithQRCodeWriter(final Map<String, String> elements) {
@@ -119,7 +118,7 @@ public class QRCodeGeneratorService {
             final ObjectMapper objectMapper = new ObjectMapper();
 
             final QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            final BitMatrix bitMatrix = qrCodeWriter.encode(objectMapper.writeValueAsString(elements), BarcodeFormat.QR_CODE, this.WIDTH, this.HEIGHT);
+            final BitMatrix bitMatrix = qrCodeWriter.encode(objectMapper.writeValueAsString(elements), BarcodeFormat.QR_CODE, QRCODE_WIDTH, QRCODE_HEIGHT);
             final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", byteArrayOutputStream);
             return Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
@@ -137,15 +136,23 @@ public class QRCodeGeneratorService {
         qrCodeEntity.setLocation(params.get("location").toString());
         qrCodeEntity.setName(valueOf(params.get("name")));
         qrCodeEntity.setFinalContent(valueOf(params.get("finalContent")));
-        File file = QRCode.from(valueOf(params.get("finalContent"))).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+        File file = QRCode.from(valueOf(params.get("finalContent")))
+                .withColor(0xFF000000, 0xFFFFFFFF)
+                .to(JPG)
+                .withSize(QRCODE_WIDTH, QRCODE_HEIGHT)
+                .file();
+        if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
             final UserAccount author = this.profileService.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
             qrCodeEntity.setTempContent(valueOf(params.get("tempContent")));
             qrCodeEntity.setTrack(true);
             qrCodeEntity.setAuthor(author.getId());
             this.qrCodeRepository.findByPublicId(publicId).ifPresent(byPublicId -> qrCodeEntity.setId(byPublicId.getId()));
             this.qrCodeRepository.save(qrCodeEntity);
-            file = QRCode.from(valueOf(params.get("tempContent"))).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
+            file = QRCode
+                    .from(valueOf(params.get("tempContent")))
+                    .to(JPG)
+                    .withSize(QRCODE_WIDTH, QRCODE_HEIGHT)
+                    .file();
         }
         return this.getFileContent(params.get("location").toString(), file);
     }
@@ -165,9 +172,9 @@ public class QRCodeGeneratorService {
         Map<String, Object> params = new HashMap<>();
         final QRCodeType type = qrCodeEntity.getType();
         switch (type) {
-            case LINK -> params = this.linkQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootfolder, this.imagesFolder);
-            case WIFI -> params = this.wifiQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootfolder, this.imagesFolder);
-            case VCARD -> params = this.vcardQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootfolder, this.imagesFolder);
+            case LINK, TEXT -> params = this.linkQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
+            case WIFI -> params = this.wifiQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
+            case VCARD -> params = this.vcardQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
         }
         return params;
     }
@@ -178,7 +185,7 @@ public class QRCodeGeneratorService {
 
         String result = null;
         switch (qrCodeEntity.getType()) {
-            case LINK -> result = this.linkQrCode.content(qrCodeEntity);
+            case LINK, TEXT -> result = this.linkQrCode.content(qrCodeEntity);
             case WIFI -> result = this.wifiQrCode.content(qrCodeEntity);
             case VCARD -> result = this.vcardQrCode.content(qrCodeEntity);
 
@@ -227,7 +234,7 @@ public class QRCodeGeneratorService {
         final List<QRCodeEntity> byAuthor = this.qrCodeRepository.findByAuthor(authenticateUser.getId());
 
         return byAuthor.parallelStream().peek(qrcode -> {
-            final File file = QRCode.from(qrcode.getTempContent()).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
+            final File file = QRCode.from(qrcode.getTempContent()).to(JPG).withSize(QRCODE_WIDTH, QRCODE_HEIGHT).file();
             try {
                 qrcode.setFile(this.getFileContent(qrcode.getLocation(), file));
             } catch (final IOException e) {
@@ -242,7 +249,7 @@ public class QRCodeGeneratorService {
         final QRCodeEntity qrCodeEntity = this.qrCodeRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Aucune entite ne correspond aux données que vous avez transmis"));
         final long scans = this.qrCodeStatisticRepository.countByQrCode(qrCodeEntity.getId());
         qrCodeEntity.setScans(scans);
-        final File file = QRCode.from(qrCodeEntity.getTempContent()).to(ImageType.JPG).withSize(this.WIDTH, this.HEIGHT).file();
+        final File file = QRCode.from(qrCodeEntity.getTempContent()).to(JPG).withSize(QRCODE_WIDTH, QRCODE_HEIGHT).file();
         try {
             qrCodeEntity.setFile(this.getFileContent(qrCodeEntity.getLocation(), file));
         } catch (final IOException e) {

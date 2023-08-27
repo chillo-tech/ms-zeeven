@@ -2,7 +2,10 @@ package com.cs.ge.controllers;
 
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
+import com.cs.ge.entites.Invitation;
+import com.cs.ge.entites.Plan;
 import com.cs.ge.entites.Schedule;
+import com.cs.ge.entites.Table;
 import com.cs.ge.services.EventService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -54,13 +58,13 @@ public class EventController {
     }
 
     @PostMapping(value = "{id}/guest")
-    public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) {
+    public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) throws IOException {
         this.eventService.addGuest(id, guest);
     }
 
-    @PostMapping(value = "{id}/invitations")
-    public void sendInvitations(@PathVariable final String id, @RequestBody final Set<String> guestIds) {
-        this.eventService.sendInvitations(id, guestIds);
+    @PostMapping(value = "{id}/plan")
+    public void addPlan(@PathVariable final String id, @RequestBody final Plan plan) {
+        this.eventService.addPlan(id, plan);
     }
 
     @DeleteMapping(value = "{eventId}/guest/{guestId}")
@@ -68,9 +72,30 @@ public class EventController {
         this.eventService.deleteGuest(eventId, guestId);
     }
 
+    @PostMapping(value = "{id}/invitations")
+    public void sendInvitations(@PathVariable final String id, @RequestBody final Set<String> guestIds) {
+        this.eventService.sendInvitations(id, guestIds);
+    }
+
+
     @GetMapping(value = "{id}/guest")
     public List<Guest> fetchGuests(@PathVariable final String id) {
         return this.eventService.guests(id);
+    }
+
+    @GetMapping(value = "{id}/table")
+    public List<Table> fetchTables(@PathVariable final String id) {
+        return this.eventService.tables(id);
+    }
+
+    @PostMapping(value = "{eventId}/table")
+    public void addTable(@PathVariable final String eventId, @RequestBody final Table table) {
+        this.eventService.addTable(eventId, table);
+    }
+
+    @DeleteMapping(value = "{eventId}/table/{tableId}")
+    public void deleteTable(@PathVariable final String eventId, @PathVariable final String tableId) {
+        this.eventService.deleteTable(eventId, tableId);
     }
 
     @PostMapping(value = "{id}/schedule")
@@ -93,5 +118,14 @@ public class EventController {
         return this.eventService.statistics(id);
     }
 
+    @PostMapping(value = "{id}/invitation")
+    public void addInvitation(@PathVariable final String id, @RequestBody final Invitation invitation) {
+        this.eventService.addInvitation(id, invitation);
+    }
+
+    @DeleteMapping(value = "{eventId}/invitation/{invitattionId}")
+    public void deleteInvitation(@PathVariable final String eventId, @PathVariable final String invitattionId) {
+        this.eventService.deleteInvitation(eventId, invitattionId);
+    }
 
 }
