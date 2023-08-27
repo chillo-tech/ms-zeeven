@@ -25,7 +25,7 @@ services:
       - "spring.rabbitmq.host=${RABBITMQ_IP}"
       - "spring.rabbitmq.port=${RABBITMQ_PORT}"
       - "spring.rabbitmq.password=${RABBITMQ_PASSWORD}"
-      - "spring.rabbitmq.username-${RABBITMQ_USERNAME}"
+      - "spring.rabbitmq.username=${RABBITMQ_USERNAME}"
 
     labels:
       - "traefik.enable=true"
