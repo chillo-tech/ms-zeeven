@@ -10,9 +10,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventParams {
-    private boolean hasGuests = false;
-    private boolean hasTables = false;
-    private boolean hasSchedule = false;
-    private boolean hasInvitation = false;
-    private boolean hasContacts = true;
+    private boolean table = false;
+    private boolean schedule = false;
+    private boolean invitation = false;
+    private boolean contact = true;
 }

@@ -65,7 +65,7 @@ public class InvitationService {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
         events.parallel()
-                .filter(event -> event.getParams().isHasInvitation())
+                .filter(event -> event.getParams().isInvitation())
                 .forEach(this::handleEvent);
     }
 

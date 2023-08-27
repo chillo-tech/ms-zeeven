@@ -256,7 +256,7 @@ public class EventService {
 
     public void addGuest(final String eventId, final Guest guestProfile) throws IOException {
         final var event = this.read(eventId);
-        if (event.getParams().isHasGuests()) {
+        if (event.getParams().isContact()) {
             ValidationService.checkEmail(guestProfile.getEmail());
             ValidationService.checkPhone(guestProfile.getPhone());
             final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
@@ -489,7 +489,7 @@ public class EventService {
 
     public void addSchedule(final String eventId, final Schedule schedule) {
         final var event = this.read(eventId);
-        if (event.getParams().isHasSchedule()) {
+        if (event.getParams().isSchedule()) {
             final String guestId = UUID.randomUUID().toString();
             schedule.setId(guestId);
 
@@ -529,7 +529,7 @@ public class EventService {
 
     public void addTable(final String eventId, final Table table) {
         final var event = this.read(eventId);
-        if (event.getParams().isHasTables()) {
+        if (event.getParams().isTable()) {
             table.setId(UUID.randomUUID().toString());
             table.setSlug(this.sharedService.toSlug(table.getName()));
             final List<Table> tables = event.getTables();
@@ -778,7 +778,7 @@ public class EventService {
 
     public void addInvitation(final String id, final Invitation invitation) {
         final Event event = this.read(id);
-        if (event.getParams().isHasInvitation()) {
+        if (event.getParams().isInvitation()) {
             final Template template = invitation.getTemplate();
             Set<Schedule> schedules = template.getSchedules();
             if (schedules != null) {
