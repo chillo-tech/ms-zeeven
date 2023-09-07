@@ -11,6 +11,7 @@ import com.cs.ge.enums.Civility;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -258,13 +259,15 @@ public class ASynchroniousNotifications {
         return parameters;
     }
 
-    public void sendInvitationMessage(final Map<String, Object> messageParameters) {
+    public void sendInvitationMessage(final Map<String, Object> messageParameters) throws JsonProcessingException {
         final MessageProperties messageProperties = new MessageProperties();
         messageProperties.setHeader("application", "ZEEVEN");
         messageProperties.setHeader("type", "invitation");
-        final Gson gson = new Gson();
+
+        final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
         final String jsonString = gson.toJson(messageParameters);
-        
+
+
         this.rabbitTemplate.setExchange(this.applicationInvitationsExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
     }

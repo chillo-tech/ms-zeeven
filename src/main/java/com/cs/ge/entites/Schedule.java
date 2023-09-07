@@ -1,7 +1,6 @@
 package com.cs.ge.entites;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.Expose;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +24,5 @@ public class Schedule {
     private String location;
     private String end;
     private String start;
-    @Expose
     private Instant date;
 }
