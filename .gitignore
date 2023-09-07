@@ -12,6 +12,7 @@ target/
 .settings
 .springBeans
 .sts4-cache
+tmp.image.jpg
 
 ### IntelliJ IDEA ###
 .idea
