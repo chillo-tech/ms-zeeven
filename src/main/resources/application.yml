@@ -8,6 +8,7 @@ app:
   images-host: http://files.chillo.fr
   files:
     exchange: tech.files.exchange
+    virtual-host: prod-notifications
   administrator:
       email: marlene.dechillo@gmail.com
       firstname: Marlene
