@@ -17,6 +17,7 @@ public class Template {
     private String publicId;
     private String title;
     private String name;
+    private String file;
     private String address;
     private String text;
     private Map<String, String> params;
