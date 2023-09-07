@@ -26,6 +26,7 @@ public class QRCodeEntity {
     private QRCodeType type;
     private Map<String, String> data;
     private Map<String, String> attributes;
+    private QRCodeParams params;
     private String publicId;
     private String author;
     private long scans;

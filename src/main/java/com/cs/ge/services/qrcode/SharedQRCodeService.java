@@ -35,10 +35,24 @@ public abstract class SharedQRCodeService {
     private String slugFromType(final QRCodeEntity qrCodeEntity) {
         return switch (qrCodeEntity.getType()) {
             case LINK, TEXT -> this.utilitaireService.makeSlug(
-                    qrCodeEntity.getData().get("url")
+                    qrCodeEntity.getData().get("text")
                             .replaceAll("https", "")
                             .replaceAll("http", "")
                             .replaceAll("www", "")
+            );
+            case PHONE -> this.utilitaireService.makeSlug(
+                    String.format("%s%s", qrCodeEntity.getData().get("phoneIndex"),
+                            qrCodeEntity.getData().get("phone"))
+            );
+            case SMS, WHATSAPP -> this.utilitaireService.makeSlug(
+                    String.format("%s-%s-%s",
+                            qrCodeEntity.getData().get("phoneIndex"),
+                            qrCodeEntity.getData().get("phone"),
+                            qrCodeEntity.getData().get("text")
+                    )
+            );
+            case EMAIL -> this.utilitaireService.makeSlug(
+                    String.format("%s", qrCodeEntity.getData().get("email"))
             );
             case WIFI -> this.utilitaireService.makeSlug(
                     qrCodeEntity.getData().get("name")

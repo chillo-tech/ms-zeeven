@@ -3,13 +3,16 @@ package com.cs.ge.services.qrcode;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.QRCodeEntity;
+import com.cs.ge.entites.QRCodeParams;
 import com.cs.ge.entites.QRCodeStatistic;
 import com.cs.ge.entites.UserAccount;
+import com.cs.ge.enums.QRCodeShapeType;
 import com.cs.ge.enums.QRCodeType;
 import com.cs.ge.feign.FeignIPGeolocation;
 import com.cs.ge.repositories.QRCodeRepository;
 import com.cs.ge.repositories.QRCodeStatisticRepository;
 import com.cs.ge.services.ProfileService;
+import com.cs.ge.services.graphics.GraphicsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.zxing.BarcodeFormat;
@@ -29,8 +32,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Base64;
@@ -38,22 +46,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.cs.ge.enums.QRCodeType.TEXT;
+import static com.cs.ge.utils.Data.IMAGE_FORMAT;
 import static com.cs.ge.utils.Data.QRCODE_HEIGHT;
 import static com.cs.ge.utils.Data.QRCODE_STATISTICS_KEY;
 import static com.cs.ge.utils.Data.QRCODE_WIDTH;
+import static com.cs.ge.utils.Data.QR_CODE_SHAPE_PARAMS;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static net.glxn.qrgen.core.image.ImageType.JPG;
+import static net.glxn.qrgen.core.image.ImageType.PNG;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
 @Component
 public class QRCodeGeneratorService {
-
 
     private final ProfileService profileService;
     private final String imagesHost;
@@ -63,8 +74,10 @@ public class QRCodeGeneratorService {
     private final QRCodeStatisticRepository qrCodeStatisticRepository;
     private final LinkQrCode linkQrCode;
     private final WIFIQrCode wifiQrCode;
+    private final MessageQrCode messageQrCode;
     private final VcardQrCode vcardQrCode;
     private final FeignIPGeolocation ipGeolocation;
+    private final GraphicsService graphicsService;
 
     public QRCodeGeneratorService(
             @Value("${resources.images.folder}") final String imagesFolder,
@@ -75,9 +88,9 @@ public class QRCodeGeneratorService {
             final QRCodeRepository qrCodeRepository,
             final LinkQrCode linkQrCode,
             final WIFIQrCode wifiQrCode,
-            final VcardQrCode vcardQrCode,
-            final FeignIPGeolocation ipGeolocation
-    ) {
+            final MessageQrCode messageQrCode, final VcardQrCode vcardQrCode,
+            final FeignIPGeolocation ipGeolocation,
+            final GraphicsService graphicsService) {
         this.profileService = profileService;
         this.qrCodeRepository = qrCodeRepository;
         this.imagesHost = imagesHost;
@@ -86,8 +99,10 @@ public class QRCodeGeneratorService {
         this.qrCodeStatisticRepository = qrCodeStatisticRepository;
         this.wifiQrCode = wifiQrCode;
         this.linkQrCode = linkQrCode;
+        this.messageQrCode = messageQrCode;
         this.vcardQrCode = vcardQrCode;
         this.ipGeolocation = ipGeolocation;
+        this.graphicsService = graphicsService;
     }
 
     public QRCodeEntity guestQRCODE(final Event event, final Guest guest) throws IOException {
@@ -128,33 +143,92 @@ public class QRCodeGeneratorService {
         return null;
     }
 
-    public String generate(final QRCodeEntity qrCodeEntity) throws IOException {
+    public String generate(final QRCodeEntity qrCodeEntity, final boolean simulate) throws IOException {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Map<String, Object> params = this.qrCodeParamsFromType(qrCodeEntity);
         final String publicId = valueOf(params.get("publicId"));
+
         qrCodeEntity.setPublicId(publicId);
-        qrCodeEntity.setLocation(params.get("location").toString());
+        qrCodeEntity.setLocation(valueOf(params.get("location")));
         qrCodeEntity.setName(valueOf(params.get("name")));
-        qrCodeEntity.setFinalContent(valueOf(params.get("finalContent")));
-        File file = QRCode.from(valueOf(params.get("finalContent")))
+        String qrCodeContent = valueOf(params.get("finalContent"));
+        qrCodeEntity.setFinalContent(qrCodeContent);
+        if (!simulate) {
+            if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+                final UserAccount author = this.profileService.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
+                qrCodeEntity.setTempContent(valueOf(params.get("tempContent")));
+                qrCodeEntity.setTrack(true);
+                qrCodeEntity.setAuthor(author.getId());
+                final Optional<QRCodeEntity> qrCodeInDatabase = this.qrCodeRepository.findByPublicId(publicId);
+                qrCodeInDatabase.ifPresent(codeEntity -> qrCodeEntity.setId(codeEntity.getId()));
+                this.qrCodeRepository.save(qrCodeEntity);
+                qrCodeContent = valueOf(params.get("tempContent"));
+            }
+        }
+        final File file = QRCode.from(qrCodeContent)
                 .withColor(0xFF000000, 0xFFFFFFFF)
-                .to(JPG)
+                .to(PNG)
                 .withSize(QRCODE_WIDTH, QRCODE_HEIGHT)
                 .file();
-        if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
-            final UserAccount author = this.profileService.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
-            qrCodeEntity.setTempContent(valueOf(params.get("tempContent")));
-            qrCodeEntity.setTrack(true);
-            qrCodeEntity.setAuthor(author.getId());
-            this.qrCodeRepository.findByPublicId(publicId).ifPresent(byPublicId -> qrCodeEntity.setId(byPublicId.getId()));
-            this.qrCodeRepository.save(qrCodeEntity);
-            file = QRCode
-                    .from(valueOf(params.get("tempContent")))
-                    .to(JPG)
-                    .withSize(QRCODE_WIDTH, QRCODE_HEIGHT)
-                    .file();
+        String fileContent = this.getFileContent(valueOf(params.get("location")), file);
+        final QRCodeParams qrCodeEntityParams = qrCodeEntity.getParams();
+        if (qrCodeEntityParams != null && !QRCodeShapeType.NONE.equals(qrCodeEntityParams.getShape().getSelected())) {
+            fileContent = this.getShapedQRCODE(fileContent, qrCodeEntityParams);
         }
-        return this.getFileContent(params.get("location").toString(), file);
+
+        return fileContent;
+    }
+
+    private String getShapedQRCODE(String fileContent, final QRCodeParams qrCodeEntityParams) throws IOException {
+        final Map<String, List<Integer>> coordinatesMap = QR_CODE_SHAPE_PARAMS.get(qrCodeEntityParams.getShape().getSelected());
+
+        final List<Integer> shapeSize = coordinatesMap.get("shape");
+        final int shapeWidth = shapeSize.get(0);
+        final int shapeHeight = shapeSize.get(1);
+
+        final BufferedImage shapedQrCode = new BufferedImage(shapeWidth, shapeHeight, BufferedImage.TYPE_INT_RGB);
+        final Graphics2D graphics2D = shapedQrCode.createGraphics();
+
+        try {
+            final String text = qrCodeEntityParams.getShape().getText();
+            final List<Integer> textCoords = coordinatesMap.get("text");
+            final byte[] bytes = Base64.getDecoder().decode(fileContent);
+            final BufferedImage qrcode = ImageIO.read(new ByteArrayInputStream(bytes));
+            graphics2D.setColor(Color.decode(qrCodeEntityParams.getShape().getBgColor()));
+            graphics2D.fillRect(0, 0, shapeWidth, shapeHeight);
+
+            final List<Integer> imageCoords = coordinatesMap.get("image");
+            graphics2D.drawImage(qrcode, imageCoords.get(0), imageCoords.get(1), imageCoords.get(2), imageCoords.get(3), null);
+
+            graphics2D.setColor(Color.decode(qrCodeEntityParams.getShape().getTextColor()));
+            int fontSize = 40;
+            if (text.length() > shapeWidth) {
+                fontSize = (shapeWidth / text.length()) * 40;
+            }
+
+            final Font openSansFont = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream("OpenSans-Light.ttf"));
+            openSansFont.deriveFont(Font.PLAIN, fontSize);
+            final Font font = new Font("Open Sans Font", Font.PLAIN, fontSize);
+            graphics2D.setFont(font);
+
+
+            this.graphicsService.centerString(
+                    graphics2D,
+                    new Rectangle(0, 0, shapeWidth, shapeHeight),
+                    qrCodeEntityParams.getShape().getText(),
+                    font,
+                    textCoords.get(0),
+                    textCoords.get(1)
+            );
+            graphics2D.dispose();
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(shapedQrCode, IMAGE_FORMAT, baos);
+            fileContent = Base64.getEncoder().encodeToString(baos.toByteArray());
+
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+        return fileContent;
     }
 
     private String getFileContent(final String location, final File file) throws IOException {
@@ -172,7 +246,8 @@ public class QRCodeGeneratorService {
         Map<String, Object> params = new HashMap<>();
         final QRCodeType type = qrCodeEntity.getType();
         switch (type) {
-            case LINK, TEXT -> params = this.linkQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
+            case LINK, TEXT, PHONE -> params = this.linkQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
+            case SMS, WHATSAPP, EMAIL -> params = this.messageQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
             case WIFI -> params = this.wifiQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
             case VCARD -> params = this.vcardQrCode.qrCodeParamsFromType(qrCodeEntity, this.imagesHost, this.imagesRootFolder, this.imagesFolder);
         }
@@ -185,7 +260,8 @@ public class QRCodeGeneratorService {
 
         String result = null;
         switch (qrCodeEntity.getType()) {
-            case LINK, TEXT -> result = this.linkQrCode.content(qrCodeEntity);
+            case LINK, TEXT, PHONE -> result = this.linkQrCode.content(qrCodeEntity);
+            case SMS, WHATSAPP, EMAIL -> result = this.messageQrCode.content(qrCodeEntity);
             case WIFI -> result = this.wifiQrCode.content(qrCodeEntity);
             case VCARD -> result = this.vcardQrCode.content(qrCodeEntity);
 

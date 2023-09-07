@@ -32,7 +32,7 @@ public class Event {
     private String slug;
     private Plan plan;
     private Invitation invitation;
-    private List<Guest> guests;
+    private List<Guest> guests = new ArrayList<>();
     private List<Channel> channels = new ArrayList<>();
     private List<ApplicationMessage> messages = new ArrayList<>();
     private List<Table> tables = new ArrayList<>();

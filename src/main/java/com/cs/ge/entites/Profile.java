@@ -21,6 +21,7 @@ public class Profile {
     private String slug;
     private Civility civility;
     protected String firstName;
+    protected String partner;
     protected String lastName;
     protected String email;
     protected String phoneIndex;

@@ -1,9 +1,12 @@
 package com.cs.ge.enums;
 
 public enum QRCodeType {
-    TEXT,
-    LINK,
+    PHONE,
     EMAIL,
+    TEXT,
+    SMS,
+    WHATSAPP,
+    LINK,
     WIFI,
     VCARD
 }

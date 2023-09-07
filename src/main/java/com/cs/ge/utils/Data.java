@@ -1,7 +1,12 @@
 package com.cs.ge.utils;
 
+import com.cs.ge.enums.QRCodeShapeType;
+
 import java.util.List;
 import java.util.Map;
+
+import static com.cs.ge.enums.QRCodeShapeType.TEXT_BOTTOM;
+import static com.cs.ge.enums.QRCodeShapeType.TEXT_TOP;
 
 public class Data {
     public static final String EMAIL_FROM = "noreply@zeeven.com";
@@ -24,6 +29,18 @@ public class Data {
             "MR", "M.",
             "Mr", "M.",
             "MLLE", "Mlle"
+    );
+    public static final Map<QRCodeShapeType, Map<String, List<Integer>>> QR_CODE_SHAPE_PARAMS = Map.of(
+            TEXT_BOTTOM, Map.of(
+                    "shape", List.of(QRCODE_WIDTH + 50, QRCODE_HEIGHT + 150),
+                    "image", List.of(25, 25, QRCODE_WIDTH, QRCODE_HEIGHT),
+                    "text", List.of(0, QRCODE_HEIGHT + 100)
+            ),
+            TEXT_TOP, Map.of(
+                    "shape", List.of(QRCODE_WIDTH + 50, QRCODE_HEIGHT + 150),
+                    "image", List.of(25, 120, QRCODE_WIDTH, QRCODE_HEIGHT),
+                    "text", List.of(0, 80)
+            )
     );
 
 }

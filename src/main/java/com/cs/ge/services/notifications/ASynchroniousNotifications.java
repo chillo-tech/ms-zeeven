@@ -268,7 +268,7 @@ public class ASynchroniousNotifications {
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
     }
 
-    public void senFile(final Map<String, Object> messageParameters) {
+    public void sendFile(final Map<String, Object> messageParameters) {
         final MessageProperties messageProperties = new MessageProperties();
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(messageParameters);

@@ -5,14 +5,9 @@ server:
 app:
   host: http://app.zeeven.com
   api-host: http://api.zeeven.com
-  images-host: https://files.chillo.fr
-  invitations:
-    exchange: tech.invitations.exchange
-  files:
-    virtual-host: prod-notifications
-    exchange: tech.files.exchange
+  images-host: http://files.chillo.fr
   administrator:
-      email: accueil@chillo.tech
+      email: marlene.dechillo@gmail.com
       firstname: Marlene
       lastname: "DE ZEEVEN"
 spring:
@@ -78,6 +73,7 @@ providers:
     host: ms-notifications:27192
     base-path: api/v1
   whatsapp:
+    api-endpoint: "https://wa.me"
     host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
     phone: 108190935266755
   twilio:
