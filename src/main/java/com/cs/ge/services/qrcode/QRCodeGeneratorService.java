@@ -208,7 +208,7 @@ public class QRCodeGeneratorService {
 
             final Font openSansFont = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream("OpenSans-Light.ttf"));
             openSansFont.deriveFont(Font.PLAIN, fontSize);
-            final Font font = new Font("Open Sans Font", Font.PLAIN, fontSize);
+            final Font font = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
             graphics2D.setFont(font);
 
 

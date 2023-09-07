@@ -163,7 +163,7 @@ public class InvitationService {
 
             openSansFont.deriveFont(Font.PLAIN, 32);
 
-            Font font = new Font("Open Sans Font", Font.BOLD, 90);
+            Font font = new Font(Font.SANS_SERIF, Font.BOLD, 90);
             g2d.setFont(font);
 
             g2d.drawImage(ticketTemplate, 0, 0, null);
@@ -172,7 +172,7 @@ public class InvitationService {
 
             g2d.setColor(new Color(210, 168, 40));
             this.graphicsService.centerString(g2d, left, event.getName().toUpperCase(), font, 15, 250);
-            font = new Font("Open Sans Font", Font.BOLD, 34);
+            font = new Font(Font.SANS_SERIF, Font.BOLD, 34);
             g2d.setFont(font);
 
 
@@ -186,7 +186,7 @@ public class InvitationService {
 
             this.graphicsService.centerString(g2d, left, invitation.getTemplate().getText().toUpperCase(), font, 15, 600);
 
-            font = new Font("Open Sans Font", Font.BOLD, 32);
+            font = new Font(Font.SANS_SERIF, Font.BOLD, 32);
             g2d.setFont(font);
 
             final Rectangle right = new Rectangle(1425, 22, 540, 600);
@@ -219,7 +219,7 @@ public class InvitationService {
                     470
             );
 
-            font = new Font("Open Sans Font", Font.BOLD, 50);
+            font = new Font(Font.SANS_SERIF, Font.BOLD, 50);
             g2d.setFont(font);
 
             this.graphicsService.centerString(
