@@ -10,6 +10,8 @@ app:
       email: marlene.dechillo@gmail.com
       firstname: Marlene
       lastname: "DE ZEEVEN"
+  invitations:
+      limit: 1
 spring:
   jackson:
     serialization:
