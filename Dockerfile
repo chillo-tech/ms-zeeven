@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-buster
+FROM amazoncorretto:17-alpine3.17-jdk
 VOLUME /tmp
 EXPOSE 8083
 ARG APP_NAME=ms-zeeven.jar
