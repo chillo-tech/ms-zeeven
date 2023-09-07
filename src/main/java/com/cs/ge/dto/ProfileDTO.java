@@ -1,8 +1,10 @@
 package com.cs.ge.dto;
 
+import com.cs.ge.enums.Civility;
+
 public record ProfileDTO(
         String id,
-        String civility,
+        Civility civility,
         String firstName,
         String lastName,
         String email,

@@ -122,7 +122,7 @@ public class InvitationService {
                                 "image", String.format("%s/%s", this.applicationFilesHost, filePath),
                                 "guest", new ProfileDTO(
                                         guest.getPublicId(),
-                                        guest.getCivility().name(),
+                                        guest.getCivility(),
                                         guest.getFirstName(),
                                         guest.getLastName(),
                                         guest.getEmail(),
@@ -132,7 +132,7 @@ public class InvitationService {
                                 ),
                                 "author", new ProfileDTO(
                                         event.getAuthor().getPublicId(),
-                                        event.getAuthor().getCivility().name(),
+                                        event.getAuthor().getCivility(),
                                         event.getAuthor().getFirstName(),
                                         event.getAuthor().getLastName(),
                                         event.getAuthor().getEmail(),
