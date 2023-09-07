@@ -1,6 +1,5 @@
 package com.cs.ge.services;
 
-import com.cs.ge.dto.ProfileDTO;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
@@ -120,26 +119,8 @@ public class InvitationService {
                                 "eventId", event.getPublicId(),
                                 "eventName", event.getName(),
                                 "image", String.format("%s/%s", this.applicationFilesHost, filePath),
-                                "guest", new ProfileDTO(
-                                        guest.getPublicId(),
-                                        guest.getCivility(),
-                                        guest.getFirstName(),
-                                        guest.getLastName(),
-                                        guest.getEmail(),
-                                        guest.isTrial(),
-                                        guest.getPhoneIndex(),
-                                        guest.getPhone()
-                                ),
-                                "author", new ProfileDTO(
-                                        event.getAuthor().getPublicId(),
-                                        event.getAuthor().getCivility(),
-                                        event.getAuthor().getFirstName(),
-                                        event.getAuthor().getLastName(),
-                                        event.getAuthor().getEmail(),
-                                        event.getAuthor().isTrial(),
-                                        event.getAuthor().getPhoneIndex(),
-                                        event.getAuthor().getPhone()
-                                ),
+                                "guest", guest,
+                                "author", event.getAuthor(),
                                 "application", "ZEEVEN",
                                 "notificationTemplate", invitation.getTemplate().getName(),
                                 "whatsappTemplateName", "ze_invitation",
@@ -220,6 +201,7 @@ public class InvitationService {
                             CIVILITY_MAPPING.get(String.valueOf(guest.getCivility())),
                             String.valueOf(formattedFirstName.charAt(0)).toUpperCase(),
                             formattedFirstName.substring(1).toLowerCase(),
+
                             String.valueOf(guest.getLastName().isEmpty() ? "" : guest.getLastName()).toUpperCase()
                     ),
                     font,
