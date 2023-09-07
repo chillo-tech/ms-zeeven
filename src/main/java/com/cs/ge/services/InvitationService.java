@@ -143,9 +143,9 @@ public class InvitationService {
         try {
 
             final Template template = invitation.getTemplate();
-            BufferedImage ticketTemplate = ImageIO.read(new File("horizontal-template.png"));
-            final int ticketWidth = ticketTemplate.getWidth();
-            final int ticketHeight = ticketTemplate.getHeight();
+            BufferedImage ticketTemplate = null; //ImageIO.read(new File("horizontal-template.png"));
+            final int ticketWidth = 2000; //ticketTemplate.getWidth();
+            final int ticketHeight = 647; //ticketTemplate.getHeight();
 
             final byte[] bytes = Base64.getDecoder().decode(qrcodeAsString);
             final BufferedImage qrcode = ImageIO.read(new ByteArrayInputStream(bytes));
