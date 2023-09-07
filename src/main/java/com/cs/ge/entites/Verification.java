@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.google.gson.annotations.Expose;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,12 +24,13 @@ public class Verification {
     private String code;
     private boolean active;
     private String username;
-
+    @Expose
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private LocalDateTime dateCreation;
 
+    @Expose
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
@@ -38,7 +40,7 @@ public class Verification {
     public Verification() {
     }
 
-    public Verification(boolean active, String code, String username, LocalDateTime dateCreation, LocalDateTime dateExpiration, UserAccount userAccount) {
+    public Verification(final boolean active, final String code, final String username, final LocalDateTime dateCreation, final LocalDateTime dateExpiration, final UserAccount userAccount) {
         this.code = code;
         this.active = active;
         this.username = username;
