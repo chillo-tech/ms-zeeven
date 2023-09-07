@@ -65,8 +65,8 @@ public class InvitationService {
         this.nbInvitations = nbInvitations;
     }
 
-    //@Scheduled(cron = "*/10 * * * * *")
-    @Scheduled(cron = "@hourly")
+    @Scheduled(cron = "*/10 * * * * *")
+    //@Scheduled(cron = "@hourly")
     public void sendInvitations() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
@@ -151,7 +151,11 @@ public class InvitationService {
             final BufferedImage qrcode = ImageIO.read(new ByteArrayInputStream(bytes));
 
             if (!Strings.isNullOrEmpty(event.getInvitation().getTemplate().getFile())) {
-                final byte[] fileAsBytes = Base64.getDecoder().decode(event.getInvitation().getTemplate().getFile());
+                String imageFromFile = event.getInvitation().getTemplate().getFile();
+                if (!Strings.isNullOrEmpty(imageFromFile) && imageFromFile.contains("base64,")) {
+                    imageFromFile = imageFromFile.split(",")[1];
+                }
+                final byte[] fileAsBytes = Base64.getDecoder().decode(imageFromFile);
                 ticketTemplate = ImageIO.read(new ByteArrayInputStream(fileAsBytes));
             }
 
