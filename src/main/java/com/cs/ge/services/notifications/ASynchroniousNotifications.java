@@ -258,14 +258,17 @@ public class ASynchroniousNotifications {
         return parameters;
     }
 
-    public void sendInvitationMessage(final Map<String, Object> messageParameters) {
+    public void sendInvitationMessage(final Map<String, Object> messageParameters) throws JsonProcessingException {
         final MessageProperties messageProperties = new MessageProperties();
         messageProperties.setHeader("application", "ZEEVEN");
         messageProperties.setHeader("type", "invitation");
         final Gson gson = new Gson();
-        final String jsonString = gson.toJson(messageParameters);
+        //final String jsonString = gson.toJson(messageParameters);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final String jacksonData = objectMapper.writeValueAsString(messageParameters);
         this.rabbitTemplate.setExchange(this.applicationInvitationsExchange);
-        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
+        this.rabbitTemplate.convertAndSend(new Message(jacksonData.getBytes(), messageProperties));
     }
 
     public void sendFile(final Map<String, Object> messageParameters) {
