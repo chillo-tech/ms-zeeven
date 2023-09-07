@@ -65,8 +65,8 @@ public class InvitationService {
         this.nbInvitations = nbInvitations;
     }
 
-    //@Scheduled(cron = "@hourly")
-    @Scheduled(cron = "*/10 * * * * *")
+    //@Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "@hourly")
     public void sendInvitations() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
