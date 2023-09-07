@@ -1,5 +1,7 @@
 app:
   host: https://api.zeeven.chillo.fr
+  invitations:
+    exchange: tech.invitations.exchange
 spring:
   rabbitmq:
     host: 192.168.1.101
