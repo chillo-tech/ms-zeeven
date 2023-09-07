@@ -1,5 +1,6 @@
 package com.cs.ge.services;
 
+import com.cs.ge.dto.ProfileDTO;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
@@ -119,8 +120,26 @@ public class InvitationService {
                                 "eventId", event.getPublicId(),
                                 "eventName", event.getName(),
                                 "image", String.format("%s/%s", this.applicationFilesHost, filePath),
-                                "guest", guest,
-                                "author", event.getAuthor(),
+                                "guest", new ProfileDTO(
+                                        guest.getPublicId(),
+                                        guest.getCivility().name(),
+                                        guest.getFirstName(),
+                                        guest.getLastName(),
+                                        guest.getEmail(),
+                                        guest.isTrial(),
+                                        guest.getPhoneIndex(),
+                                        guest.getPhone()
+                                ),
+                                "author", new ProfileDTO(
+                                        event.getAuthor().getPublicId(),
+                                        event.getAuthor().getCivility().name(),
+                                        event.getAuthor().getFirstName(),
+                                        event.getAuthor().getLastName(),
+                                        event.getAuthor().getEmail(),
+                                        event.getAuthor().isTrial(),
+                                        event.getAuthor().getPhoneIndex(),
+                                        event.getAuthor().getPhone()
+                                ),
                                 "application", "ZEEVEN",
                                 "notificationTemplate", invitation.getTemplate().getName(),
                                 "whatsappTemplateName", "ze_invitation",
