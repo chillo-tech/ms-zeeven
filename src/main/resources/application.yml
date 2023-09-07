@@ -6,6 +6,9 @@ app:
   host: http://app.zeeven.com
   api-host: http://api.zeeven.com
   images-host: http://files.chillo.fr
+  invitations:
+    exchange: tech.invitations.exchange
+    limit: 1
   files:
     exchange: tech.files.exchange
     virtual-host: prod-notifications
@@ -13,8 +16,6 @@ app:
       email: marlene.dechillo@gmail.com
       firstname: Marlene
       lastname: "DE ZEEVEN"
-  invitations:
-      limit: 1
 spring:
   jackson:
     serialization:
