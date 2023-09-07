@@ -38,7 +38,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Base64;
@@ -206,8 +205,6 @@ public class QRCodeGeneratorService {
                 fontSize = (shapeWidth / text.length()) * 40;
             }
 
-            final Font openSansFont = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream("OpenSans-Light.ttf"));
-            openSansFont.deriveFont(Font.PLAIN, fontSize);
             final Font font = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
             graphics2D.setFont(font);
 

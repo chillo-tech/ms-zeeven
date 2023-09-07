@@ -23,7 +23,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -159,10 +158,6 @@ public class InvitationService {
             final BufferedImage finalImage = new BufferedImage(ticketWidth, ticketHeight, BufferedImage.TYPE_INT_RGB);
             final Graphics2D g2d = finalImage.createGraphics();
 
-            final Font openSansFont = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream("OpenSans-Light.ttf"));
-
-            openSansFont.deriveFont(Font.PLAIN, 32);
-
             Font font = new Font(Font.SANS_SERIF, Font.BOLD, 90);
             g2d.setFont(font);
 
@@ -235,7 +230,7 @@ public class InvitationService {
             ImageIO.write(finalImage, IMAGE_FORMAT, baos);
             return Base64.getEncoder().encodeToString(baos.toByteArray());
 
-        } catch (final IOException | FontFormatException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
         }
         return null;
