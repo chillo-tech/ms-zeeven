@@ -220,7 +220,6 @@ public class InvitationService {
                             CIVILITY_MAPPING.get(String.valueOf(guest.getCivility())),
                             String.valueOf(formattedFirstName.charAt(0)).toUpperCase(),
                             formattedFirstName.substring(1).toLowerCase(),
-
                             String.valueOf(guest.getLastName().isEmpty() ? "" : guest.getLastName()).toUpperCase()
                     ),
                     font,

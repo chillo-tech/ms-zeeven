@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM openjdk:17-jdk-buster
 VOLUME /tmp
 EXPOSE 8083
 ARG APP_NAME=ms-zeeven.jar
