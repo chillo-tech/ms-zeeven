@@ -1,6 +1,7 @@
 package com.cs.ge.entites;
 
 import com.cs.ge.enums.Channel;
+import com.google.gson.annotations.Expose;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,8 @@ public class Invitation {
     private String publicId;
     private Channel[] channels;
     private Template template;
+    @Expose
     private Instant send;
+    @Expose
     private Instant active;
 }
