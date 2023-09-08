@@ -109,12 +109,13 @@ public class QRCodeGeneratorService {
     }
 
     private QRCodeEntity generateQRCODEWithQRGen(final Event event, final Guest guest) throws IOException {
-        final String imageContent = format("event-%s|event-%s|guest-%s", event.getName(), event.getPublicId(), guest.getPublicId());
+        final String imageContent = format("%s|%s|%s", event.getName(), event.getPublicId(), guest.getPublicId());
 
         final QRCodeEntity qrCodeEntity = new QRCodeEntity();
         qrCodeEntity.setFinalContent(imageContent);
         qrCodeEntity.setName(imageContent);
         qrCodeEntity.setType(TEXT);
+        qrCodeEntity.setData(Map.of("text", imageContent));
         final Map<String, Object> params = this.qrCodeParamsFromType(qrCodeEntity);
         final String publicId = valueOf(params.get("publicId"));
         qrCodeEntity.setPublicId(publicId);

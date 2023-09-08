@@ -7,7 +7,6 @@ import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
 import com.cs.ge.entites.Plan;
-import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.Table;
 import com.cs.ge.entites.Template;
@@ -267,8 +266,8 @@ public class EventService {
             guestProfile.setPublicId(publicId);
             final String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
             guestProfile.setSlug(format("%s-%s", slug, publicId));
-            final QRCodeEntity guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
-            guestProfile.setQrCode(guestQRCODE);
+            //final QRCodeEntity guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
+            //guestProfile.setQrCode(guestQRCODE);
             List<Guest> guests = event.getGuests();
             if (guests == null) {
                 guests = new ArrayList<>();
