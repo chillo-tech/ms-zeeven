@@ -65,8 +65,7 @@ public class InvitationService {
         this.nbInvitations = nbInvitations;
     }
 
-    @Scheduled(cron = "*/10 * * * * *")
-    //@Scheduled(cron = "@hourly")
+    @Scheduled(cron = "@hourly")
     public void sendInvitations() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
@@ -85,7 +84,7 @@ public class InvitationService {
             this.nbInvitations = guests.size();
         }
         if (invitation.getSend().isBefore(Instant.now())) {
-            guests.subList(0, 1).parallelStream().forEach(guest -> {
+            guests.parallelStream().forEach(guest -> {
                 final QRCodeEntity qrCodeEntity = QRCodeEntity
                         .builder()
                         .type(QRCodeType.TEXT)
@@ -113,8 +112,6 @@ public class InvitationService {
                                         "path", filePath
                                 )
                         );
-                        guest.setPhoneIndex("33");
-                        guest.setPhone("761705745");
                         final Map<String, Object> messageParameters = Map.of(
                                 "eventId", event.getPublicId(),
                                 "eventName", event.getName(),
