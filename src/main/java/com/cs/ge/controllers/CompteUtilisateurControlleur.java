@@ -1,5 +1,6 @@
 package com.cs.ge.controllers;
 
+import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.JwtRequest;
 import com.cs.ge.entites.JwtResponse;
 import com.cs.ge.entites.UserAccount;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -67,9 +69,13 @@ public class CompteUtilisateurControlleur {
     @ResponseBody
     @PatchMapping(path = "profile/{id}")
     public void getAuthenticateUser(@PathVariable final String id, @RequestBody final UserAccount userAccount) {
-
-
         this.utilisateursService.updateUtilisateur(id, userAccount);
+    }
+
+    @ResponseBody
+    @GetMapping(path = "profile/{id}/contact")
+    public List<Guest> getAuthenticateUserContacts(@PathVariable final String id) {
+        return this.utilisateursService.contacts(id);
     }
 }
 

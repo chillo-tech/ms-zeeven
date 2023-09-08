@@ -1,10 +1,12 @@
 package com.cs.ge.services;
 
+import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.cs.ge.enums.Role.CUSTOMER;
 import static com.cs.ge.utils.Data.DEFAULT_STOCK_SIZE;
@@ -29,6 +32,7 @@ public class UtilisateursService {
     private final VerificationService verificationService;
     private final PasswordEncoder passwordEncoder;
     private final StockService stockService;
+    private final ProfileService profileService;
     private final ASynchroniousNotifications asynchroniousNotifications;
 
     public UtilisateursService(
@@ -36,11 +40,12 @@ public class UtilisateursService {
             final VerificationService verificationService,
             final PasswordEncoder passwordEncoder,
             final StockService stockService,
-            final ASynchroniousNotifications aSynchroniousNotifications) {
+            final ProfileService profileService, final ASynchroniousNotifications aSynchroniousNotifications) {
         this.utilisateurRepository = utilisateurRepository;
         this.verificationService = verificationService;
         this.passwordEncoder = passwordEncoder;
         this.stockService = stockService;
+        this.profileService = profileService;
 
         this.asynchroniousNotifications = aSynchroniousNotifications;
     }
@@ -192,5 +197,17 @@ public class UtilisateursService {
                 throw new ApplicationException("Ce téléphone est déjà utilsé. Si vous avez déjà un compte, connectez vous.");
             }
         }
+    }
+
+    public List<Guest> contacts(final String id) {
+        final UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
+        if (authenticatedUser.getId().equals(id)) {
+            return authenticatedUser.getContacts().stream().map(userAccount -> {
+                final Guest guest = new Guest();
+                BeanUtils.copyProperties(userAccount, guest);
+                return guest;
+            }).collect(Collectors.toList());
+        }
+        return null;
     }
 }

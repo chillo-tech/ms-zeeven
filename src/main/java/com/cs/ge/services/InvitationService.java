@@ -65,7 +65,7 @@ public class InvitationService {
         this.nbInvitations = nbInvitations;
     }
 
-    @Scheduled(cron = "@hourly")
+    @Scheduled(cron = "0 0/10 * * * *")
     public void sendInvitations() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
@@ -86,6 +86,7 @@ public class InvitationService {
         if (this.nbInvitations == 0) {
             this.nbInvitations = guests.size();
         }
+        log.debug("Les invitations pour {} seront envoyées à {}", event.getName(), invitation.getSend());
         if (invitation.getSend().isBefore(Instant.now())) {
             guests.parallelStream().forEach(guest -> {
                 final QRCodeEntity qrCodeEntity = QRCodeEntity
