@@ -80,6 +80,9 @@ public class InvitationService {
         if (invitation == null || invitation.getSend() == null) {
             return;
         }
+        if (invitation.isSent()) {
+            return;
+        }
         if (this.nbInvitations == 0) {
             this.nbInvitations = guests.size();
         }
@@ -112,6 +115,7 @@ public class InvitationService {
                                         "path", filePath
                                 )
                         );
+
                         final Map<String, Object> messageParameters = Map.of(
                                 "eventId", event.getPublicId(),
                                 "eventName", event.getName(),
@@ -133,6 +137,9 @@ public class InvitationService {
 
             });
         }
+        invitation.setSent(true);
+        event.setInvitation(invitation);
+        this.eventsRepository.save(event);
     }
 
     private String generateTicket(final Event event, final Guest guest, final Invitation invitation,

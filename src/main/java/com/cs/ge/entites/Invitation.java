@@ -18,6 +18,7 @@ public class Invitation {
     private String publicId;
     private Channel[] channels;
     private Template template;
+    private boolean isSent;
     @Expose
     private Instant send;
     @Expose
