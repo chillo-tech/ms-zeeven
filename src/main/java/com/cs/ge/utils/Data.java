@@ -28,7 +28,8 @@ public class Data {
             "Mme", "Mme",
             "MR", "M.",
             "Mr", "M.",
-            "MLLE", "Mlle"
+            "MLLE", "Mlle",
+            "Mlle", "Mlle"
     );
     public static final Map<QRCodeShapeType, Map<String, List<Integer>>> QR_CODE_SHAPE_PARAMS = Map.of(
             TEXT_BOTTOM, Map.of(

@@ -1,5 +1,6 @@
 package com.cs.ge.entites;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,8 @@ import lombok.Setter;
 
 import java.util.Map;
 import java.util.Set;
+
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,6 +20,7 @@ public class Template {
     private String publicId;
     private String title;
     private String name;
+    @JsonProperty(access = WRITE_ONLY)
     private String file;
     private String address;
     private String text;

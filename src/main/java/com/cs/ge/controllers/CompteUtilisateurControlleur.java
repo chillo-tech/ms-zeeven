@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,9 +74,21 @@ public class CompteUtilisateurControlleur {
     }
 
     @ResponseBody
-    @GetMapping(path = "profile/{id}/contact")
-    public List<Guest> getAuthenticateUserContacts(@PathVariable final String id) {
-        return this.utilisateursService.contacts(id);
+    @GetMapping(path = "contact")
+    public List<Guest> getAuthenticateUserContacts() {
+        return this.utilisateursService.contacts();
+    }
+
+    @ResponseBody
+    @PostMapping(path = "contact")
+    public void getAuthenticateUserContacts(@RequestBody final UserAccount guest) {
+        this.utilisateursService.createContact(guest);
+    }
+
+    @ResponseBody
+    @DeleteMapping(path = "contact/{id}")
+    public void deleteAuthenticateUserContacts(@PathVariable final String id) {
+        this.utilisateursService.deleteContact(id);
     }
 }
 

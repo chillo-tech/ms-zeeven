@@ -6,6 +6,7 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.UtilisateurRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.cs.ge.enums.Role.CUSTOMER;
@@ -199,15 +202,36 @@ public class UtilisateursService {
         }
     }
 
-    public List<Guest> contacts(final String id) {
+    public List<Guest> contacts() {
         final UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
-        if (authenticatedUser.getId().equals(id)) {
-            return authenticatedUser.getContacts().stream().map(userAccount -> {
-                final Guest guest = new Guest();
-                BeanUtils.copyProperties(userAccount, guest);
-                return guest;
-            }).collect(Collectors.toList());
-        }
-        return null;
+        return authenticatedUser.getContacts().stream().map(userAccount -> {
+            final Guest guest = new Guest();
+            BeanUtils.copyProperties(userAccount, guest);
+            return guest;
+        }).collect(Collectors.toList());
+    }
+
+    public void deleteContact(final String id) {
+        final UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
+        final List<UserAccount> userAccounts = authenticatedUser.getContacts().stream().filter(userAccount -> !userAccount.getPublicId().equals(id)).collect(Collectors.toList());
+        authenticatedUser.setContacts(userAccounts);
+        this.utilisateurRepository.save(authenticatedUser);
+    }
+
+    public void createContact(final UserAccount userAccount) {
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String id = UUID.randomUUID().toString();
+        userAccount.setId(id);
+        userAccount.setPublicId(publicId);
+
+        userAccount.setRole(CUSTOMER);
+        userAccount.setEnabled(true);
+        userAccount.setTrial(true);
+
+        final UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
+        final List<UserAccount> contacts = authenticatedUser.getContacts();
+        contacts.add(userAccount);
+        authenticatedUser.setContacts(contacts);
+        this.utilisateurRepository.save(authenticatedUser);
     }
 }
