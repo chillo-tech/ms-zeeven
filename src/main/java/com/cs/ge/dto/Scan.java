@@ -14,8 +14,8 @@ import java.time.Instant;
 public class Scan {
     private String publicId;
     private Instant date;
-    private String deventPublicId;
-    private String dguestPublicId;
+    private String eventPublicId;
+    private String guestPublicId;
     private String invitationId;
-    private String dtablePublicId;
+    private String tablePublicId;
 }
