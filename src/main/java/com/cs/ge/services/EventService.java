@@ -538,7 +538,7 @@ public class EventService {
     public void deleteScan(final String eventId, final String scanId) {
         final var event = this.read(eventId);
         List<Scan> scans = event.getScans();
-        scans = scans.stream().filter(current -> !current.getPublicId().equals(scanId)).collect(Collectors.toList());
+        scans = scans.stream().filter(current -> !current.getGuestPublicId().equals(scanId)).collect(Collectors.toList());
         event.setScans(scans);
         this.eventsRepository.save(event);
     }
