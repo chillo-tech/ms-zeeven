@@ -1,5 +1,6 @@
 package com.cs.ge.services;
 
+import com.cs.ge.dto.Scan;
 import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
@@ -513,6 +514,30 @@ public class EventService {
         List<Schedule> schedules = event.getSchedules();
         schedules = schedules.stream().filter(currentSchedule -> !currentSchedule.getPublicId().equals(scheduleId)).collect(Collectors.toList());
         event.setSchedules(schedules);
+        this.eventsRepository.save(event);
+    }
+
+    public void addScan(final String eventId, final Scan scan) {
+        log.info("Enregistrement du scan pour {}", eventId);
+        final var event = this.read(eventId);
+
+        final String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+        scan.setPublicId(publicId);
+
+        List<Scan> scans = event.getScans();
+        if (scans == null) {
+            scans = new ArrayList<>();
+        }
+        scans.add(scan);
+        event.setScans(scans);
+        this.eventsRepository.save(event);
+    }
+
+    public void deleteScan(final String eventId, final String scanId) {
+        final var event = this.read(eventId);
+        List<Scan> scans = event.getScans();
+        scans = scans.stream().filter(current -> !current.getPublicId().equals(scanId)).collect(Collectors.toList());
+        event.setScans(scans);
         this.eventsRepository.save(event);
     }
 
