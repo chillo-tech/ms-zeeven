@@ -527,6 +527,8 @@ public class EventService {
         List<Scan> scans = event.getScans();
         if (scans == null) {
             scans = new ArrayList<>();
+        } else {
+            scans = scans.stream().filter(current -> !current.getGuestPublicId().equals(scan.getPublicId())).collect(Collectors.toList());
         }
         scans.add(scan);
         event.setScans(scans);
