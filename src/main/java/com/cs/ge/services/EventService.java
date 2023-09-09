@@ -493,7 +493,7 @@ public class EventService {
             final String guestId = UUID.randomUUID().toString();
             schedule.setId(guestId);
 
-            final String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+            final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
             schedule.setPublicId(publicId);
             final String slug = this.utilitaireService.makeSlug(schedule.getTitle());
             schedule.setSlug(format("%s-%s", slug, publicId));
@@ -521,7 +521,7 @@ public class EventService {
         log.info("Enregistrement du scan pour {}", eventId);
         final var event = this.read(eventId);
 
-        final String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         scan.setPublicId(publicId);
 
         List<Scan> scans = event.getScans();
