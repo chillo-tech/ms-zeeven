@@ -2,6 +2,7 @@ package com.cs.ge.services.qrcode;
 
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.utils.UtilitaireService;
+import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import net.glxn.qrgen.core.scheme.SMS;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,10 +38,17 @@ public class MessageQrCode extends SharedQRCodeService {
         sms.setSubject(text);
         String message = sms.generateString();
         if (WHATSAPP.equals(qrCodeEntity.getType())) {
-            message = String.format("%s/%s?text=%s", this.waEndpoint, phoneNumber, URLEncoder.encode(text, StandardCharsets.UTF_8));
+            message = String.format("%s/%s", this.waEndpoint, phoneNumber);
+            if (!Strings.isNullOrEmpty(text)) {
+                message = String.format("%s?text=%s", message, URLEncoder.encode(text, StandardCharsets.UTF_8));
+            }
+
         }
         if (EMAIL.equals(qrCodeEntity.getType())) {
-            message = String.format("mailto:%s?body=%s", qrCodeEntity.getData().get("email"), URLEncoder.encode(text, StandardCharsets.UTF_8));
+            message = String.format("mailto:%s", qrCodeEntity.getData().get("email"));
+            if (!Strings.isNullOrEmpty(text)) {
+                message = String.format("%s?body=%s", message, URLEncoder.encode(text, StandardCharsets.UTF_8));
+            }
         }
         params.put("finalContent", message);
         params.put("tempContent", params.get("finalContent"));

@@ -13,7 +13,7 @@ app:
     exchange: tech.files.exchange
     virtual-host: prod-notifications
   administrator:
-      email: marlene.dechillo@gmail.com
+      email: no-reply@zeeven.eu
       firstname: Marlene
       lastname: "DE ZEEVEN"
 spring:

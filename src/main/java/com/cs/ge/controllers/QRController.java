@@ -7,7 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,8 +38,12 @@ public class QRController {
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    public String add(@RequestParam(defaultValue = "true") final boolean simulate, @RequestBody final QRCodeEntity qrCodeEntity) throws IOException {
-        return this.qrCodeGeneratorService.generate(qrCodeEntity, simulate);
+    public String add(
+            @RequestParam(defaultValue = "true") final boolean simulate,
+            @RequestBody final QRCodeEntity qrCodeEntity,
+            @RequestHeader final Map<String, String> headers
+    ) throws IOException {
+        return this.qrCodeGeneratorService.generate(qrCodeEntity, simulate, headers);
     }
 
     @GetMapping
@@ -51,6 +57,16 @@ public class QRController {
         final RedirectView redirectView = new RedirectView();
         redirectView.setUrl(url);
         return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(URI.create(url)).build();
+    }
+
+    @PatchMapping(value = "/{id}")
+    public void path(@PathVariable final String id, @RequestBody final QRCodeEntity qrCodeEntity) throws IOException {
+        this.qrCodeGeneratorService.patch(id, qrCodeEntity);
+    }
+
+    @DeleteMapping(value = "/{id}")
+    public void get(@PathVariable final String id) throws IOException {
+        this.qrCodeGeneratorService.delete(id);
     }
 
     @GetMapping(value = "/private/{id}")

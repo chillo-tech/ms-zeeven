@@ -31,8 +31,8 @@ public class Profile {
     protected String phone;
     protected boolean trial;
     protected List<Stock> stocks;
-    
+
     @JsonProperty(access = WRITE_ONLY)
-    protected List<UserAccount> contacts;
+    protected List<Guest> contacts;
 
 }

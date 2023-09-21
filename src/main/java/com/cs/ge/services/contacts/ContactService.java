@@ -6,7 +6,6 @@ import com.cs.ge.entites.UserAccount;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.repositories.UtilisateurRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -34,12 +33,7 @@ public class ContactService {
             log.info("Mis à jour des contacts pour {}", userAccount.getPublicId());
             final Stream<Event> userEvents = this.eventsRepository.findByAuthorId(userAccount.getId());
             final List<Guest> guests = userEvents.parallel().flatMap(event -> event.getGuests().stream()).collect(Collectors.toList());
-            final List<UserAccount> contacts = guests.stream().map(guest -> {
-                final UserAccount temp = new UserAccount();
-                BeanUtils.copyProperties(guest, temp);
-                return temp;
-            }).collect(Collectors.toList());
-            userAccount.setContacts(contacts);
+            userAccount.setContacts(guests);
             this.utilisateurRepository.save(userAccount);
         });
     }

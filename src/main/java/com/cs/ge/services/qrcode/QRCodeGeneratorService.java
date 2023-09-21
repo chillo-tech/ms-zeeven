@@ -23,6 +23,9 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import lombok.extern.slf4j.Slf4j;
 import net.glxn.qrgen.javase.QRCode;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -42,10 +45,12 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -143,26 +148,34 @@ public class QRCodeGeneratorService {
         return null;
     }
 
-    public String generate(final QRCodeEntity qrCodeEntity, final boolean simulate) throws IOException {
+    public String generate(final QRCodeEntity qrCodeEntity, final boolean simulate, final Map<String, String> headers) throws IOException {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Map<String, Object> params = this.qrCodeParamsFromType(qrCodeEntity);
-        final String publicId = valueOf(params.get("publicId"));
 
-        qrCodeEntity.setPublicId(publicId);
+        qrCodeEntity.setPublicId(valueOf(params.get("publicId")));
         qrCodeEntity.setLocation(valueOf(params.get("location")));
         qrCodeEntity.setName(valueOf(params.get("name")));
         String qrCodeContent = valueOf(params.get("finalContent"));
-        qrCodeEntity.setFinalContent(qrCodeContent);
+        qrCodeEntity.setFinalContent(valueOf(params.get("finalContent")));
         if (!simulate) {
             if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
                 final UserAccount author = this.profileService.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));
                 qrCodeEntity.setTempContent(valueOf(params.get("tempContent")));
                 qrCodeEntity.setTrack(true);
                 qrCodeEntity.setAuthor(author.getId());
-                final Optional<QRCodeEntity> qrCodeInDatabase = this.qrCodeRepository.findByPublicId(publicId);
-                qrCodeInDatabase.ifPresent(codeEntity -> qrCodeEntity.setId(codeEntity.getId()));
-                this.qrCodeRepository.save(qrCodeEntity);
-                qrCodeContent = valueOf(params.get("tempContent"));
+                QRCodeEntity newQRCodeEntity = qrCodeEntity;
+                final String qrcodeId = headers.get("qrcode-id");
+                if (!Strings.isNullOrEmpty(qrcodeId)) {
+                    final Optional<QRCodeEntity> qrCodeInDatabase = this.qrCodeRepository.findById(qrcodeId);
+                    newQRCodeEntity = qrCodeInDatabase.orElse(qrCodeEntity);
+                    newQRCodeEntity.setName(qrCodeEntity.getName());
+                    newQRCodeEntity.setLocation(qrCodeEntity.getLocation());
+                    newQRCodeEntity.setFinalContent(qrCodeEntity.getFinalContent());
+                    newQRCodeEntity.setTempContent(qrCodeEntity.getTempContent());
+                    newQRCodeEntity.setType(qrCodeEntity.getType());
+                }
+                this.qrCodeRepository.save(newQRCodeEntity);
+                qrCodeContent = qrCodeEntity.getTempContent();
             }
         }
         final File file = QRCode.from(qrCodeContent)
@@ -332,7 +345,34 @@ public class QRCodeGeneratorService {
         return qrCodeEntity;
     }
 
+    public void delete(final String id) {
+        final QRCodeEntity qrCodeEntity = this.qrCodeRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Aucune entite ne correspond aux données que vous avez transmis"));
+        this.qrCodeRepository.delete(qrCodeEntity);
+    }
+
+    public void patch(final String id, final QRCodeEntity qrCodeEntity) {
+        final QRCodeEntity qrCodeEntityInBDD = this.qrCodeRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Aucune entite ne correspond aux données que vous avez transmis"));
+        BeanUtils.copyProperties(qrCodeEntity, qrCodeEntityInBDD, getNullPropertyNames(qrCodeEntity));
+        this.qrCodeRepository.save(qrCodeEntityInBDD);
+    }
+
     public Stream<QRCodeStatistic> statistics(final String id) {
         return this.qrCodeStatisticRepository.findByQrCode(id);
+    }
+
+    public static String[] getNullPropertyNames(final Object source) {
+        final BeanWrapper src = new BeanWrapperImpl(source);
+        final java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
+
+        final Set<String> emptyNames = new HashSet<String>();
+        for (final java.beans.PropertyDescriptor pd : pds) {
+            final Object srcValue = src.getPropertyValue(pd.getName());
+            if (srcValue == null) {
+                emptyNames.add(pd.getName());
+            }
+        }
+
+        final String[] result = new String[emptyNames.size()];
+        return emptyNames.toArray(result);
     }
 }

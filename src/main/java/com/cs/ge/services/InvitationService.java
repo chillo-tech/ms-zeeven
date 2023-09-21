@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -96,7 +97,7 @@ public class InvitationService {
                         .build();
 
                 try {
-                    final String qrcode = this.qrCodeGeneratorService.generate(qrCodeEntity, false);
+                    final String qrcode = this.qrCodeGeneratorService.generate(qrCodeEntity, false, new HashMap<>());
                     String image = this.generateTicket(event, guest, invitation, qrcode);
                     if (Strings.isNullOrEmpty(image)) {
                         image = qrcode;

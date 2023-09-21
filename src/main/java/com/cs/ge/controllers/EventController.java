@@ -58,6 +58,11 @@ public class EventController {
         this.eventService.update(id, event);
     }
 
+    @GetMapping(value = "{id}/guest")
+    public List<Guest> fetchGuests(@PathVariable final String id) {
+        return this.eventService.guests(id);
+    }
+
     @PostMapping(value = "{id}/guest")
     public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) throws IOException {
         this.eventService.addGuest(id, guest);
@@ -78,11 +83,6 @@ public class EventController {
         this.eventService.sendInvitations(id, guestIds);
     }
 
-
-    @GetMapping(value = "{id}/guest")
-    public List<Guest> fetchGuests(@PathVariable final String id) {
-        return this.eventService.guests(id);
-    }
 
     @GetMapping(value = "{id}/table")
     public List<Table> fetchTables(@PathVariable final String id) {
