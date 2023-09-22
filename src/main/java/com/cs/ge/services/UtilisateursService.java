@@ -197,7 +197,9 @@ public class UtilisateursService {
 
     private List<Guest> getLocalGuests() {
         final UserAccount authenticatedUser = this.profileService.getAuthenticateUser();
-        return authenticatedUser.getContacts().stream().map(userAccount -> {
+        final List<Guest> contacts = authenticatedUser.getContacts();
+
+        return contacts.stream().map(userAccount -> {
             final Guest guest = new Guest();
             BeanUtils.copyProperties(userAccount, guest);
             return guest;

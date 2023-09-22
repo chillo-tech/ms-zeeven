@@ -19,7 +19,7 @@ public abstract class SharedQRCodeService {
 
     protected Map<String, Object> qrCodeParamsFromType(final QRCodeEntity qrCodeEntity, final String imagesHost, final String imagesRootfolder, final String imagesFolder) {
         final Map<String, Object> params = new HashMap<>();
-        final String slug = RandomStringUtils.randomNumeric(7);//this.slugFromType(qrCodeEntity);
+        final String slug = RandomStringUtils.random(7);//this.slugFromType(qrCodeEntity);
         String path = "go-to";
         if (Objects.equals(this.environment.getActiveProfiles()[0], "local")) {
             path = "qr-code";
