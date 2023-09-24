@@ -266,6 +266,7 @@ public class QRCodeGeneratorService {
     }
 
     public String content(final String publicId, final Map<String, String> headers) {
+        log.info("{}", headers);
         final QRCodeEntity qrCodeEntity = this.qrCodeRepository.findByPublicId(publicId).orElseThrow(
                 () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
 
