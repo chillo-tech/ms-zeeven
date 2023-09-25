@@ -51,7 +51,6 @@ public class MessageQrCode extends SharedQRCodeService {
             }
         }
         params.put("finalContent", message);
-        params.put("tempContent", params.get("finalContent"));
         return params;
     }
 }

@@ -28,7 +28,6 @@ public class WIFIQrCode extends SharedQRCodeService {
         }
         final String finalContent = String.format(pattern, qrCodeEntity.getData().get("name"), encodage, qrCodeEntity.getData().get("password"), qrCodeEntity.getData().get("hidden"));
         params.put("finalContent", finalContent);
-        params.put("tempContent", params.get("finalContent"));
         return params;
     }
 }

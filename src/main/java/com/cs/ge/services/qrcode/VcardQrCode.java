@@ -55,7 +55,6 @@ public class VcardQrCode extends SharedQRCodeService {
                 qrCodeEntity.getData().get("website")
         );
         params.put("finalContent", finalContent);
-        params.put("tempContent", params.get("finalContent"));
         return params;
     }
 }
