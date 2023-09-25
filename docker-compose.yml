@@ -14,6 +14,8 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=prod"
       - "logging.level.org.springframework.web.cors.DefaultCorsProcessor=debug"
+      - "providers.maxmind.licenceKey=${MAXMIND_KEY}"
+      - "providers.maxmind.accountId=${MAXMIND_ID}"
       - "providers.whatsapp.token=${WHATSAPP_TOKEN}"
       - "providers.front.host=${ZEEVEN_HOST}"
       - "providers.notifications.host=${NOTIFICATIONS_HOST}"

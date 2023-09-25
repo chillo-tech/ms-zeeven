@@ -289,31 +289,35 @@ public class QRCodeGeneratorService {
     }
 
     public Map<String, Object> ipdata(final String ip) {
-
-        final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(ip);
         final Map<String, Object> qrCodeStatisticBuilder = new HashMap<>();
-        final Map<String, Object> city = (Map<String, Object>) result.get("city");
-        if (city != null) {
-            final Map<String, Object> names = (Map<String, Object>) city.get("names");
-            qrCodeStatisticBuilder.put("city", format("%s", names.get("fr")));
-        }
-        final Map<String, Object> traits = (Map<String, Object>) result.get("traits");
-        if (traits != null) {
-            qrCodeStatisticBuilder.put("ip", format("%s", traits.get("ip_address")));
-        }
-        final Map<String, Object> postal = (Map<String, Object>) result.get("postal");
-        if (postal != null) {
-            qrCodeStatisticBuilder.put("zipcode", format("%s", postal.get("code")));
-        }
-        final Map<String, Object> registeredCountry = (Map<String, Object>) result.get("registered_country");
-        if (registeredCountry != null) {
-            final Map<String, Object> names = (Map<String, Object>) registeredCountry.get("names");
-            qrCodeStatisticBuilder.put("country", format("%s", names.get("fr")));
-        }
-        final Map<String, Object> location = (Map<String, Object>) result.get("location");
-        if (location != null) {
-            qrCodeStatisticBuilder.put("latitude", format("%s", location.get("latitude")));
-            qrCodeStatisticBuilder.put("longitude", format("%s", location.get("longitude")));
+        try {
+            final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(ip);
+            final Map<String, Object> city = (Map<String, Object>) result.get("city");
+            if (city != null) {
+                final Map<String, Object> names = (Map<String, Object>) city.get("names");
+                qrCodeStatisticBuilder.put("city", format("%s", names.get("fr")));
+            }
+            final Map<String, Object> traits = (Map<String, Object>) result.get("traits");
+            if (traits != null) {
+                qrCodeStatisticBuilder.put("ip", format("%s", traits.get("ip_address")));
+            }
+            final Map<String, Object> postal = (Map<String, Object>) result.get("postal");
+            if (postal != null) {
+                qrCodeStatisticBuilder.put("zipcode", format("%s", postal.get("code")));
+            }
+            final Map<String, Object> registeredCountry = (Map<String, Object>) result.get("registered_country");
+            if (registeredCountry != null) {
+                final Map<String, Object> names = (Map<String, Object>) registeredCountry.get("names");
+                qrCodeStatisticBuilder.put("country", format("%s", names.get("fr")));
+            }
+            final Map<String, Object> location = (Map<String, Object>) result.get("location");
+            if (location != null) {
+                qrCodeStatisticBuilder.put("latitude", format("%s", location.get("latitude")));
+                qrCodeStatisticBuilder.put("longitude", format("%s", location.get("longitude")));
+            }
+            return qrCodeStatisticBuilder;
+        } catch (final Exception e) {
+            e.printStackTrace();
         }
         return qrCodeStatisticBuilder;
     }
@@ -337,31 +341,34 @@ public class QRCodeGeneratorService {
                     qrCodeStatisticBuilder.agent("other");
                 }
             } else if (Objects.equals(key, "x-forwarded-for")) {
-                final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(value);
-                final Map<String, Object> city = (Map<String, Object>) result.get("city");
-                if (city != null) {
-                    final Map<String, Object> names = (Map<String, Object>) city.get("names");
-                    qrCodeStatisticBuilder.city(format("%s", names.get("fr")));
+                try {
+                    final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(value);
+                    final Map<String, Object> city = (Map<String, Object>) result.get("city");
+                    if (city != null) {
+                        final Map<String, Object> names = (Map<String, Object>) city.get("names");
+                        qrCodeStatisticBuilder.city(format("%s", names.get("fr")));
+                    }
+                    final Map<String, Object> traits = (Map<String, Object>) result.get("traits");
+                    if (traits != null) {
+                        qrCodeStatisticBuilder.ip(format("%s", traits.get("ip_address")));
+                    }
+                    final Map<String, Object> postal = (Map<String, Object>) result.get("postal");
+                    if (postal != null) {
+                        qrCodeStatisticBuilder.zipcode(format("%s", postal.get("code")));
+                    }
+                    final Map<String, Object> registeredCountry = (Map<String, Object>) result.get("registered_country");
+                    if (registeredCountry != null) {
+                        final Map<String, Object> names = (Map<String, Object>) registeredCountry.get("names");
+                        qrCodeStatisticBuilder.country(format("%s", names.get("fr")));
+                    }
+                    final Map<String, Object> location = (Map<String, Object>) result.get("location");
+                    if (location != null) {
+                        qrCodeStatisticBuilder.latitude(format("%s", location.get("latitude")));
+                        qrCodeStatisticBuilder.longitude(format("%s", location.get("longitude")));
+                    }
+                } catch (final Exception exception) {
+                    exception.printStackTrace();
                 }
-                final Map<String, Object> traits = (Map<String, Object>) result.get("traits");
-                if (traits != null) {
-                    qrCodeStatisticBuilder.ip(format("%s", traits.get("ip_address")));
-                }
-                final Map<String, Object> postal = (Map<String, Object>) result.get("postal");
-                if (postal != null) {
-                    qrCodeStatisticBuilder.zipcode(format("%s", postal.get("code")));
-                }
-                final Map<String, Object> registeredCountry = (Map<String, Object>) result.get("registered_country");
-                if (registeredCountry != null) {
-                    final Map<String, Object> names = (Map<String, Object>) registeredCountry.get("names");
-                    qrCodeStatisticBuilder.country(format("%s", names.get("fr")));
-                }
-                final Map<String, Object> location = (Map<String, Object>) result.get("location");
-                if (location != null) {
-                    qrCodeStatisticBuilder.latitude(format("%s", location.get("latitude")));
-                    qrCodeStatisticBuilder.longitude(format("%s", location.get("longitude")));
-                }
-
             }
         });
         final QRCodeStatistic qrCodeStatistic = qrCodeStatisticBuilder.build();

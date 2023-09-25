@@ -62,7 +62,6 @@ public abstract class SharedQRCodeService {
             case VCARD -> this.utilitaireService.makeSlug(
                     String.format("%s %s", qrCodeEntity.getData().get("firstName"), qrCodeEntity.getData().get("lastName"))
             );
-            default -> null;
         };
     }
 
