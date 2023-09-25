@@ -9,6 +9,7 @@ import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.QRCodeShapeType;
 import com.cs.ge.enums.QRCodeType;
 import com.cs.ge.feign.FeignIPGeolocation;
+import com.cs.ge.feign.FeignMaxMindIPGeolocation;
 import com.cs.ge.repositories.QRCodeRepository;
 import com.cs.ge.repositories.QRCodeStatisticRepository;
 import com.cs.ge.services.ProfileService;
@@ -81,6 +82,7 @@ public class QRCodeGeneratorService {
     private final MessageQrCode messageQrCode;
     private final VcardQrCode vcardQrCode;
     private final FeignIPGeolocation ipGeolocation;
+    private final FeignMaxMindIPGeolocation maxMindIPGeolocation;
     private final GraphicsService graphicsService;
 
     public QRCodeGeneratorService(
@@ -94,7 +96,7 @@ public class QRCodeGeneratorService {
             final WIFIQrCode wifiQrCode,
             final MessageQrCode messageQrCode, final VcardQrCode vcardQrCode,
             final FeignIPGeolocation ipGeolocation,
-            final GraphicsService graphicsService) {
+            final FeignMaxMindIPGeolocation maxMindIPGeolocation, final GraphicsService graphicsService) {
         this.profileService = profileService;
         this.qrCodeRepository = qrCodeRepository;
         this.imagesHost = imagesHost;
@@ -106,6 +108,7 @@ public class QRCodeGeneratorService {
         this.messageQrCode = messageQrCode;
         this.vcardQrCode = vcardQrCode;
         this.ipGeolocation = ipGeolocation;
+        this.maxMindIPGeolocation = maxMindIPGeolocation;
         this.graphicsService = graphicsService;
     }
 
@@ -285,6 +288,36 @@ public class QRCodeGeneratorService {
 
     }
 
+    public Map<String, Object> ipdata(final String ip) {
+
+        final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(ip);
+        final Map<String, Object> qrCodeStatisticBuilder = new HashMap<>();
+        final Map<String, Object> city = (Map<String, Object>) result.get("city");
+        if (city != null) {
+            final Map<String, Object> names = (Map<String, Object>) city.get("names");
+            qrCodeStatisticBuilder.put("city", format("%s", names.get("fr")));
+        }
+        final Map<String, Object> traits = (Map<String, Object>) result.get("traits");
+        if (traits != null) {
+            qrCodeStatisticBuilder.put("ip", format("%s", traits.get("ip_address")));
+        }
+        final Map<String, Object> postal = (Map<String, Object>) result.get("postal");
+        if (postal != null) {
+            qrCodeStatisticBuilder.put("zipcode", format("%s", postal.get("code")));
+        }
+        final Map<String, Object> registeredCountry = (Map<String, Object>) result.get("registered_country");
+        if (registeredCountry != null) {
+            final Map<String, Object> names = (Map<String, Object>) registeredCountry.get("names");
+            qrCodeStatisticBuilder.put("country", format("%s", names.get("fr")));
+        }
+        final Map<String, Object> location = (Map<String, Object>) result.get("location");
+        if (location != null) {
+            qrCodeStatisticBuilder.put("latitude", format("%s", location.get("latitude")));
+            qrCodeStatisticBuilder.put("longitude", format("%s", location.get("longitude")));
+        }
+        return qrCodeStatisticBuilder;
+    }
+
     @Async
     void updateStatistics(final QRCodeEntity qrCodeEntity, final Map<String, String> headers) {
         final QRCodeStatistic.QRCodeStatisticBuilder qrCodeStatisticBuilder = QRCodeStatistic.builder().qrCode(qrCodeEntity.getId());
@@ -304,18 +337,37 @@ public class QRCodeGeneratorService {
                     qrCodeStatisticBuilder.agent("other");
                 }
             } else if (Objects.equals(key, "x-forwarded-for")) {
-                final Map<String, Object> result = this.ipGeolocation.ipgeo(value);
-                qrCodeStatisticBuilder.ip(format("%s", result.get("ip")));
-                qrCodeStatisticBuilder.city(format("%s", result.get("city")));
-                qrCodeStatisticBuilder.zipcode(format("%s", result.get("zipcode")));
-                qrCodeStatisticBuilder.country(format("%s", result.get("country_name")));
-                qrCodeStatisticBuilder.latitude(format("%s", result.get("latitude")));
-                qrCodeStatisticBuilder.longitude(format("%s", result.get("longitude")));
+                final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(value);
+                final Map<String, Object> city = (Map<String, Object>) result.get("city");
+                if (city != null) {
+                    final Map<String, Object> names = (Map<String, Object>) city.get("names");
+                    qrCodeStatisticBuilder.city(format("%s", names.get("fr")));
+                }
+                final Map<String, Object> traits = (Map<String, Object>) result.get("traits");
+                if (traits != null) {
+                    qrCodeStatisticBuilder.ip(format("%s", traits.get("ip_address")));
+                }
+                final Map<String, Object> postal = (Map<String, Object>) result.get("postal");
+                if (postal != null) {
+                    qrCodeStatisticBuilder.zipcode(format("%s", postal.get("code")));
+                }
+                final Map<String, Object> registeredCountry = (Map<String, Object>) result.get("registered_country");
+                if (registeredCountry != null) {
+                    final Map<String, Object> names = (Map<String, Object>) registeredCountry.get("names");
+                    qrCodeStatisticBuilder.country(format("%s", names.get("fr")));
+                }
+                final Map<String, Object> location = (Map<String, Object>) result.get("location");
+                if (location != null) {
+                    qrCodeStatisticBuilder.latitude(format("%s", location.get("latitude")));
+                    qrCodeStatisticBuilder.longitude(format("%s", location.get("longitude")));
+                }
+
             }
         });
         final QRCodeStatistic qrCodeStatistic = qrCodeStatisticBuilder.build();
         this.qrCodeStatisticRepository.save(qrCodeStatistic);
     }
+
 
     public List<QRCodeEntity> search() {
         final UserAccount authenticateUser = this.profileService.getAuthenticateUser();

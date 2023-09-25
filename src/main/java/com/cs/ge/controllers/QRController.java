@@ -59,6 +59,11 @@ public class QRController {
         return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(URI.create(url)).build();
     }
 
+    @GetMapping(value = "/ip/{publicId}")
+    public Map<String, Object> getIp(@PathVariable final String publicId, @RequestHeader final Map<String, String> headers) throws IOException {
+        return this.qrCodeGeneratorService.ipdata(publicId);
+    }
+
     @PatchMapping(value = "/{id}")
     public void path(@PathVariable final String id, @RequestBody final QRCodeEntity qrCodeEntity) throws IOException {
         this.qrCodeGeneratorService.patch(id, qrCodeEntity);
