@@ -5,6 +5,7 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.VerificationRepository;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -44,4 +45,9 @@ public class VerificationService {
         this.verificationRepository.save(current);
     }
 
+
+    @Scheduled(cron = "@midnight")
+    public void deleteAll() {
+        this.verificationRepository.deleteAll();
+    }
 }
