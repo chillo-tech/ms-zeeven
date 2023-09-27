@@ -62,10 +62,42 @@ public class UtilisateursService {
     }
 
 
+    public void updatePassword(final String code, final String password) {
+        final Verification verification = this.verificationService.getByCode(code);
+
+        UserAccount userAccount = verification.getUserAccount();
+        userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun compte pour ce code"));
+        userAccount.setEnabled(true);
+        final String encodedPassword = this.passwordEncoder.encode(password);
+        userAccount.setPassword(encodedPassword);
+
+        verification.setActive(false);
+
+        this.utilisateurRepository.save(userAccount);
+        this.verificationService.updateCode(verification.getId(), verification);
+    }
+
+    public void resetPasswordLink(final String email) {
+        final UserAccount userAccount = this.utilisateurRepository.findByEmail(email).orElseThrow(() -> new ApplicationException("Aucun compte ne correspond à cet identifiant"));
+        final Verification verification = this.verificationService.createCode(userAccount);
+        this.asynchroniousNotifications.sendEmail(
+                null,
+                userAccount,
+                new HashMap<String, List<String>>() {{
+                    this.put("code", List.of(verification.getCode()));
+                }},
+
+                "ZEEVEN",
+                "activation.html",
+                null,
+                "Créez un nouveau mot de passe"
+        );
+    }
+
     public void activate(final String code) {
         final Verification verification = this.verificationService.getByCode(code);
         UserAccount userAccount = verification.getUserAccount();
-        userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun userAccount pour ce code"));
+        userAccount = this.utilisateurRepository.findById(userAccount.getId()).orElseThrow(() -> new ApplicationException("aucun compte pour ce code"));
         userAccount.setEnabled(true);
         userAccount.setTrial(true);
 

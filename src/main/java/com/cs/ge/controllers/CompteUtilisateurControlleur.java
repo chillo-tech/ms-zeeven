@@ -10,6 +10,7 @@ import com.cs.ge.services.UtilisateursService;
 import com.cs.ge.services.security.TokenService;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -62,6 +64,19 @@ public class CompteUtilisateurControlleur {
     public void activated(@RequestBody final Map<String, String> params) {
         this.utilisateursService.activate(params.get("code"));
     }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping(path = "reset-password-link")
+    public void resetPasswordLink(@RequestBody final Map<String, String> params) {
+        this.utilisateursService.resetPasswordLink(params.get("email"));
+    }
+
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PostMapping(path = "update-password")
+    public void activate(@RequestBody final Map<String, String> credentials) {
+        this.utilisateursService.updatePassword(credentials.get("code"), credentials.get("password"));
+    }
+
 
     @ResponseBody
     @GetMapping(path = "profile")

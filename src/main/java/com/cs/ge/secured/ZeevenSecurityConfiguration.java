@@ -84,6 +84,8 @@ public class ZeevenSecurityConfiguration {
                                         .requestMatchers("/webhooks").permitAll()
                                         .requestMatchers(POST, "/webhooks/stripe").permitAll()
                                         .requestMatchers(POST, "/activation").permitAll()
+                                        .requestMatchers(POST, "/update-password").permitAll()
+                                        .requestMatchers(POST, "/reset-password-link").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

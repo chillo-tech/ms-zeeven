@@ -369,6 +369,7 @@ public class QRCodeGeneratorService {
                 } catch (final Exception exception) {
                     exception.printStackTrace();
                 }
+ 
             }
         });
         final QRCodeStatistic qrCodeStatistic = qrCodeStatisticBuilder.build();
