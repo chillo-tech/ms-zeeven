@@ -2,6 +2,7 @@ package com.cs.ge.controllers;
 
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.entites.QRCodeStatistic;
+import com.cs.ge.enums.QRCodeType;
 import com.cs.ge.services.qrcode.QRCodeGeneratorService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,10 +54,16 @@ public class QRController {
 
     @GetMapping(value = "/{publicId}")
     public ResponseEntity<Object> get(@PathVariable final String publicId, @RequestHeader final Map<String, String> headers) throws IOException {
-        final String url = this.qrCodeGeneratorService.content(publicId, headers);
-        final RedirectView redirectView = new RedirectView();
-        redirectView.setUrl(url);
-        return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(URI.create(url)).build();
+        final Map<String, Object> data = this.qrCodeGeneratorService.content(publicId, headers);
+        final String result = (String) data.get("result");
+        if (data.get("type").equals(QRCodeType.TEXT)) {
+            return ResponseEntity.status(HttpStatus.OK).body(result);
+        } else {
+            final RedirectView redirectView = new RedirectView();
+            redirectView.setUrl(result);
+            return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT).location(URI.create(result)).build();
+
+        }
     }
 
     @GetMapping(value = "/ip/{publicId}")

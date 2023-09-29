@@ -266,7 +266,7 @@ public class QRCodeGeneratorService {
         return params;
     }
 
-    public String content(final String publicId, final Map<String, String> headers) {
+    public Map<String, Object> content(final String publicId, final Map<String, String> headers) {
         final QRCodeEntity qrCodeEntity = this.qrCodeRepository.findByPublicId(publicId).orElseThrow(
                 () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
 
@@ -282,7 +282,10 @@ public class QRCodeGeneratorService {
         if (qrCodeEntity.isTrack()) {
             this.updateStatistics(qrCodeEntity, headers);
         }
-        return result;
+        return Map.of(
+                "result", result,
+                "type", qrCodeEntity.getType()
+        );
 
     }
 
