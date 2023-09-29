@@ -272,6 +272,7 @@ public class QRCodeGeneratorService {
         final QRCodeEntity qrCodeEntity = this.qrCodeRepository.findByPublicId(publicId).orElseThrow(
                 () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
 
+        log.info("QR CODE {}", qrCodeEntity);
         String result = null;
         switch (qrCodeEntity.getType()) {
             case LINK, TEXT, PHONE -> result = this.linkQrCode.content(qrCodeEntity);
