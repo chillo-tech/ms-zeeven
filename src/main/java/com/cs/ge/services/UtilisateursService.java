@@ -194,7 +194,9 @@ public class UtilisateursService {
         valEmail(userAccount.getUsername());
         valNumber(userAccount.getUsername());
         this.utilitaireService.checkAccount(userAccount);
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         userAccount.setRole(CUSTOMER);
+        userAccount.setPublicId(publicId);
         final String encodedPassword = this.passwordEncoder.encode(userAccount.getPassword());
         userAccount.setPassword(encodedPassword);
         this.utilisateurRepository.save(userAccount);

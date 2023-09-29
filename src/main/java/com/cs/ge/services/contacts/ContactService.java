@@ -30,7 +30,7 @@ public class ContactService {
         log.info("Mis à jour des contacts");
         final List<UserAccount> userAccounts = this.utilisateurRepository.findAll();
         userAccounts.forEach(userAccount -> {
-            log.info("Mis à jour des contacts pour {}", userAccount.getPublicId());
+            log.info("Mis à jour des contacts pour {}", userAccount.getEmail());
             final Stream<Event> userEvents = this.eventsRepository.findByAuthorId(userAccount.getId());
             final List<Guest> guests = userEvents.parallel().flatMap(event -> event.getGuests().stream()).collect(Collectors.toList());
             userAccount.setContacts(guests);

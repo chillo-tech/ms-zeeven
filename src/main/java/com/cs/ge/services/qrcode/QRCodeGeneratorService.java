@@ -269,7 +269,6 @@ public class QRCodeGeneratorService {
     }
 
     public String content(final String publicId, final Map<String, String> headers) {
-        log.info("{}", headers);
         final QRCodeEntity qrCodeEntity = this.qrCodeRepository.findByPublicId(publicId).orElseThrow(
                 () -> new ResponseStatusException(NOT_FOUND, "Aucune enttité ne correspond au critères fournis"));
 
@@ -324,24 +323,25 @@ public class QRCodeGeneratorService {
 
     @Async
     void updateStatistics(final QRCodeEntity qrCodeEntity, final Map<String, String> headers) {
-        final QRCodeStatistic.QRCodeStatisticBuilder qrCodeStatisticBuilder = QRCodeStatistic.builder().qrCode(qrCodeEntity.getId());
-        qrCodeStatisticBuilder.creation(Instant.now());
-        qrCodeStatisticBuilder.qrCode(qrCodeEntity.getId());
-        qrCodeStatisticBuilder.language(format("%s", headers.get("accept-language")));
-        headers.keySet().parallelStream().filter(QRCODE_STATISTICS_KEY::contains).forEach((key) -> {
-            final String value = headers.get(key);
-            if (Objects.equals(key, "host")) {
-                qrCodeStatisticBuilder.host(headers.get(key));
-            } else if (Objects.equals(key, "user-agent")) {
-                if (value.toLowerCase().contains("android")) {
-                    qrCodeStatisticBuilder.agent("android");
-                } else if (value.toLowerCase().contains("ios")) {
-                    qrCodeStatisticBuilder.agent("ios");
-                } else {
-                    qrCodeStatisticBuilder.agent("other");
-                }
-            } else if (Objects.equals(key, "x-forwarded-for")) {
-                try {
+        try {
+            log.info("{}", headers);
+            final QRCodeStatistic.QRCodeStatisticBuilder qrCodeStatisticBuilder = QRCodeStatistic.builder().qrCode(qrCodeEntity.getId());
+            qrCodeStatisticBuilder.creation(Instant.now());
+            qrCodeStatisticBuilder.qrCode(qrCodeEntity.getId());
+            qrCodeStatisticBuilder.language(format("%s", headers.get("accept-language")));
+            headers.keySet().parallelStream().filter(QRCODE_STATISTICS_KEY::contains).forEach((key) -> {
+                final String value = headers.get(key);
+                if (Objects.equals(key, "host")) {
+                    qrCodeStatisticBuilder.host(headers.get(key));
+                } else if (Objects.equals(key, "user-agent")) {
+                    if (value.toLowerCase().contains("android")) {
+                        qrCodeStatisticBuilder.agent("android");
+                    } else if (value.toLowerCase().contains("ios")) {
+                        qrCodeStatisticBuilder.agent("ios");
+                    } else {
+                        qrCodeStatisticBuilder.agent("other");
+                    }
+                } else if (Objects.equals(key, "x-forwarded-for")) {
                     final Map<String, Object> result = this.maxMindIPGeolocation.ipgeo(value);
                     final Map<String, Object> city = (Map<String, Object>) result.get("city");
                     if (city != null) {
@@ -366,14 +366,14 @@ public class QRCodeGeneratorService {
                         qrCodeStatisticBuilder.latitude(format("%s", location.get("latitude")));
                         qrCodeStatisticBuilder.longitude(format("%s", location.get("longitude")));
                     }
-                } catch (final Exception exception) {
-                    exception.printStackTrace();
+
                 }
- 
-            }
-        });
-        final QRCodeStatistic qrCodeStatistic = qrCodeStatisticBuilder.build();
-        this.qrCodeStatisticRepository.save(qrCodeStatistic);
+            });
+            final QRCodeStatistic qrCodeStatistic = qrCodeStatisticBuilder.build();
+            this.qrCodeStatisticRepository.save(qrCodeStatistic);
+        } catch (final Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
 
