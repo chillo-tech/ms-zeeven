@@ -172,9 +172,7 @@ public class QRCodeGeneratorService {
                     final Optional<QRCodeEntity> qrCodeInDatabase = this.qrCodeRepository.findById(qrcodeId);
                     newQRCodeEntity = qrCodeInDatabase.orElse(qrCodeEntity);
                     newQRCodeEntity.setName(qrCodeEntity.getName());
-                    newQRCodeEntity.setLocation(qrCodeEntity.getLocation());
                     newQRCodeEntity.setFinalContent(qrCodeEntity.getFinalContent());
-                    newQRCodeEntity.setTempContent(qrCodeEntity.getTempContent());
                     newQRCodeEntity.setType(qrCodeEntity.getType());
                 }
                 this.qrCodeRepository.save(newQRCodeEntity);
