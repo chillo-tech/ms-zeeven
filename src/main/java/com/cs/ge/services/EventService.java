@@ -19,6 +19,7 @@ import com.cs.ge.enums.StockType;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
+import com.cs.ge.services.messages.EventMessageService;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.shared.SharedService;
 import com.cs.ge.utils.UtilitaireService;
@@ -55,7 +56,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.cs.ge.enums.EventStatus.ACTIVE;
-import static com.cs.ge.enums.EventStatus.DISABLED;
 import static com.cs.ge.enums.EventStatus.INCOMMING;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -72,6 +72,7 @@ public class EventService {
     private final UtilitaireService utilitaireService;
     private final StockService stockService;
     private final SharedService sharedService;
+    private final EventMessageService eventMessageService;
 
     public EventService(
             final FeignNotifications feignNotifications,
@@ -79,7 +80,7 @@ public class EventService {
             final ProfileService profileService,
             final CategorieService categorieService,
             final ASynchroniousNotifications aSynchroniousNotifications,
-            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService) {
+            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService, final EventMessageService eventMessageService) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
@@ -88,6 +89,7 @@ public class EventService {
         this.utilitaireService = utilitaireService;
         this.stockService = stockService;
         this.sharedService = sharedService;
+        this.eventMessageService = eventMessageService;
     }
 
     public List<Event> search() {
@@ -140,14 +142,14 @@ public class EventService {
     public void add(Event event) {
         final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         final String id = UUID.randomUUID().toString();
+        final UserAccount author = this.profileService.getAuthenticateUser();
 
         if (event.getName() == null) {
-            event.setName(String.format("%s %s %s", event.getCategory().getLabel(), event.getAuthor().getFirstName(), event.getAuthor().getLastName()).toLowerCase());
+            event.setName(String.format("%s %s %s", event.getCategory().getLabel(), author.getFirstName(), author.getLastName()).toLowerCase());
         }
 
-        final UserAccount author = this.profileService.getAuthenticateUser();
-        event.setAuthor(author);
-
+        //event.setAuthor(author);
+        event.setAuthorId(author.getId());
         final List<Guest> guestList = event.getGuests().parallelStream().map(guest -> {
             guest.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
             guest.setId(UUID.randomUUID().toString());
@@ -176,6 +178,7 @@ public class EventService {
 
         event = this.eventsRepository.save(event);
         final String eventName = event.getName();
+        this.eventMessageService.eventToEventMessages(event);
         /*
         this.aSynchroniousNotifications.sendEmail(
                 null,
@@ -314,144 +317,6 @@ public class EventService {
         }
     }
 
-    /*
-        private void sendInvitation(Event event, Guest guest) {
-            Profile guestProfile = guest.getProfile();
-            if (StringUtils.isNotBlank(guestProfile.getEmail()) && StringUtils.isNotEmpty(guestProfile.getEmail())) {
-                //this.mailsService.newGuest(guestProfile, event, guest.getTicket());
-            }
-
-            if (StringUtils.isNotBlank(guestProfile.getPhone()) && StringUtils.isNotEmpty(guestProfile.getPhone())) {
-                this.sendWhatAppMessage(event, guest);
-                //this.sendTwilioMessage(event, guest);
-
-            }
-        }
-        private void sendTwilioMessage(Event event, Guest guest) {
-            String azureImage = "https://zeevenimages.blob.core.windows.net/images/eo9arfovirt6dxzrythf.jpeg?sp=r&st=2022-06-26T08:43:58Z&se=2022-06-26T16:43:58Z&spr=https&sv=2021-06-08&sr=b&sig=8Sr%2BcyxBFrucDoCl5l3uEC01WAtFvHz3Htvqimtqc6E%3D";
-            String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
-            Twilio.init(this.accountSid, this.authToken);
-            ApplicationMessage message = null;
-            try {
-
-                message = ApplicationMessage.creator(
-                                new com.twilio.type.PhoneNumber("whatsapp:+33761705745"),
-                                new com.twilio.type.PhoneNumber("whatsapp:+14155238886"),
-                                List.of(new URI(azureImage))).setBody("fpjzfpojzjjgpojrzfpojzpfzjpo")
-                        .create();
-                System.out.println(message.getSid());
-
-                message = ApplicationMessage.creator(
-                                new com.twilio.type.PhoneNumber("+33761705745"),
-                                new com.twilio.type.PhoneNumber("+18455769979"),
-                                "This is the ship that made the Kessel Run in fourteen parsecs?")
-                        .setMediaUrl(
-                                Arrays.asList(URI.create(azureImage)))
-                        .create();
-
-                System.out.println(message.getSid());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        private void sendMappedWhatAppMessage(Event event, Guest guest) {
-
-            Map<String, Object> language = new HashMap();
-            language.put("code", Collections.singletonMap("code", "fr"));
-
-            Map<String, Object> headerParameter = new HashMap();
-            headerParameter.put("type", "image");
-            String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
-            log.info("linkWithExtension " + linkWithExtension);
-            headerParameter.put("image", Collections.singletonMap("link", linkWithExtension));
-
-            Map<String, Object> headerParameters = new HashMap();
-            headerParameters.put("parameters", List.of(headerParameter));
-            Map<String, Object> header = new HashMap();
-            header.put("type", "header");
-            header.put("parameters", headerParameters);
-
-            Map<String, Object> fistText = new HashMap();
-            fistText.put("type", "text");
-            fistText.put("text", String.format("%s %s", guest.getProfile().getFirstName(), guest.getProfile().getLastName().toUpperCase()));
-            Map<String, Object> secondText = new HashMap();
-            secondText.put("type", "text");
-            secondText.put("text", event.getName());
-
-            Map<String, Object> bodyParameters = new HashMap();
-            bodyParameters.put("parameters", List.of(fistText, secondText));
-            Map<String, Object> body = new HashMap();
-            header.put("type", "body");
-            header.put("parameters", bodyParameters);
-
-            Map<String, Object> components = new HashMap();
-            components.put("header", header);
-            components.put("body", body);
-
-            Map<String, Object> template = new HashMap();
-            template.put("name", "user_invitation");
-            template.put("language", language);
-            template.put("components", components);
-
-            Map<String, Object> textMessage = new HashMap();
-            textMessage.put("messaging_product", "whatsapp");
-            textMessage.put("recipient_type", "individual");
-            textMessage.put("to", String.format("%s%s", guest.getProfile().getPhoneIndex(), guest.getProfile().getPhone()));
-            textMessage.put("type", "template");
-            textMessage.put("template", template);
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            // this.textMessageService.mapMessage(objectMapper.writeValueAsString(textMessage));
-        }
-
-        private void sendWhatAppMessage(Event event, Guest guest) {
-            String azureImage = "https://zeevenimages.blob.core.windows.net/images/eo9arfovirt6dxzrythf.jpeg?sp=r&st=2022-06-26T08:43:58Z&se=2022-06-26T16:43:58Z&spr=https&sv=2021-06-08&sr=b&sig=8Sr%2BcyxBFrucDoCl5l3uEC01WAtFvHz3Htvqimtqc6E%3D";
-            String apiImage = "https://api.zeeven.chillo.fr/events/19508513/tickets/08535166.jpg";
-            Profile guestProfile = guest.getProfile();
-
-
-            Template template = new Template();
-            template.setName("user_invitation");
-            template.setLanguage(new Language("fr"));
-
-            Image image = new Image();
-            String link = String.format("%s/ticket?event=%s&guest=%s", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
-            log.info("Link information " + link);
-            //image.setId("775355320148280");
-
-            String linkWithExtension = String.format("%s/events/%s/tickets/%s.jpg", this.imagesHost, event.getPublicId(), guest.getProfile().getPublicId());
-            log.info("linkWithExtension " + linkWithExtension);
-            image.setLink(apiImage);
-
-            //image.setLink("https://media.istockphoto.com/photos/taj-mahal-mausoleum-in-agra-picture-id1146517111?k=20&m=1146517111&s=612x612&w=0&h=vHWfu6TE0R5rG6DJkV42Jxr49aEsLN0ML-ihvtim8kk=");
-            Parameter parameter = new Parameter();
-            parameter.setType("image");
-            parameter.setImage(image);
-
-            Component header = new Component();
-            header.setType("header");
-            header.setParameters(List.of(parameter));
-
-            Component body = new Component();
-            body.setType("body");
-            body.setParameters(List.of(
-                    new Parameter("text", String.format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName().toUpperCase()), null),
-                    new Parameter("text", event.getName(), null)
-            ));
-
-            template.setComponents(List.of(header, body));
-            TextMessage textMessage = new TextMessage();
-            textMessage.setTemplate(template);
-            textMessage.setMessaging_product("whatsapp");
-            textMessage.setRecipient_type("individual");
-            textMessage.setType("template");
-            //textMessage.setType("image");
-            textMessage.setTo(String.format("%s%s", guestProfile.getPhoneIndex(), guestProfile.getPhone()));
-            this.textMessageService.message(textMessage);
-        }
-    */
     public void deleteGuest(final String eventId, final String guestId) {
         final var event = this.read(eventId);
         List<Guest> guests = event.getGuests();
@@ -637,14 +502,20 @@ public class EventService {
     }
 
     private void handleEvent(final Event event) {
-
+        final String authorId = event.getAuthorId();
+        final UserAccount author = this.profileService.findById(authorId);
         final List<Guest> eventGuests = event.getGuests();
         final List<Channel> eventChannels = event.getChannels();
-        final Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(event.getAuthor().getId(), eventChannels);
-        final UserAccount author = event.getAuthor();
+        final Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(authorId, eventChannels);
         final List<Channel> channelsToHandle = this.getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
 
-        log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
+        if (channelsToHandle.size() > 0) {
+            log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
+            this.eventMessageService.handleMessages(channelsToHandle, event);
+        } else {
+            // TODO ENVOYER UN MAIL
+        }
+        /*
         if (channelsToHandle.size() > 0) {
             final List<ApplicationMessage> messagesToSend = this.getEventMessagesToSend(event.getMessages());
             final List<ApplicationMessage> messagesToKeep = this.getEventMessagesToKeep(event.getMessages(), messagesToSend);
@@ -658,11 +529,11 @@ public class EventService {
                 final List<ApplicationMessage> sentMessages = this.sendMessages(event, messagesToSend, channelsToHandle);
                 messagesToKeep.addAll(sentMessages);
                 event.setMessages(messagesToKeep);
-                this.updateStocks(event.getAuthor(), channelsToHandle, event.getGuests().size());
+                this.updateStocks(authorId, channelsToHandle, event.getGuests().size());
             }
             this.eventsRepository.save(event);
         }
-
+*/
     }
 
     private List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
@@ -670,10 +541,10 @@ public class EventService {
         return messages;
     }
 
-    private void updateStocks(final UserAccount author, final List<Channel> channelsToHandle, final int consumed) {
+    private void updateStocks(final String userId, final List<Channel> channelsToHandle, final int consumed) {
         channelsToHandle.parallelStream()
                 .forEach(channel -> this.stockService
-                        .update(author.getId(), null, null, consumed, channel, StockType.DEBIT));
+                        .update(userId, null, null, consumed, channel, StockType.DEBIT));
     }
 
     private List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
@@ -688,6 +559,7 @@ public class EventService {
     }
 
     private List<ApplicationMessage> sendMessages(final Event event, final List<ApplicationMessage> messagesTosend, final List<Channel> channelsToHandle) {
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
         return messagesTosend
                 .parallelStream()
                 .peek(applicationMessage -> {
@@ -699,6 +571,7 @@ public class EventService {
                                 .findFirst().orElse(-1);
                         this.aSynchroniousNotifications.sendEventMessage(
                                 event,
+                                author,
                                 applicationMessage,
                                 channelsToHandle,
                                 null,
@@ -830,7 +703,7 @@ public class EventService {
     }
 
 
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));

@@ -29,10 +29,10 @@ public class BaseEmails {
     private final String newPasswordUrl;
 
     public BaseEmails(
-            EMailContentBuilder eMailContentBuilder,
-            @Value("${app.host}") String applicationHost,
-            @Value("${spring.mail.activation-url}") String activationUrl,
-            @Value("${spring.mail.new-password-url}") String newPasswordUrl
+            final EMailContentBuilder eMailContentBuilder,
+            @Value("${app.host}") final String applicationHost,
+            @Value("${spring.mail.activation-url}") final String activationUrl,
+            @Value("${spring.mail.new-password-url}") final String newPasswordUrl
     ) {
         this.eMailContentBuilder = eMailContentBuilder;
         this.activationUrl = activationUrl;
@@ -41,23 +41,23 @@ public class BaseEmails {
     }
 
 
-    public Email newEvent(Event event) {
-        Map<String, Object> replacements = new HashMap<>();
+    public Email newEvent(final Event event) {
+        final Map<String, Object> replacements = new HashMap<>();
         replacements.put(TITRE, "Votre évènement a bien été enregistré");
-        replacements.put(PRENOM_DESTINATAIRE, event.getAuthor().getFirstName());
-        replacements.put(NOM_DESTINATAIRE, event.getAuthor().getLastName());
+        replacements.put(PRENOM_DESTINATAIRE, ""); //event.getAuthor().getFirstName());
+        replacements.put(NOM_DESTINATAIRE, "");// event.getAuthor().getLastName());
         replacements.put(LIEN_URL, this.applicationHost);
         replacements.put(LIEN_LABEL, "Connectez vous à votre compte");
         replacements.put(APPLICATION_LINK, this.applicationHost);
-        replacements.put(EMAIL_DESTINATAIRE, event.getAuthor().getEmail());
+        replacements.put(EMAIL_DESTINATAIRE, "");// event.getAuthor().getEmail());
 
         return this.getEmail(replacements, "new-event");
 
     }
 
 
-    public Email newGuest(Profile guestProfile, Event event, String image) {
-        Map<String, Object> replacements = new HashMap<>();
+    public Email newGuest(final Profile guestProfile, final Event event, final String image) {
+        final Map<String, Object> replacements = new HashMap<>();
         replacements.put(TITRE, "Votre invitation");
         replacements.put(PRENOM_DESTINATAIRE, guestProfile.getFirstName());
         replacements.put(NOM_DESTINATAIRE, guestProfile.getLastName());
@@ -80,9 +80,9 @@ public class BaseEmails {
         return this.getEmail(replacements, "new-ticket");
     }
 
-    private Email getEmail(Map<String, Object> replacements, String template) {
-        String message = this.eMailContentBuilder.getTemplate(template, replacements);
-        Email email = new Email(
+    private Email getEmail(final Map<String, Object> replacements, final String template) {
+        final String message = this.eMailContentBuilder.getTemplate(template, replacements);
+        final Email email = new Email(
                 EMAIL_PAR_DEFAUT,
                 replacements.get(EMAIL_DESTINATAIRE).toString(),
                 replacements.get(TITRE).toString(),

@@ -5,6 +5,7 @@ import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
 import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.entites.Template;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.QRCodeType;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.graphics.GraphicsService;
@@ -45,6 +46,7 @@ import static com.cs.ge.utils.Data.PATTERN_FORMAT;
 public class InvitationService {
     private final EventRepository eventsRepository;
     private final QRCodeGeneratorService qrCodeGeneratorService;
+    private final ProfileService profileService;
     private final ASynchroniousNotifications aSynchroniousNotifications;
     private final String applicationFilesHost;
     private final GraphicsService graphicsService;
@@ -54,12 +56,13 @@ public class InvitationService {
     public InvitationService(
             final EventRepository eventsRepository,
             final QRCodeGeneratorService qrCodeGeneratorService,
-            final ASynchroniousNotifications aSynchroniousNotifications,
+            final ProfileService profileService, final ASynchroniousNotifications aSynchroniousNotifications,
             @Value("${app.images-host}") final String applicationFilesHost,
             @Value("${app.invitations.limit:0}") final int nbInvitations,
             final GraphicsService graphicsService) {
         this.eventsRepository = eventsRepository;
         this.qrCodeGeneratorService = qrCodeGeneratorService;
+        this.profileService = profileService;
         this.aSynchroniousNotifications = aSynchroniousNotifications;
         this.applicationFilesHost = applicationFilesHost;
         this.graphicsService = graphicsService;
@@ -76,6 +79,7 @@ public class InvitationService {
     }
 
     private void handleEvent(final Event event) {
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
         final List<Guest> guests = event.getGuests();
         final Invitation invitation = event.getInvitation();
         if (invitation == null || invitation.getSend() == null) {
@@ -123,7 +127,7 @@ public class InvitationService {
                                 "eventName", event.getName(),
                                 "image", String.format("%s/%s", this.applicationFilesHost, filePath),
                                 "guest", guest,
-                                "author", event.getAuthor(),
+                                "author", author,
                                 "application", "ZEEVEN",
                                 "notificationTemplate", invitation.getTemplate().getName(),
                                 "whatsappTemplateName", "ze_invitation",

@@ -1,5 +1,6 @@
 package com.cs.ge.entites;
 
+import com.cs.ge.dto.ProfileParams;
 import com.cs.ge.enums.Civility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,7 @@ public class Profile {
     protected String phone;
     protected boolean trial;
     protected List<Stock> stocks;
+    protected List<ProfileParams> others;
 
     @JsonProperty(access = WRITE_ONLY)
     protected List<Guest> contacts = new ArrayList<>();

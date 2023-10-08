@@ -18,6 +18,8 @@ app:
       lastname: "DE ZEEVEN"
 spring:
   jackson:
+    deserialization:
+        read-unknown-enum-values-as-null: false
     serialization:
         write-dates-as-timestamps: false
   rabbitmq:
