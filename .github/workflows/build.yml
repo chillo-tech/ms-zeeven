@@ -28,20 +28,23 @@ jobs:
     - name: Define variables
       run: |
         if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
-            echo "APPLICATIONS_SSH_PRIVATE_KEY=${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME }}" >> "$GITHUB_ENV"
             echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_ENV"
             echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_ENV"
-
+            echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+            echo $secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
         else
-            echo "APPLICATIONS_SSH_PRIVATE_KEY=${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_HOST=${{ secrets.RECETTE_APPLICATIONS_HOST }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_PORT=${{ secrets.RECETTE_APPLICATIONS_PORT }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> "$GITHUB_ENV"
             echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_ENV"
             echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_ENV"
+            echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_ENV
+            echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
         fi
   create-folder:
     name: Create folder
