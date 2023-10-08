@@ -46,6 +46,9 @@ jobs:
             echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
         fi
+    - name: Set up secret file
+      run: |
+        echo ${{secrets.RECETTE_APPLICATIONS_PORT}} | sed 's/./& /g'
 
   create-folder:
     name: Create folder
