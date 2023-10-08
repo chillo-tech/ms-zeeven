@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 jobs:
-  define variable:
+  define-variables:
     name: Define variables
     runs-on: ubuntu-latest
     steps:
