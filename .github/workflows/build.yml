@@ -28,10 +28,10 @@ jobs:
     - name: Create folder
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.APPLICATIONS_HOST }}
-        port: ${{ secrets.APPLICATIONS_PORT }}
-        username: ${{ secrets.APPLICATIONS_USERNAME }}
-        key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
+        host: ${{ env.APPLICATIONS_HOST }}
+        port: ${{ env.APPLICATIONS_PORT }}
+        username: ${{ env.APPLICATIONS_USERNAME }}
+        key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
         script: |
           sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
           sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
