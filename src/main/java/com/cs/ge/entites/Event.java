@@ -28,7 +28,8 @@ public class Event {
     private String publicId;
     private String name;
     private EventStatus status;
-    private UserAccount author;
+    //private UserAccount author;
+    private String authorId;
     private Category category;
     private String slug;
     private Plan plan;

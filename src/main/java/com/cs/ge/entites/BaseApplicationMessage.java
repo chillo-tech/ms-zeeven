@@ -11,7 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class ApplicationMessage extends BaseApplicationMessage {
-    private List<ApplicationMessageSchedule> schedules;
-
+public class BaseApplicationMessage {
+    protected String id;
+    protected String text;
+    protected List<String> informations;
 }

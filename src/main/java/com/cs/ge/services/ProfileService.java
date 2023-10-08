@@ -27,6 +27,10 @@ public class ProfileService implements UserDetailsService {
         return this.utilisateurRepository.findBySecretsServiceId(serviceId).orElseThrow(() -> new UsernameNotFoundException("User not found with serviceId: " + serviceId));
     }
 
+    public UserAccount findById(final String utilisateurId) throws UsernameNotFoundException {
+        return this.utilisateurRepository.findById(utilisateurId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
     public UserAccount getAuthenticateUser() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return this.loadUser(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + authentication.getName()));

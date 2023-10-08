@@ -26,15 +26,15 @@ public class SynchroniousNotifications {
     FeignNotifications feignNotifications;
 
     @Async
-    public void sendEventMessage(Event event, ApplicationMessage applicationMessage) {
-        Map<String, String> from = new HashMap();
-        from.put("firstName", event.getAuthor().getFirstName());
-        from.put("lastName", event.getAuthor().getLastName());
-        from.put("email", event.getAuthor().getEmail());
-        from.put("phoneIndex", event.getAuthor().getPhoneIndex());
-        from.put("phone", event.getAuthor().getPhone());
-        String formattedMessage = SynchroniousNotifications.messageAsString(applicationMessage);
-        Map<String, Object> params = new HashMap<String, Object>();
+    public void sendEventMessage(final Event event, final ApplicationMessage applicationMessage) {
+        final Map<String, String> from = new HashMap();
+        from.put("firstName", ""); //event.getAuthor().getFirstName());
+        from.put("lastName", ""); //event.getAuthor().getLastName());
+        from.put("email", ""); //event.getAuthor().getEmail());
+        from.put("phoneIndex", ""); //event.getAuthor().getPhoneIndex());
+        from.put("phone", ""); // event.getAuthor().getPhone());
+        final String formattedMessage = SynchroniousNotifications.messageAsString(applicationMessage);
+        final Map<String, Object> params = new HashMap<String, Object>();
         params.put("message", formattedMessage);
         params.put("eventId", event.getId());
         this.feignNotifications.message(
@@ -56,16 +56,16 @@ public class SynchroniousNotifications {
         );
     }
 
-    private static String messageAsString(ApplicationMessage applicationMessage) {
+    private static String messageAsString(final ApplicationMessage applicationMessage) {
 
         String textWithVariables = applicationMessage.getText();
-        Pattern pattern = Pattern.compile("\\{\\{\\w+}}");
-        Matcher matcher = pattern.matcher(textWithVariables);
+        final Pattern pattern = Pattern.compile("\\{\\{\\w+}}");
+        final Matcher matcher = pattern.matcher(textWithVariables);
         int index = 0;
         while (matcher.find()) {
-            String group = matcher.group();
-            int start = matcher.start();
-            int end = matcher.end();
+            final String group = matcher.group();
+            final int start = matcher.start();
+            final int end = matcher.end();
             textWithVariables = StringUtils.replaceOnce(textWithVariables, group, applicationMessage.getInformations().get(index));
             index++;
         }
@@ -73,9 +73,8 @@ public class SynchroniousNotifications {
     }
 
     @Async
-    public void sendConfirmationMessage(Event event) {
-        UserAccount author = event.getAuthor();
-        Map<String, String> to = new HashMap();
+    public void sendEmail(final UserAccount author, final String code) {
+        final Map<String, String> to = new HashMap();
         if (author.getCivility() != null) {
             to.put("civility", author.getCivility().name());
         }
@@ -85,55 +84,7 @@ public class SynchroniousNotifications {
         to.put("phone", author.getPhone());
         to.put("phoneIndex", author.getPhoneIndex());
 
-        Map<String, String> from = new HashMap();
-        from.put("firstName", "Marlene");
-        from.put("lastName", "DE ZEEVEN");
-        from.put("email", "bonjour.zeeven@gmail.com");
-
-        this.feignNotifications.message(
-                "ZEEVEN",
-                List.of("MAIL"),
-                new HashMap<String, Object>() {{
-                    this.put("subject", "Votre demande a bien enregistrée");
-                    this.put("applicationName", "ZEEVEN");
-                    this.put("from", from);
-                    this.put("template", "confirmation.html");
-                    this.put("to", Set.of(to));
-                    this.put("contacts", Set.of(to));
-                }}
-        );
-
-        Map<String, String> params = new HashMap();
-        params.put("name", String.format("%s %s", author.getFirstName(), author.getLastName()));
-
-        this.feignNotifications.message(
-                "ZEEVEN",
-                List.of("MAIL"),
-                new HashMap<String, Object>() {{
-                    this.put("subject", "Nouvel évènement");
-                    this.put("applicationName", "ZEEVEN");
-                    this.put("from", from);
-                    this.put("template", "new-message.html");
-                    this.put("params", params);
-                    this.put("to", Set.of(from));
-                    this.put("contacts", Set.of(from));
-                }}
-        );
-    }
-
-    @Async
-    public void sendEmail(UserAccount author, String code) {
-        Map<String, String> to = new HashMap();
-        if (author.getCivility() != null) {
-            to.put("civility", author.getCivility().name());
-        }
-        to.put("firstName", author.getFirstName());
-        to.put("lastName", author.getLastName());
-        to.put("email", author.getEmail());
-        to.put("phone", author.getPhone());
-        to.put("phoneIndex", author.getPhoneIndex());
-
-        Map<String, String> from = new HashMap();
+        final Map<String, String> from = new HashMap();
         from.put("firstName", "Marlene");
         from.put("lastName", "DE ZEEVEN");
         from.put("email", "bonjour.zeeven@gmail.com");
@@ -154,7 +105,7 @@ public class SynchroniousNotifications {
                 }}
         );
 
-        Map<String, String> params = new HashMap();
+        final Map<String, String> params = new HashMap();
         params.put("name", String.format("%s %s", author.getFirstName(), author.getLastName()));
 
         this.feignNotifications.message(
