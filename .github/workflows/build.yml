@@ -9,6 +9,13 @@ env:
   NODE_VERSION: '14.x'
   APPLICATION_NAME: 'zeeven'
   APPLICATION_TYPE: 'ms'
+  APPLICATIONS_HOST: ${{ secrets.PROD_APPLICATIONS_HOST }}
+  APPLICATIONS_PORT: ${{ secrets.PROD_APPLICATIONS_PORT }}
+  APPLICATIONS_USERNAME: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+  APPLICATIONS_SSH_PRIVATE_KEY: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+  IPLOCATION_API_KEY: ${{ secrets.PROD_IPLOCATION_API_KEY }}
+  BACKOFFICE_API_KEY: ${{ secrets.PROD_BACKOFFICE_API_KEY }}
+
 
 permissions:
   contents: read
@@ -39,9 +46,7 @@ jobs:
             echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
         fi
-    - name: Using the previously defined environment variable
-      run: |
-         echo "${{ env.APPLICATIONS_HOST }} ${{github.base_ref}}"
+
   create-folder:
     name: Create folder
     runs-on: ubuntu-latest
