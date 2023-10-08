@@ -27,7 +27,7 @@ jobs:
     steps:
     - name: Define variables
       run: |
-        if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+        if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
             echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT }}" >> "$GITHUB_ENV"
             echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME }}" >> "$GITHUB_ENV"
