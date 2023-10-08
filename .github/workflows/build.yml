@@ -25,6 +25,7 @@ jobs:
     name: Define variable
     runs-on: ubuntu-latest
     steps:
+    - name: update configs
       run: |
         if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
             echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> "$GITHUB_ENV"
