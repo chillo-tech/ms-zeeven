@@ -39,6 +39,9 @@ jobs:
             echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
         fi
+      - name: Using the previously defined environment variable
+        run: |
+          echo "${{ env.APPLICATIONS_HOST }} ${{github.base_ref}}"
   create-folder:
     name: Create folder
     runs-on: ubuntu-latest
