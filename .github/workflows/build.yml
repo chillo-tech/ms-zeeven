@@ -9,6 +9,13 @@ env:
   NODE_VERSION: '14.x'
   APPLICATION_NAME: 'zeeven'
   APPLICATION_TYPE: 'ms'
+  APPLICATIONS_HOST: ${{ secrets.PROD_APPLICATIONS_HOST }}
+  APPLICATIONS_PORT: ${{ secrets.PROD_APPLICATIONS_PORT }}
+  APPLICATIONS_USERNAME: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+  APPLICATIONS_SSH_PRIVATE_KEY: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+  IPLOCATION_API_KEY: ${{ secrets.PROD_IPLOCATION_API_KEY }}
+  BACKOFFICE_API_KEY: ${{ secrets.PROD_BACKOFFICE_API_KEY }}
+
 
 permissions:
   contents: read
@@ -21,10 +28,10 @@ jobs:
     - name: Create folder
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.PROD_APPLICATIONS_HOST }}
-        port: ${{ secrets.PROD_APPLICATIONS_PORT }}
-        username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-        key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+        host: ${{ secrets.APPLICATIONS_HOST }}
+        port: ${{ secrets.APPLICATIONS_PORT }}
+        username: ${{ secrets.APPLICATIONS_USERNAME }}
+        key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
         script: |
           sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
           sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
@@ -43,10 +50,10 @@ jobs:
       - name: copy file via ssh password
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
-          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
-          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+          host: ${{ env.APPLICATIONS_HOST }}
+          port: ${{ env.APPLICATIONS_PORT }}
+          username: ${{ env.APPLICATIONS_USERNAME }}
+          key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
           source: "docker-compose.yml"
           target: '/opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}'
   generate-tags:
@@ -105,10 +112,10 @@ jobs:
     - name: Run container
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.PROD_APPLICATIONS_HOST }}
-        port: ${{ secrets.PROD_APPLICATIONS_PORT }}
-        username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-        key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+        host: ${{ env.APPLICATIONS_HOST }}
+        port: ${{ env.APPLICATIONS_PORT }}
+        username: ${{ env.APPLICATIONS_USERNAME }}
+        key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
         script: |
             docker compose -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/docker-compose.yml rm -f
             docker compose -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/docker-compose.yml stop
@@ -128,8 +135,8 @@ jobs:
             echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
             echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
 
-            echo PROD_IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo PROD_BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+            echo IPLOCATION_API_KEY=${{ secrets.IPLOCATION_API_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+            echo BACKOFFICE_API_KEY=${{ secrets.BACKOFFICE_API_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
 
             echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
             echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
