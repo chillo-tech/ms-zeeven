@@ -13,7 +13,7 @@ app:
     exchange: tech.files.exchange
     virtual-host: prod-notifications
   administrator:
-      email: marlene.dechillo@gmail.com
+      email: no-reply@zeeven.eu
       firstname: Marlene
       lastname: "DE ZEEVEN"
 spring:
@@ -72,6 +72,9 @@ providers:
   backoffice:
     host: https://backoffice.zeeven.chillo.fr
     base-path: items
+  maxmind:
+    host: https://geolite.info
+    base-path: geoip/v2.1/city
   iplocation:
     host: https://api.ipgeolocation.io
     base-path: ipgeo

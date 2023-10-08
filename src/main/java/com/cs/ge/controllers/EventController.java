@@ -1,5 +1,6 @@
 package com.cs.ge.controllers;
 
+import com.cs.ge.dto.Scan;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
@@ -57,6 +58,11 @@ public class EventController {
         this.eventService.update(id, event);
     }
 
+    @GetMapping(value = "{id}/guest")
+    public List<Guest> fetchGuests(@PathVariable final String id) {
+        return this.eventService.guests(id);
+    }
+
     @PostMapping(value = "{id}/guest")
     public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) throws IOException {
         this.eventService.addGuest(id, guest);
@@ -78,11 +84,6 @@ public class EventController {
     }
 
 
-    @GetMapping(value = "{id}/guest")
-    public List<Guest> fetchGuests(@PathVariable final String id) {
-        return this.eventService.guests(id);
-    }
-
     @GetMapping(value = "{id}/table")
     public List<Table> fetchTables(@PathVariable final String id) {
         return this.eventService.tables(id);
@@ -98,19 +99,29 @@ public class EventController {
         this.eventService.deleteTable(eventId, tableId);
     }
 
+    @DeleteMapping(value = "{eventId}/schedule/{scheduleId}")
+    public void deleteSchedule(@PathVariable final String eventId, @PathVariable final String scheduleId) {
+        this.eventService.deleteSchedule(eventId, scheduleId);
+    }
+
     @PostMapping(value = "{id}/schedule")
     public void addSchedule(@PathVariable final String id, @RequestBody final Schedule schedule) {
         this.eventService.addSchedule(id, schedule);
     }
 
+    @DeleteMapping(value = "{eventId}/scan/{scanId}")
+    public void deleteScan(@PathVariable final String eventId, @PathVariable final String scanId) {
+        this.eventService.deleteScan(eventId, scanId);
+    }
+
+    @PostMapping(value = "{id}/scan")
+    public void addScan(@PathVariable final String id, @RequestBody final Scan scan) {
+        this.eventService.addScan(id, scan);
+    }
+
     @GetMapping(value = "{id}/schedule")
     public List<Schedule> fetchSchedules(@PathVariable final String id) {
         return this.eventService.schedules(id);
-    }
-
-    @DeleteMapping(value = "{eventId}/schedule/{scheduleId}")
-    public void deleteSchedule(@PathVariable final String eventId, @PathVariable final String scheduleId) {
-        this.eventService.deleteSchedule(eventId, scheduleId);
     }
 
     @GetMapping(value = "{id}/statistic")

@@ -1,5 +1,6 @@
 package com.cs.ge.entites;
 
+import com.cs.ge.dto.Scan;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.EventStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +34,7 @@ public class Event {
     private Plan plan;
     private Invitation invitation;
     private List<Guest> guests = new ArrayList<>();
+    private List<Scan> scans = new ArrayList<>();
     private List<Channel> channels = new ArrayList<>();
     private List<ApplicationMessage> messages = new ArrayList<>();
     private List<Table> tables = new ArrayList<>();

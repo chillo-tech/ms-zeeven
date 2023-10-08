@@ -1,5 +1,6 @@
 package com.cs.ge.services;
 
+import com.cs.ge.dto.Scan;
 import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
@@ -19,12 +20,12 @@ import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.feign.FeignNotifications;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
-import com.cs.ge.services.qrcode.QRCodeGeneratorService;
 import com.cs.ge.services.shared.SharedService;
 import com.cs.ge.utils.UtilitaireService;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -67,8 +68,6 @@ public class EventService {
     private final EventRepository eventsRepository;
     private final ProfileService profileService;
     private final CategorieService categorieService;
-    private final UtilisateursService utilisateursService;
-    private final QRCodeGeneratorService qrCodeGeneratorService;
     private final ASynchroniousNotifications aSynchroniousNotifications;
     private final UtilitaireService utilitaireService;
     private final StockService stockService;
@@ -79,16 +78,12 @@ public class EventService {
             final EventRepository eventsRepository,
             final ProfileService profileService,
             final CategorieService categorieService,
-            final UtilisateursService utilisateursService,
-            final QRCodeGeneratorService qrCodeGeneratorService,
             final ASynchroniousNotifications aSynchroniousNotifications,
             final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
         this.categorieService = categorieService;
-        this.utilisateursService = utilisateursService;
-        this.qrCodeGeneratorService = qrCodeGeneratorService;
         this.aSynchroniousNotifications = aSynchroniousNotifications;
         this.utilitaireService = utilitaireService;
         this.stockService = stockService;
@@ -253,26 +248,29 @@ public class EventService {
         return null; //Base64.getDecoder().decode(guest.getTicket());
     }
 
-    public void addGuest(final String eventId, final Guest guestProfile) throws IOException {
+    public void addGuest(final String eventId, final Guest guest) throws IOException {
         final var event = this.read(eventId);
+
+        final UserAccount userAccount = new UserAccount();
+        BeanUtils.copyProperties(guest, userAccount);
         if (event.getParams().isContact()) {
-            ValidationService.checkEmail(guestProfile.getEmail());
-            ValidationService.checkPhone(guestProfile.getPhone());
+            ValidationService.checkEmail(guest.getEmail());
+            ValidationService.checkPhone(guest.getPhone());
             final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
             final String guestId = UUID.randomUUID().toString();
-            guestProfile.setId(guestId);
-            guestProfile.setTrial(true);
+            guest.setId(guestId);
+            guest.setTrial(true);
 
-            guestProfile.setPublicId(publicId);
-            final String slug = this.utilitaireService.makeSlug(format("%s %s", guestProfile.getFirstName(), guestProfile.getLastName()));
-            guestProfile.setSlug(format("%s-%s", slug, publicId));
-            //final QRCodeEntity guestQRCODE = this.qrCodeGeneratorService.guestQRCODE(event, guestProfile);
-            //guestProfile.setQrCode(guestQRCODE);
+            guest.setPublicId(publicId);
+            final String slug = this.utilitaireService.makeSlug(format("%s %s", guest.getFirstName(), guest.getLastName()));
+            guest.setSlug(format("%s-%s", slug, publicId));
+            
             List<Guest> guests = event.getGuests();
+            this.utilitaireService.checkIfAccountIsInList(guests, guest);
             if (guests == null) {
                 guests = new ArrayList<>();
             }
-            guests.add(guestProfile);
+            guests.add(guest);
             event.setGuests(guests);
 
             // Mis à jour des plans
@@ -283,7 +281,7 @@ public class EventService {
 
             final Map<String, Guest> planContacts = plan.getContacts();
             final List<Guest> guestList = planContacts.keySet().parallelStream().map(key -> planContacts.get(key)).collect(Collectors.toList());
-            guestList.add(guestProfile);
+            guestList.add(guest);
             final Map<String, Guest> newPlanContacts = guestList.stream().collect(Collectors.toMap(Guest::getPublicId, Function.identity()));
             plan.setContacts(newPlanContacts);
 
@@ -492,7 +490,7 @@ public class EventService {
             final String guestId = UUID.randomUUID().toString();
             schedule.setId(guestId);
 
-            final String publicId = RandomStringUtils.randomAlphanumeric(20).toLowerCase(Locale.ROOT);
+            final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
             schedule.setPublicId(publicId);
             final String slug = this.utilitaireService.makeSlug(schedule.getTitle());
             schedule.setSlug(format("%s-%s", slug, publicId));
@@ -513,6 +511,32 @@ public class EventService {
         List<Schedule> schedules = event.getSchedules();
         schedules = schedules.stream().filter(currentSchedule -> !currentSchedule.getPublicId().equals(scheduleId)).collect(Collectors.toList());
         event.setSchedules(schedules);
+        this.eventsRepository.save(event);
+    }
+
+    public void addScan(final String eventId, final Scan scan) {
+        log.info("Enregistrement du scan pour {}", eventId);
+        final var event = this.read(eventId);
+
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        scan.setPublicId(publicId);
+
+        List<Scan> scans = event.getScans();
+        if (scans == null) {
+            scans = new ArrayList<>();
+        } else {
+            scans = scans.stream().filter(current -> !current.getGuestPublicId().equals(scan.getPublicId())).collect(Collectors.toList());
+        }
+        scans.add(scan);
+        event.setScans(scans);
+        this.eventsRepository.save(event);
+    }
+
+    public void deleteScan(final String eventId, final String scanId) {
+        final var event = this.read(eventId);
+        List<Scan> scans = event.getScans();
+        scans = scans.stream().filter(current -> !current.getGuestPublicId().equals(scanId)).collect(Collectors.toList());
+        event.setScans(scans);
         this.eventsRepository.save(event);
     }
 

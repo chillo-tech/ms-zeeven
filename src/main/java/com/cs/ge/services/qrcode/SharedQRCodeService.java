@@ -4,9 +4,11 @@ import com.cs.ge.entites.QRCodeEntity;
 import com.cs.ge.utils.UtilitaireService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,7 +20,7 @@ public abstract class SharedQRCodeService {
 
     protected Map<String, Object> qrCodeParamsFromType(final QRCodeEntity qrCodeEntity, final String imagesHost, final String imagesRootfolder, final String imagesFolder) {
         final Map<String, Object> params = new HashMap<>();
-        final String slug = this.slugFromType(qrCodeEntity);
+        final String slug = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);//this.slugFromType(qrCodeEntity);
         String path = "go-to";
         if (Objects.equals(this.environment.getActiveProfiles()[0], "local")) {
             path = "qr-code";
@@ -60,7 +62,6 @@ public abstract class SharedQRCodeService {
             case VCARD -> this.utilitaireService.makeSlug(
                     String.format("%s %s", qrCodeEntity.getData().get("firstName"), qrCodeEntity.getData().get("lastName"))
             );
-            default -> null;
         };
     }
 

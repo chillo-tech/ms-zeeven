@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
@@ -31,8 +32,8 @@ public class Profile {
     protected String phone;
     protected boolean trial;
     protected List<Stock> stocks;
-    
+
     @JsonProperty(access = WRITE_ONLY)
-    protected List<UserAccount> contacts;
+    protected List<Guest> contacts = new ArrayList<>();
 
 }
