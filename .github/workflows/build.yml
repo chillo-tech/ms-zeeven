@@ -7,23 +7,44 @@ on:
 permissions:
   contents: read
 
+env:
+  NODE_VERSION: '14.x'
+  APPLICATION_NAME: 'zeeven'
+  APPLICATION_TYPE: 'ms'
 jobs:
   define-variables:
     name: JOB Define variables
     runs-on: ubuntu-latest
     outputs:
       APPLICATIONS_HOST: ${{ steps.step-define-variables.outputs.APPLICATIONS_HOST }}
+      APPLICATIONS_PORT: ${{ steps.step-define-variables.outputs.APPLICATIONS_PORT }}
+      APPLICATIONS_USERNAME: ${{ steps.step-define-variables.outputs.APPLICATIONS_USERNAME }}
+      IPLOCATION_API_KEY: ${{ steps.step-define-variables.outputs.IPLOCATION_API_KEY }}
+      BACKOFFICE_API_KEY: ${{ steps.step-define-variables.outputs.BACKOFFICE_API_KEY }}
+      APPLICATIONS_SSH_PRIVATE_KEY: ${{ steps.step-define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
     steps:
       - name: STEP Define variables
         id: step-define-variables
         run: |
-          echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_HOST=${{ secrets.RECETTE_APPLICATIONS_HOST }}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_PORT=${{ secrets.RECETTE_APPLICATIONS_PORT }}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> $GITHUB_OUTPUT
+          echo "IPLOCATION_API_KEY=${{ secrets.RECETTE_IPLOCATION_API_KEY }}" >> $GITHUB_OUTPUT
+          echo "BACKOFFICE_API_KEY=${{ secrets.RECETTE_BACKOFFICE_API_KEY }}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_SSH_PRIVATE_KEY=${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
 
-  debug-variables:
-    name: JOB Debug variables
+  create-folder:
+    name: Create folder
     runs-on: ubuntu-latest
     needs: define-variables
     steps:
-      - name: Display variables
-        run: |
-          echo "HOST ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}"
+      - name: Create folder
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
+          port: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
+          username: ${{ needs.define-variables.outputs.APPLICATIONS_USERNAME }}
+          key: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
+          script: |
+            sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
+            sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
