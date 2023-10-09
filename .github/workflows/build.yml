@@ -26,7 +26,7 @@ jobs:
       - name: STEP Define variables
         id: step-define-variables
         run: |
-          echo "APPLICATIONS_HOST=${{ secrets.RECETTE_APPLICATIONS_HOST }}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_HOST={${{ secrets.RECETTE_APPLICATIONS_HOST }}}" >> $GITHUB_OUTPUT
           echo "APPLICATIONS_PORT=${{ secrets.RECETTE_APPLICATIONS_PORT }}" >> $GITHUB_OUTPUT
           echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> $GITHUB_OUTPUT
           echo "IPLOCATION_API_KEY=${{ secrets.RECETTE_IPLOCATION_API_KEY }}" >> $GITHUB_OUTPUT
