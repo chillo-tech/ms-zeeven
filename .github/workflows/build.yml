@@ -17,7 +17,7 @@ jobs:
       - name: STEP Define variables
         id: step-define-variables
         run: |
-          echo "APPLICATIONS_HOST=$secrets.PROD_APPLICATIONS_HOST" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> $GITHUB_OUTPUT
 
   debug-variables:
     name: JOB Debug variables
