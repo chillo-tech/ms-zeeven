@@ -21,7 +21,6 @@ permissions:
 
 jobs:
   define-variables:
-    id: job-define-variables
     name: JOB Define variables
     runs-on: ubuntu-latest
     outputs:
