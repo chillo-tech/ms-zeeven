@@ -62,14 +62,14 @@ jobs:
       - name: Create folder
         uses: appleboy/ssh-action@master
         env:
-          APPLICATIONS_HOST: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
+          APPLICATIONS_HOST: ${{ define-variables.outputs.APPLICATIONS_HOST }}
           APPLICATIONS_PORT: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
           APPLICATIONS_USERNAME: ${{ needs.define-variables.outputs.APPLICATIONS_USERNAME }}
           IPLOCATION_API_KEY: ${{ needs.define-variables.outputs.IPLOCATION_API_KEY }}
           BACKOFFICE_API_KEY: ${{ needs.define-variables.outputs.BACKOFFICE_API_KEY }}
           APPLICATIONS_SSH_PRIVATE_KEY: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
         with:
-          host: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
+          host: ${{ env.APPLICATIONS_HOST }}
           port: ${{ env.APPLICATIONS_PORT }}
           username: ${{ env.APPLICATIONS_USERNAME }}
           key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
