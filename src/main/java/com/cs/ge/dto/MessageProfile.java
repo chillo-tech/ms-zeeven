@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -20,5 +21,5 @@ public class MessageProfile {
     private String phoneIndex;
     private String phone;
     private boolean trial;
-    private List<ProfileParams> others;
+    private List<ProfileParams> others = new ArrayList<>();
 }

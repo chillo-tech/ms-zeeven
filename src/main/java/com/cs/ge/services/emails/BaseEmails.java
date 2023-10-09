@@ -3,7 +3,9 @@ package com.cs.ge.services.emails;
 import com.cs.ge.dto.Email;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.Profile;
+import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Civility;
+import com.cs.ge.services.ProfileService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -24,17 +26,19 @@ public class BaseEmails {
     private static final String EMAIL_DESTINATAIRE = "email";
 
     private final EMailContentBuilder eMailContentBuilder;
+    private final ProfileService profileService;
     private final String activationUrl;
     private final String applicationHost;
     private final String newPasswordUrl;
 
     public BaseEmails(
             final EMailContentBuilder eMailContentBuilder,
-            @Value("${app.host}") final String applicationHost,
+            final ProfileService profileService, @Value("${app.host}") final String applicationHost,
             @Value("${spring.mail.activation-url}") final String activationUrl,
             @Value("${spring.mail.new-password-url}") final String newPasswordUrl
     ) {
         this.eMailContentBuilder = eMailContentBuilder;
+        this.profileService = profileService;
         this.activationUrl = activationUrl;
         this.applicationHost = applicationHost;
         this.newPasswordUrl = newPasswordUrl;
@@ -43,9 +47,10 @@ public class BaseEmails {
 
     public Email newEvent(final Event event) {
         final Map<String, Object> replacements = new HashMap<>();
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
         replacements.put(TITRE, "Votre évènement a bien été enregistré");
-        replacements.put(PRENOM_DESTINATAIRE, ""); //event.getAuthor().getFirstName());
-        replacements.put(NOM_DESTINATAIRE, "");// event.getAuthor().getLastName());
+        replacements.put(PRENOM_DESTINATAIRE, author.getFirstName());
+        replacements.put(NOM_DESTINATAIRE, author.getLastName());
         replacements.put(LIEN_URL, this.applicationHost);
         replacements.put(LIEN_LABEL, "Connectez vous à votre compte");
         replacements.put(APPLICATION_LINK, this.applicationHost);

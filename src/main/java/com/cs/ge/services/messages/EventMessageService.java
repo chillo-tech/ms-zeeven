@@ -78,7 +78,7 @@ public class EventMessageService {
         channels.forEach(channel -> {
             List<EventMessage> eventMessages = this.eventMessageRepository.findMessagesToSend(channel, event.getId()).collect(Collectors.toList());
             eventMessages = eventMessages.stream().filter(eventMessage -> eventMessage.getMessage() != null && !Strings.isNullOrEmpty(eventMessage.getMessage().getText()))
-                    //.filter(eventMessage -> !eventMessage.isHandled())
+                    .filter(eventMessage -> !eventMessage.isHandled())
                     .peek(eventMessage -> {
                                 final UserAccount author = this.profileService.findById(event.getAuthorId());
                                 this.aSynchroniousNotifications.sendEventMessage(
@@ -88,6 +88,14 @@ public class EventMessageService {
                                         List.of(channel),
                                         null,
                                         new HashMap<>()
+                                );
+                                eventMessage.setStatus(
+                                        List.of(
+                                                EventMessageNotificationStatus.builder()
+                                                        .status("SENT")
+                                                        .creation(Instant.now())
+                                                        .build()
+                                        )
                                 );
                                 eventMessage.setHandle(Instant.now());
                                 eventMessage.setHandled(true);

@@ -10,6 +10,7 @@ import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
+import com.cs.ge.services.ProfileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -43,6 +44,7 @@ public class ASynchroniousNotifications {
     private final String applicationFilesVhost;
     private final String applicationInvitationsExchange;
     private final String administratoremail;
+    private final ProfileService profileService;
 
     public ASynchroniousNotifications(final RabbitTemplate rabbitTemplate,
                                       @Value("${app.administrator.firstname}") final String administratorFirstname,
@@ -50,8 +52,8 @@ public class ASynchroniousNotifications {
                                       @Value("${app.files.exchange}") final String applicationFilesExchange,
                                       @Value("${app.files.virtual-host}") final String applicationFilesVhost,
                                       @Value("${app.invitations.exchange}") final String applicationInvitationsExchange,
-                                      @Value("${app.administrator.email}") final String administratoremail
-    ) {
+                                      @Value("${app.administrator.email}") final String administratoremail,
+                                      final ProfileService profileService) {
         this.rabbitTemplate = rabbitTemplate;
         this.administratorFirstname = administratorFirstname;
         this.administratorLastname = administratorLastname;
@@ -59,6 +61,7 @@ public class ASynchroniousNotifications {
         this.applicationFilesVhost = applicationFilesVhost;
         this.applicationInvitationsExchange = applicationInvitationsExchange;
         this.administratoremail = administratoremail;
+        this.profileService = profileService;
     }
 
 
@@ -165,6 +168,34 @@ public class ASynchroniousNotifications {
 
     }
 
+    public void sendPaymentConfirmationMessage(final Event event, final ApplicationMessage applicationMessage, final List<Channel> channelsToHandle) {
+        log.info("ApplicationNotification du message de {}", applicationMessage.getId());
+
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
+
+        final Map<String, List<String>> params = this.messageParameters(applicationMessage);
+        params.put("trial", List.of(String.valueOf(author.isTrial())));
+        final ApplicationNotification notification = new ApplicationNotification(
+                "ZEEVEN",
+                null,
+                event.getName(),
+                event.getId(),
+                applicationMessage.getText(),
+                params,
+                channelsToHandle,
+                this.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), null),
+                event.getGuests().parallelStream().map(guest -> this.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), null)).collect(Collectors.toList()));
+
+        final MessageProperties properties = new MessageProperties();
+        properties.setHeader("application", "ZEEVEN");
+        properties.setHeader("type", "message");
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(notification);
+        final ObjectMapper objectMapper = new ObjectMapper();
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+
+    }
+
     private MessageProfile getUserInfos(
             final String id,
             final Civility civility,
@@ -221,7 +252,7 @@ public class ASynchroniousNotifications {
     private Map<String, List<String>> messageParameters(final BaseApplicationMessage applicationMessage) {
 
         final String textWithVariables = applicationMessage.getText();
-        final Pattern pattern = Pattern.compile("\\{\\{[a-zA-Z0-9_ ]+}}");
+        final Pattern pattern = Pattern.compile("\\{\\{\\w+}}");
         final Matcher matcher = pattern.matcher(textWithVariables);
         int index = 0;
         final Map<String, List<String>> parameters = new HashMap<>();

@@ -4,6 +4,7 @@ import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.Event;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.feign.FeignNotifications;
+import com.cs.ge.services.ProfileService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 public class SynchroniousNotifications {
     FeignNotifications feignNotifications;
+    ProfileService profileService;
 
     @Async
     public void sendEventMessage(final Event event, final ApplicationMessage applicationMessage) {
@@ -70,6 +72,55 @@ public class SynchroniousNotifications {
             index++;
         }
         return textWithVariables;
+    }
+
+    @Async
+    public void sendConfirmationMessage(final Event event) {
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
+        final Map<String, String> to = new HashMap();
+        if (author.getCivility() != null) {
+            to.put("civility", author.getCivility().name());
+        }
+        to.put("firstName", author.getFirstName());
+        to.put("lastName", author.getLastName());
+        to.put("email", author.getEmail());
+        to.put("phone", author.getPhone());
+        to.put("phoneIndex", author.getPhoneIndex());
+
+        final Map<String, String> from = new HashMap();
+        from.put("firstName", "Marlene");
+        from.put("lastName", "DE ZEEVEN");
+        from.put("email", "bonjour.zeeven@gmail.com");
+
+        this.feignNotifications.message(
+                "ZEEVEN",
+                List.of("MAIL"),
+                new HashMap<String, Object>() {{
+                    this.put("subject", "Votre demande a bien enregistrée");
+                    this.put("applicationName", "ZEEVEN");
+                    this.put("from", from);
+                    this.put("template", "confirmation.html");
+                    this.put("to", Set.of(to));
+                    this.put("contacts", Set.of(to));
+                }}
+        );
+
+        final Map<String, String> params = new HashMap();
+        params.put("name", String.format("%s %s", author.getFirstName(), author.getLastName()));
+
+        this.feignNotifications.message(
+                "ZEEVEN",
+                List.of("MAIL"),
+                new HashMap<String, Object>() {{
+                    this.put("subject", "Nouvel évènement");
+                    this.put("applicationName", "ZEEVEN");
+                    this.put("from", from);
+                    this.put("template", "new-message.html");
+                    this.put("params", params);
+                    this.put("to", Set.of(from));
+                    this.put("contacts", Set.of(from));
+                }}
+        );
     }
 
     @Async

@@ -180,6 +180,7 @@ public class EventService {
         final String eventName = event.getName();
         this.eventMessageService.eventToEventMessages(event);
         /*
+        //TODO
         this.aSynchroniousNotifications.sendEmail(
                 null,
                 event.getAuthor(),
@@ -267,7 +268,7 @@ public class EventService {
             guest.setPublicId(publicId);
             final String slug = this.utilitaireService.makeSlug(format("%s %s", guest.getFirstName(), guest.getLastName()));
             guest.setSlug(format("%s-%s", slug, publicId));
-            
+
             List<Guest> guests = event.getGuests();
             this.utilitaireService.checkIfAccountIsInList(guests, guest);
             if (guests == null) {
@@ -515,25 +516,6 @@ public class EventService {
         } else {
             // TODO ENVOYER UN MAIL
         }
-        /*
-        if (channelsToHandle.size() > 0) {
-            final List<ApplicationMessage> messagesToSend = this.getEventMessagesToSend(event.getMessages());
-            final List<ApplicationMessage> messagesToKeep = this.getEventMessagesToKeep(event.getMessages(), messagesToSend);
-            final boolean isDisabled = event.getMessages().size() == messagesToSend.size();
-            EventStatus eventStatus = ACTIVE;
-            if (isDisabled) {
-                eventStatus = DISABLED;
-            }
-            event.setStatus(eventStatus);
-            if (messagesToSend.size() > 0) {
-                final List<ApplicationMessage> sentMessages = this.sendMessages(event, messagesToSend, channelsToHandle);
-                messagesToKeep.addAll(sentMessages);
-                event.setMessages(messagesToKeep);
-                this.updateStocks(authorId, channelsToHandle, event.getGuests().size());
-            }
-            this.eventsRepository.save(event);
-        }
-*/
     }
 
     private List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
