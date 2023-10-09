@@ -4,18 +4,6 @@ on:
       - feature/*
       - develop
   workflow_dispatch:
-
-env:
-  NODE_VERSION: '14.x'
-  APPLICATION_NAME: 'zeeven'
-  APPLICATION_TYPE: 'ms'
-  APPLICATIONS_HOST: ${{ secrets.PROD_APPLICATIONS_HOST }}
-  APPLICATIONS_PORT: ${{ secrets.PROD_APPLICATIONS_PORT }}
-  APPLICATIONS_USERNAME: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
-  APPLICATIONS_SSH_PRIVATE_KEY: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
-  IPLOCATION_API_KEY: ${{ secrets.PROD_IPLOCATION_API_KEY }}
-  BACKOFFICE_API_KEY: ${{ secrets.PROD_BACKOFFICE_API_KEY }}
-
 permissions:
   contents: read
 
@@ -23,173 +11,16 @@ jobs:
   define-variables:
     name: JOB Define variables
     runs-on: ubuntu-latest
-    outputs:
-      APPLICATIONS_HOST: ${{ steps.step-define-variables.outputs.APPLICATIONS_HOST }}
-      APPLICATIONS_PORT: ${{ steps.step-define-variables.outputs.APPLICATIONS_PORT }}
-      APPLICATIONS_USERNAME: ${{ steps.step-define-variables.outputs.APPLICATIONS_USERNAME }}
-      IPLOCATION_API_KEY: ${{ steps.step-define-variables.outputs.IPLOCATION_API_KEY }}
-      BACKOFFICE_API_KEY: ${{ steps.step-define-variables.outputs.BACKOFFICE_API_KEY }}
-      APPLICATIONS_SSH_PRIVATE_KEY: ${{ steps.step-define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
     steps:
       - name: STEP Define variables
         id: step-define-variables
         run: |
-          if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
-              echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> "$GITHUB_OUTPUT"
-              echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT }}" >> "$GITHUB_OUTPUT"
-              echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
-              echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
-              echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
-              echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
-              echo $secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
-              echo "EOF" >> $GITHUB_OUTPUT
-          else
-              echo "::set-output name=APPLICATIONS_HOST::${{ secrets.RECETTE_APPLICATIONS_HOST }}"
-              echo "APPLICATIONS_PORT=${{ secrets.RECETTE_APPLICATIONS_PORT }}" >> "$GITHUB_OUTPUT"
-              echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
-              echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
-              echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
-              echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
-              echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
-              echo "EOF" >> $GITHUB_OUTPUT
-          fi
-      - name: STEP Debug variables
-        id: step-debug-variables
-        run: echo "$APPLICATIONS_HOST $APPLICATIONS_PORT"
+          echo "::set-output name=APPLICATIONS_HOST::$secrets.PROD_APPLICATIONS_HOST"
 
-  create-folder:
-    name: Create folder
+  debug-variables:
+    name: JOB Debug variables
     runs-on: ubuntu-latest
-    needs: define-variables
     steps:
-      - name: STEP Debug variables
-        id: step-debug-variables
-        run: echo "${{ needs.define-variables.outputs.APPLICATIONS_HOST }}"
-      - name: Create folder
-        uses: appleboy/ssh-action@master
-        env:
-          APPLICATIONS_HOST: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
-          APPLICATIONS_PORT: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
-          APPLICATIONS_USERNAME: ${{ needs.define-variables.outputs.APPLICATIONS_USERNAME }}
-          IPLOCATION_API_KEY: ${{ needs.define-variables.outputs.IPLOCATION_API_KEY }}
-          BACKOFFICE_API_KEY: ${{ needs.define-variables.outputs.BACKOFFICE_API_KEY }}
-          APPLICATIONS_SSH_PRIVATE_KEY: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
-        with:
-          host: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
-          port: ${{ env.APPLICATIONS_PORT }}
-          username: ${{ env.APPLICATIONS_USERNAME }}
-          key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
-          script: |
-            sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
-            sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
-
-  copy-configs:
-    name: 'copy configs'
-    runs-on: ubuntu-latest
-    needs: create-folder
-    steps:
-      - uses: actions/checkout@master
-      - name: update configs
+      - name: Display variables
         run: |
-          sed -i 's|IMAGE_NAME|simachille/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}:${{ github.sha }}|' docker-compose.yml
-
-      - name: copy file via ssh password
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
-          port: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
-          username: ${{ needs.define-variables.outputs.APPLICATIONS_USERNAME }}
-          key: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
-          source: 'docker-compose.yml'
-          target: '/opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}'
-  generate-tags:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Update Version
-        run: mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion} versions:commit
-      - name: Check Version
-        run: |
-          cat pom.xml
-  dockerize:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'adopt'
-      - name: Build with Maven
-        run: mvn -Dmaven.test.skip=true clean compile package
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: simachille/ms-zeeven
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: simachille/ms-zeeven:${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  run-container:
-    name: 'Run container'
-    runs-on: ubuntu-latest
-    needs: [dockerize, copy-configs]
-    steps:
-      - name: Run container
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.APPLICATIONS_HOST }}
-          port: ${{ env.APPLICATIONS_PORT }}
-          username: ${{ env.APPLICATIONS_USERNAME }}
-          key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
-          script: |
-            docker compose -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/docker-compose.yml rm -f
-            docker compose -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/docker-compose.yml stop
-            docker rmi -f simachille/ms-zeeven:${{ github.sha }}
-            rm -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo MAXMIND_ID=${{ secrets.MAXMIND_ID }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo MAXMIND_KEY=${{ secrets.MAXMIND_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo IPLOCATION_API_KEY=${{ secrets.IPLOCATION_API_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo BACKOFFICE_API_KEY=${{ secrets.BACKOFFICE_API_KEY }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            echo RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-
-            docker compose -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/docker-compose.yml pull
-            docker compose -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/docker-compose.yml up -d
-            cat /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            rm -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
+          echo "HOST ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}"
