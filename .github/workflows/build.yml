@@ -53,6 +53,9 @@ jobs:
               echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
               echo "EOF" >> $GITHUB_OUTPUT
           fi
+      - name: STEP Debug variables
+        id: step-debug-variables
+        run: echo "$APPLICATIONS_HOST $APPLICATIONS_PORT"
 
   create-folder:
     name: Create folder
