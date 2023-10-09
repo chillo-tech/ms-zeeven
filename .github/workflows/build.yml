@@ -24,12 +24,12 @@ jobs:
     name: JOB Define variables
     runs-on: ubuntu-latest
     outputs:
-      APPLICATIONS_HOST: ${{ steps.shared-data.outputs.APPLICATIONS_HOST }}
-      APPLICATIONS_PORT: ${{ steps.shared-data.outputs.APPLICATIONS_PORT }}
-      APPLICATIONS_USERNAME: ${{ steps.shared-data.outputs.APPLICATIONS_USERNAME }}
-      IPLOCATION_API_KEY: ${{ steps.shared-data.outputs.IPLOCATION_API_KEY }}
-      BACKOFFICE_API_KEY: ${{ steps.shared-data.outputs.BACKOFFICE_API_KEY }}
-      APPLICATIONS_SSH_PRIVATE_KEY: ${{ steps.shared-data.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
+      APPLICATIONS_HOST: ${{ steps.step-define-variables.outputs.APPLICATIONS_HOST }}
+      APPLICATIONS_PORT: ${{ steps.step-define-variables.outputs.APPLICATIONS_PORT }}
+      APPLICATIONS_USERNAME: ${{ steps.step-define-variables.outputs.APPLICATIONS_USERNAME }}
+      IPLOCATION_API_KEY: ${{ steps.step-define-variables.outputs.IPLOCATION_API_KEY }}
+      BACKOFFICE_API_KEY: ${{ steps.step-define-variables.outputs.BACKOFFICE_API_KEY }}
+      APPLICATIONS_SSH_PRIVATE_KEY: ${{ steps.step-define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
     steps:
       - name: STEP Define variables
         id: step-define-variables
@@ -62,7 +62,7 @@ jobs:
       - name: Create folder
         uses: appleboy/ssh-action@master
         env:
-          APPLICATIONS_HOST: ${{ define-variables.outputs.APPLICATIONS_HOST }}
+          APPLICATIONS_HOST: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
           APPLICATIONS_PORT: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
           APPLICATIONS_USERNAME: ${{ needs.define-variables.outputs.APPLICATIONS_USERNAME }}
           IPLOCATION_API_KEY: ${{ needs.define-variables.outputs.IPLOCATION_API_KEY }}
