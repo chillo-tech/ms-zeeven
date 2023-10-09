@@ -69,7 +69,7 @@ jobs:
           BACKOFFICE_API_KEY: ${{ needs.define-variables.outputs.BACKOFFICE_API_KEY }}
           APPLICATIONS_SSH_PRIVATE_KEY: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
         with:
-          host: ${{ env.APPLICATIONS_HOST }}
+          host: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
           port: ${{ env.APPLICATIONS_PORT }}
           username: ${{ env.APPLICATIONS_USERNAME }}
           key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
