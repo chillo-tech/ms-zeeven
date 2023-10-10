@@ -13,15 +13,6 @@ env:
   APPLICATION_TYPE: 'ms'
 
 jobs:
-  list-branches:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Checkout repository
-        run: |
-          echo "branches ${{github.base_ref}} ${{ github.ref }}"
-
   create-prod-folder:
     name: create prod folder
     runs-on: ubuntu-latest
