@@ -128,7 +128,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   run-staging-container:
-    name: 'Run container'
+    name: 'Run staging container'
     runs-on: ubuntu-latest
     needs: [dockerize, create-staging-folder]
     if: ${{ !(github.base_ref == 'master' || github.ref == 'refs/heads/master') }}
@@ -174,7 +174,7 @@ jobs:
             cat /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
             rm -f /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
   run-prod-container:
-    name: 'Run container'
+    name: 'Run prod container'
     runs-on: ubuntu-latest
     needs: [dockerize, create-prod-folder]
     if: ${{ !(github.base_ref == 'master' || github.ref == 'refs/heads/master') }}
