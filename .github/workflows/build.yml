@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Checkout repository
         script: |
           echo "branches ${{github.base_ref}} ${{ github.ref }}"
 
