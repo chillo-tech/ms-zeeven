@@ -27,12 +27,25 @@ jobs:
       - name: STEP Define variables
         id: step-define-variables
         run: |
-          echo "APPLICATIONS_HOST<<EOF${{ secrets.PROD_APPLICATIONS_HOST}}EOF" >> $GITHUB_OUTPUT
-          echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT}}" >> $GITHUB_OUTPUT
-          echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME}}" >> $GITHUB_OUTPUT
-          echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY}}" >> $GITHUB_OUTPUT
-          echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY}}" >> $GITHUB_OUTPUT
-          echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}EOF" >> $GITHUB_OUTPUT
+          if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
+            echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> "$GITHUB_OUTPUT"
+            echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT }}" >> "$GITHUB_OUTPUT"
+            echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
+            echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
+            echo $secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "::set-output name=APPLICATIONS_HOST::${{ secrets.RECETTE_APPLICATIONS_HOST }}"
+            echo "APPLICATIONS_PORT=${{ secrets.RECETTE_APPLICATIONS_PORT }}" >> "$GITHUB_OUTPUT"
+            echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
+            echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
+            echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
 
   debug-variables:
     name: JOB Debug variables
