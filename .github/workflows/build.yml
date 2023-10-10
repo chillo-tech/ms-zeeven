@@ -27,12 +27,14 @@ jobs:
       - name: STEP Define variables
         id: step-define-variables
         run: |
-          echo -n "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST}}" >> $GITHUB_OUTPUT
-          echo -n "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT}}" >> $GITHUB_OUTPUT
-          echo -n "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME}}" >> $GITHUB_OUTPUT
-          echo -n "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY}}" >> $GITHUB_OUTPUT
-          echo -n "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY}}" >> $GITHUB_OUTPUT
-          echo -n "APPLICATIONS_SSH_PRIVATE_KEY=${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY}}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_HOST<<$EOF" >> $GITHUB_OUTPUT
+          echo "${{ secrets.PROD_APPLICATIONS_HOST}}" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT}}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME}}" >> $GITHUB_OUTPUT
+          echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY}}" >> $GITHUB_OUTPUT
+          echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY}}" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_SSH_PRIVATE_KEY=${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY}}" >> $GITHUB_OUTPUT
 
   debug-variables:
     name: JOB Debug variables
