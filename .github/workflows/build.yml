@@ -67,9 +67,9 @@ jobs:
           APPLICATIONS_SSH_PRIVATE_KEY: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
         with:
           host: ${{ env.APPLICATIONS_HOST }}
-          port: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
-          username: ${{needs.define-variables.outputs.APPLICATIONS_USERNAME }}
-          key: ${{ needs.define-variables.outputs.IPLOCATION_API_KEY }}
+          port: ${{ env.APPLICATIONS_PORT }}
+          username: ${{env.APPLICATIONS_USERNAME }}
+          key: ${{ env.IPLOCATION_API_KEY }}
           script: |
             sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
             sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
