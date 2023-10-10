@@ -32,9 +32,7 @@ jobs:
           echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME}}" >> $GITHUB_OUTPUT
           echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY}}" >> $GITHUB_OUTPUT
           echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY}}" >> $GITHUB_OUTPUT
-          echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
-          echo ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }} >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}EOF" >> $GITHUB_OUTPUT
 
   debug-variables:
     name: JOB Debug variables
