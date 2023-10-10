@@ -689,7 +689,7 @@ public class EventService {
     public void sendMessages() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
-        events.parallel().forEach(this::handleEvent);
+        events.filter(Event::getAuthorId).forEach(this::handleEvent);
     }
 
 }
