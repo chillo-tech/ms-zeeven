@@ -69,7 +69,7 @@ jobs:
           host: ${{ env.APPLICATIONS_HOST }}
           port: ${{ env.APPLICATIONS_PORT }}
           username: ${{env.APPLICATIONS_USERNAME }}
-          key: ${{ env.IPLOCATION_API_KEY }}
+          key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
             sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
             sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
