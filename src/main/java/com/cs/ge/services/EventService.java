@@ -23,6 +23,7 @@ import com.cs.ge.services.messages.EventMessageService;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.shared.SharedService;
 import com.cs.ge.utils.UtilitaireService;
+import com.google.api.client.util.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -689,7 +690,7 @@ public class EventService {
     public void sendMessages() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
-        events.filter(Event::getAuthorId).forEach(this::handleEvent);
+        events.filter(event -> !Strings.isNullOrEmpty(event.getAuthorId())).forEach(this::handleEvent);
     }
 
 }
