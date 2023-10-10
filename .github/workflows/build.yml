@@ -13,63 +13,17 @@ env:
   APPLICATION_TYPE: 'ms'
 
 jobs:
-  define-variables:
-    name: JOB Define variables
-    runs-on: ubuntu-latest
-    outputs:
-      APPLICATIONS_HOST: ${{ steps.step-define-variables.outputs.APPLICATIONS_HOST }}
-      APPLICATIONS_PORT: ${{ steps.step-define-variables.outputs.APPLICATIONS_PORT }}
-      APPLICATIONS_USERNAME: ${{ steps.step-define-variables.outputs.APPLICATIONS_USERNAME }}
-      IPLOCATION_API_KEY: ${{ steps.step-define-variables.outputs.IPLOCATION_API_KEY }}
-      BACKOFFICE_API_KEY: ${{ steps.step-define-variables.outputs.BACKOFFICE_API_KEY }}
-      APPLICATIONS_SSH_PRIVATE_KEY: ${{ steps.step-define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
-      BACKOFFICE_VAR: ${{ steps.step-define-variables.outputs.BACKOFFICE_VAR }}
-    steps:
-      - name: STEP Define variables
-        id: step-define-variables
-        run: |
-          if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
-            echo "APPLICATIONS_HOST=${{ secrets.PROD_APPLICATIONS_HOST }}" >> "$GITHUB_OUTPUT"
-            echo "APPLICATIONS_PORT=${{ secrets.PROD_APPLICATIONS_PORT }}" >> "$GITHUB_OUTPUT"
-            echo "APPLICATIONS_USERNAME=${{ secrets.PROD_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
-            echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
-            echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
-            echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
-            echo $secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "APPLICATIONS_HOST=${{ secrets.RECETTE_APPLICATIONS_HOST }}" >> "$GITHUB_OUTPUT"
-            echo "APPLICATIONS_PORT=${{ secrets.RECETTE_APPLICATIONS_PORT }}" >> "$GITHUB_OUTPUT"
-            echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
-            echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
-            echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
-            echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF${{ secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY}}EOF" >> $GITHUB_OUTPUT
-          fi
-
   debug-variables:
     name: JOB Debug variables
     runs-on: ubuntu-latest
-    needs: define-variables
     steps:
-      - name: Display variables
-        run: |
-          echo "HOST ${{ needs.define-variables.outputs.BACKOFFICE_VAR }}"
-          echo "PORT ${{ needs.define-variables.outputs.BACKOFFICE_VAR }}"
       - name: Create folder
         uses: appleboy/ssh-action@master
-        env:
-          APPLICATIONS_HOST: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
-          APPLICATIONS_PORT: ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}
-          APPLICATIONS_USERNAME: ${{ needs.define-variables.outputs.APPLICATIONS_USERNAME }}
-          IPLOCATION_API_KEY: ${{ needs.define-variables.outputs.IPLOCATION_API_KEY }}
-          BACKOFFICE_API_KEY: ${{ needs.define-variables.outputs.BACKOFFICE_API_KEY }}
-          APPLICATIONS_SSH_PRIVATE_KEY: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
-          BACKOFFICE_VAR: ${{ needs.define-variables.outputs.BACKOFFICE_VAR }}
         with:
-          host: ${{ env.APPLICATIONS_HOST }}
-          port: ${{ env.APPLICATIONS_PORT }}
-          username: ${{env.APPLICATIONS_USERNAME }}
-          key: ${{ env.APPLICATIONS_SSH_PRIVATE_KEY }}
+          host: ${{ secrets.APPLICATIONS_HOST }}
+          port: ${{ secrets.APPLICATIONS_PORT }}
+          username: ${{secrets.APPLICATIONS_USERNAME }}
+          key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
             sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
             sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
