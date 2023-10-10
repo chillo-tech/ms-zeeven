@@ -16,13 +16,15 @@ jobs:
   debug-variables:
     name: JOB Debug variables
     runs-on: ubuntu-latest
+    environment:
+      name: staging
     steps:
       - name: Create folder
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.APPLICATIONS_HOST }}
           port: ${{ secrets.APPLICATIONS_PORT }}
-          username: ${{secrets.APPLICATIONS_USERNAME }}
+          username: ${{ secrets.APPLICATIONS_USERNAME }}
           key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
             sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
