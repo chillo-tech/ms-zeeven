@@ -36,7 +36,7 @@ jobs:
         with:
           host: ${{ secrets.APPLICATIONS_HOST }}
           port: ${{ secrets.APPLICATIONS_PORT }}
-          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          username: ${{ secrets.APPLICATIONS_USERNAME }}
           key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
             sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
@@ -51,7 +51,7 @@ jobs:
         with:
           host: ${{ secrets.APPLICATIONS_HOST }}
           port: ${{ secrets.APPLICATIONS_PORT }}
-          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          username: ${{ secrets.APPLICATIONS_USERNAME }}
           key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
           source: 'docker-compose.yml'
           target: '/opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}'
