@@ -57,11 +57,17 @@ jobs:
     steps:
       - name: Create folder
         uses: appleboy/ssh-action@master
+
+        env:
+          FOO: 'BAR'
+          BAR: 'FOO'
+          APPLICATIONS_HOST: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
         with:
-          host: ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}
+          host: $APPLICATIONS_HOST
           port: ${{ secrets.APPLICATIONS_PORT }}
           username: ${{ secrets.APPLICATIONS_USERNAME }}
           key: ${{ secrets.APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
+            echo "sha: $APPLICATIONS_HOST"
             sudo mkdir -p /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
             sudo chmod ugo+rwx /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}
