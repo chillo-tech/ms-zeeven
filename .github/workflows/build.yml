@@ -11,6 +11,7 @@ env:
   NODE_VERSION: '14.x'
   APPLICATION_NAME: 'zeeven'
   APPLICATION_TYPE: 'ms'
+
 jobs:
   debug-variables:
     name: JOB Debug variables
