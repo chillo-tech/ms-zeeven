@@ -23,6 +23,7 @@ jobs:
       IPLOCATION_API_KEY: ${{ steps.step-define-variables.outputs.IPLOCATION_API_KEY }}
       BACKOFFICE_API_KEY: ${{ steps.step-define-variables.outputs.BACKOFFICE_API_KEY }}
       APPLICATIONS_SSH_PRIVATE_KEY: ${{ steps.step-define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
+      BACKOFFICE_VAR: ${{ steps.step-define-variables.outputs.BACKOFFICE_VAR }}
     steps:
       - name: STEP Define variables
         id: step-define-variables
@@ -42,6 +43,7 @@ jobs:
             echo "APPLICATIONS_USERNAME=${{ secrets.RECETTE_APPLICATIONS_USERNAME }}" >> "$GITHUB_OUTPUT"
             echo "IPLOCATION_API_KEY=${{ secrets.PROD_IPLOCATION_API_KEY }}" >> "$GITHUB_OUTPUT"
             echo "BACKOFFICE_API_KEY=${{ secrets.PROD_BACKOFFICE_API_KEY }}" >> "$GITHUB_OUTPUT"
+            echo "BACKOFFICE_VAR='BACKVAR'" >> "$GITHUB_OUTPUT"
             echo "APPLICATIONS_SSH_PRIVATE_KEY<<EOF" >> $GITHUB_OUTPUT
             echo $secrets.RECETTE_APPLICATIONS_SSH_PRIVATE_KEY >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
@@ -54,8 +56,8 @@ jobs:
     steps:
       - name: Display variables
         run: |
-          echo "HOST ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}"
-          echo "PORT ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}"
+          echo "HOST ${{ needs.define-variables.outputs.BACKOFFICE_VAR }}"
+          echo "PORT ${{ needs.define-variables.outputs.BACKOFFICE_VAR }}"
       - name: Create folder
         uses: appleboy/ssh-action@master
         env:
@@ -65,6 +67,7 @@ jobs:
           IPLOCATION_API_KEY: ${{ needs.define-variables.outputs.IPLOCATION_API_KEY }}
           BACKOFFICE_API_KEY: ${{ needs.define-variables.outputs.BACKOFFICE_API_KEY }}
           APPLICATIONS_SSH_PRIVATE_KEY: ${{ needs.define-variables.outputs.APPLICATIONS_SSH_PRIVATE_KEY }}
+          BACKOFFICE_VAR: ${{ needs.define-variables.outputs.BACKOFFICE_VAR }}
         with:
           host: ${{ env.APPLICATIONS_HOST }}
           port: ${{ env.APPLICATIONS_PORT }}
