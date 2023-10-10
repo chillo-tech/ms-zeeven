@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       APPLICATIONS_HOST: ${{ steps.step-define-variables.outputs.APPLICATIONS_HOST }}
+      APPLICATIONS_PORT: ${{ steps.step-define-variables.outputs.APPLICATIONS_PORT }}
     steps:
       - name: STEP Define variables
         id: step-define-variables
@@ -27,3 +28,4 @@ jobs:
       - name: Display variables
         run: |
           echo "HOST ${{ needs.define-variables.outputs.APPLICATIONS_HOST }}"
+          echo "PORT ${{ needs.define-variables.outputs.APPLICATIONS_PORT }}"
