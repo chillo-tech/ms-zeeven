@@ -532,7 +532,7 @@ public class EventService {
 
     private List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
         return eventChannels
-                .parallelStream().filter(channel -> {
+                .stream().filter(channel -> {
                     if (channelsStatistics != null && channelsStatistics.size() > 0) {
                         return channelsStatistics.get(channel) != null && channelsStatistics.get(channel) >= eventGuests.size();
                     } else {
@@ -686,7 +686,7 @@ public class EventService {
     }
 
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 */2 * * * *")
     public void sendMessages() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
