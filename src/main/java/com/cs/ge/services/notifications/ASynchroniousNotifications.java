@@ -164,6 +164,7 @@ public class ASynchroniousNotifications {
         properties.setHeader("message", applicationMessage.getText());
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(notification);
+        log.info("Envoi du message {}", jsonString);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
 
     }
