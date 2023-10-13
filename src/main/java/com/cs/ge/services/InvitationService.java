@@ -79,6 +79,9 @@ public class InvitationService {
     }
 
     private void handleEvent(final Event event) {
+        if (Strings.isNullOrEmpty(event.getAuthorId())) {
+            return;
+        }
         final UserAccount author = this.profileService.findById(event.getAuthorId());
         final List<Guest> guests = event.getGuests();
         final Invitation invitation = event.getInvitation();

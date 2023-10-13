@@ -76,7 +76,7 @@ public class EventMessageService {
 
     public void handleMessages(final List<Channel> channels, final Event event) {
         channels.forEach(channel -> {
-            List<EventMessage> eventMessages = this.eventMessageRepository.findMessagesToSend(channel, event.getId()).collect(Collectors.toList());
+            List<EventMessage> eventMessages = this.eventMessageRepository.findByChannelAndEventId(channel, event.getId()).collect(Collectors.toList());
             eventMessages = eventMessages.stream().filter(eventMessage -> eventMessage.getMessage() != null && !Strings.isNullOrEmpty(eventMessage.getMessage().getText()))
                     .filter(eventMessage -> !eventMessage.isHandled())
                     .peek(eventMessage -> {
