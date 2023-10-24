@@ -9,6 +9,9 @@ app:
   invitations:
     exchange: tech.invitations.exchange
     limit: 1
+  messages:
+    status:
+        queue: tech.messages.status
   files:
     exchange: tech.files.exchange
     virtual-host: prod-notifications
