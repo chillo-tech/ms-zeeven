@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -134,9 +136,19 @@ public class EventController {
         this.eventService.addInvitation(id, invitation);
     }
 
-    @DeleteMapping(value = "{eventId}/invitation/{invitattionId}")
-    public void deleteInvitation(@PathVariable final String eventId, @PathVariable final String invitattionId) {
-        this.eventService.deleteInvitation(eventId, invitattionId);
+    @DeleteMapping(value = "{eventId}/invitation/{invitationPublicId}")
+    public void deleteInvitation(@PathVariable final String eventId, @PathVariable final String invitationPublicId) {
+        this.eventService.deleteInvitation(eventId, invitationPublicId);
+    }
+
+    @PatchMapping(value = "{eventId}/invitation/{invitationPublicId}/params")
+    public void setTemplateParams(@PathVariable final String eventId, @PathVariable final String invitationPublicId, @RequestBody final Map<String, String> templateParams) {
+        this.eventService.setTemplateParams(eventId, invitationPublicId, templateParams);
+    }
+
+    @PatchMapping(value = "{id}/params")
+    public void updateParams(@PathVariable final String id, @RequestBody final Map<String, Boolean> params) {
+        this.eventService.updateParams(id, params);
     }
 
 }
