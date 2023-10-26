@@ -20,6 +20,8 @@ public class Template {
     private String publicId;
     private String title;
     private String name;
+    private int width = 0;
+    private int height = 0;
     @JsonProperty(access = WRITE_ONLY)
     private String file;
     private String address;

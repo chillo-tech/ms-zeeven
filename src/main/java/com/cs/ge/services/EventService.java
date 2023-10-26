@@ -5,6 +5,7 @@ import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
+import com.cs.ge.entites.EventParams;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
 import com.cs.ge.entites.Plan;
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -679,7 +681,7 @@ public class EventService {
         }
     }
 
-    public void deleteInvitation(final String eventId, final String invitattionId) {
+    public void deleteInvitation(final String eventId, final String invitationPublicId) {
         final var event = this.read(eventId);
         event.setInvitation(new Invitation());
         this.eventsRepository.save(event);
@@ -693,4 +695,26 @@ public class EventService {
         events.filter(event -> !Strings.isNullOrEmpty(event.getAuthorId())).forEach(this::handleEvent);
     }
 
+    public void updateParams(final String eventId, final Map<String, Boolean> params) {
+        final var event = this.read(eventId);
+        final EventParams eventParams = event.getParams();
+        params.keySet().forEach(param -> {
+            try {
+                org.apache.commons.beanutils.BeanUtils.setProperty(eventParams, param, params.get(param));
+            } catch (final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
+        this.eventsRepository.save(event);
+    }
+
+    public void setTemplateParams(final String eventId, final String invitationPublicId, final Map<String, String> templateParams) {
+        final var event = this.read(eventId);
+        final var invitation = event.getInvitation();
+        final var template = invitation.getTemplate();
+        template.setParams(templateParams);
+        invitation.setTemplate(template);
+        event.setInvitation(invitation);
+        this.eventsRepository.save(event);
+    }
 }
