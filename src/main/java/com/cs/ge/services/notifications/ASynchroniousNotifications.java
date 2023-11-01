@@ -166,6 +166,7 @@ public class ASynchroniousNotifications {
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
         properties.setHeader("action", "send");
+        properties.setHeader("type", "message");
         properties.setHeader("message", applicationMessage.getText());
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(notification);
