@@ -24,6 +24,8 @@ public class ApplicationNotification implements Serializable {
     String subject;
     @JsonProperty("eventId")
     String eventId;
+    @JsonProperty("applicationMessageId")
+    String applicationMessageId;
     @JsonProperty("message")
     String message;
     @JsonProperty("params")

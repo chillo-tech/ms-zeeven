@@ -43,6 +43,7 @@ public class ASynchroniousNotifications {
     private final String applicationFilesExchange;
     private final String applicationFilesVhost;
     private final String applicationInvitationsExchange;
+    private final String applicationMessagesSendExchange;
     private final String administratoremail;
     private final ProfileService profileService;
 
@@ -51,8 +52,9 @@ public class ASynchroniousNotifications {
                                       @Value("${app.administrator.lastname}") final String administratorLastname,
                                       @Value("${app.files.exchange}") final String applicationFilesExchange,
                                       @Value("${app.files.virtual-host}") final String applicationFilesVhost,
-                                      @Value("${app.invitations.exchange}") final String applicationInvitationsExchange,
                                       @Value("${app.administrator.email}") final String administratoremail,
+                                      @Value("${app.invitations.exchange}") final String applicationInvitationsExchange,
+                                      @Value("${app.messages.exchange}") final String applicationMessagesSendExchange,
                                       final ProfileService profileService) {
         this.rabbitTemplate = rabbitTemplate;
         this.administratorFirstname = administratorFirstname;
@@ -60,6 +62,7 @@ public class ASynchroniousNotifications {
         this.applicationFilesExchange = applicationFilesExchange;
         this.applicationFilesVhost = applicationFilesVhost;
         this.applicationInvitationsExchange = applicationInvitationsExchange;
+        this.applicationMessagesSendExchange = applicationMessagesSendExchange;
         this.administratoremail = administratoremail;
         this.profileService = profileService;
     }
@@ -116,6 +119,7 @@ public class ASynchroniousNotifications {
                 template,
                 subject,
                 RandomStringUtils.random(8, true, true),
+                RandomStringUtils.random(8, true, true),
                 message,
                 parameters,
                 List.of(Channel.EMAIL),
@@ -152,6 +156,7 @@ public class ASynchroniousNotifications {
                 template,
                 event.getName(),
                 event.getId(),
+                applicationMessage.getId(),
                 applicationMessage.getText(),
                 params,
                 channelsToHandle,
@@ -160,11 +165,12 @@ public class ASynchroniousNotifications {
 
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
-        properties.setHeader("type", "message");
+        properties.setHeader("action", "send");
         properties.setHeader("message", applicationMessage.getText());
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(notification);
         log.info("Envoi du message {}", jsonString);
+        this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
 
     }
@@ -181,6 +187,7 @@ public class ASynchroniousNotifications {
                 null,
                 event.getName(),
                 event.getId(),
+                applicationMessage.getId(),
                 applicationMessage.getText(),
                 params,
                 channelsToHandle,
