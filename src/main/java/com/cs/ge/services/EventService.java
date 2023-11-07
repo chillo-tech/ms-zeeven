@@ -5,6 +5,7 @@ import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.ApplicationMessageSchedule;
 import com.cs.ge.entites.Category;
 import com.cs.ge.entites.Event;
+import com.cs.ge.entites.EventMessage;
 import com.cs.ge.entites.EventParams;
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
@@ -19,6 +20,7 @@ import com.cs.ge.enums.Role;
 import com.cs.ge.enums.StockType;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.feign.FeignNotifications;
+import com.cs.ge.repositories.EventMessageRepository;
 import com.cs.ge.repositories.EventRepository;
 import com.cs.ge.services.messages.EventMessageService;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
@@ -59,6 +61,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.cs.ge.enums.EventStatus.ACTIVE;
+import static com.cs.ge.enums.EventStatus.DISABLED;
 import static com.cs.ge.enums.EventStatus.INCOMMING;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -76,6 +79,7 @@ public class EventService {
     private final StockService stockService;
     private final SharedService sharedService;
     private final EventMessageService eventMessageService;
+    private final EventMessageRepository eventMessageRepository;
 
     public EventService(
             final FeignNotifications feignNotifications,
@@ -83,7 +87,7 @@ public class EventService {
             final ProfileService profileService,
             final CategorieService categorieService,
             final ASynchroniousNotifications aSynchroniousNotifications,
-            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService, final EventMessageService eventMessageService) {
+            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService, final EventMessageService eventMessageService, final EventMessageRepository eventMessageRepository) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
@@ -93,6 +97,7 @@ public class EventService {
         this.stockService = stockService;
         this.sharedService = sharedService;
         this.eventMessageService = eventMessageService;
+        this.eventMessageRepository = eventMessageRepository;
     }
 
     public List<Event> search() {
@@ -693,6 +698,19 @@ public class EventService {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
         events.filter(event -> !Strings.isNullOrEmpty(event.getAuthorId())).forEach(this::handleEvent);
+    }
+
+    @Scheduled(cron = "0 */1 * * * *")
+    public void updateEventStatus() {
+        final Stream<Event> events = this.eventsRepository
+                .findByStatusIn(List.of(INCOMMING, ACTIVE));
+        events.peek(event -> {
+            final List<EventMessage> items = this.eventMessageRepository.findByEventIdAndIsHandled(event.getId(), false);
+            if (items.isEmpty()) {
+                event.setStatus(DISABLED);
+                this.eventsRepository.save(event);
+            }
+        }).collect(Collectors.toList());
     }
 
     public void updateParams(final String eventId, final Map<String, Boolean> params) {

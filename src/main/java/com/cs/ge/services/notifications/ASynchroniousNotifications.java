@@ -6,6 +6,7 @@ import com.cs.ge.dto.ProfileParams;
 import com.cs.ge.entites.ApplicationMessage;
 import com.cs.ge.entites.BaseApplicationMessage;
 import com.cs.ge.entites.Event;
+import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
@@ -164,10 +165,43 @@ public class ASynchroniousNotifications {
                 event.getGuests().parallelStream().map(guest -> this.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers())).collect(Collectors.toList()));
 
         final MessageProperties properties = new MessageProperties();
-        properties.setHeader("application", "ZEEVEN");
         properties.setHeader("action", "send");
-        properties.setHeader("type", "message");
-        properties.setHeader("message", applicationMessage.getText());
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(notification);
+        log.info("Envoi du message {}", jsonString);
+        this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+
+    }
+
+    public void sendEventMessageToContact(
+            final Event event,
+            final UserAccount author,
+            final Guest guest,
+            final BaseApplicationMessage applicationMessage,
+            final List<Channel> channelsToHandle,
+            final String template,
+            final Map<String, List<String>> extraParams
+    ) {
+        log.info("ApplicationNotification du message de {}", applicationMessage.getId());
+
+        final Map<String, List<String>> params = this.messageParameters(applicationMessage);
+        params.put("trial", List.of(String.valueOf(author.isTrial())));
+        final ApplicationNotification notification = new ApplicationNotification(
+                "ZEEVEN",
+                template,
+                event.getName(),
+                event.getId(),
+                applicationMessage.getId(),
+                applicationMessage.getText(),
+                params,
+                channelsToHandle,
+                this.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
+                List.of(this.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers()))
+        );
+
+        final MessageProperties properties = new MessageProperties();
+        properties.setHeader("action", "send");
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(notification);
         log.info("Envoi du message {}", jsonString);

@@ -12,6 +12,7 @@ import com.cs.ge.services.ProfileService;
 import com.cs.ge.services.StockService;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class EventMessageService {
 
@@ -75,15 +77,19 @@ public class EventMessageService {
     }
 
     public void handleMessages(final List<Channel> channels, final Event event) {
+        final int[] size = {0};
         channels.forEach(channel -> {
             List<EventMessage> eventMessages = this.eventMessageRepository.findByChannelAndEventId(channel, event.getId()).collect(Collectors.toList());
+            size[0] = eventMessages.size();
             eventMessages = eventMessages.stream().filter(eventMessage -> eventMessage.getMessage() != null && !Strings.isNullOrEmpty(eventMessage.getMessage().getText()))
                     .filter(eventMessage -> !eventMessage.isHandled())
-                    .peek(eventMessage -> {
+                    .peek((eventMessage) -> {
                                 final UserAccount author = this.profileService.findById(event.getAuthorId());
-                                this.aSynchroniousNotifications.sendEventMessage(
+                                log.info("{} à envoyer pour {} sur le canal {}", size[0], event.getName(), channel);
+                                this.aSynchroniousNotifications.sendEventMessageToContact(
                                         event,
                                         author,
+                                        eventMessage.getGuest(),
                                         eventMessage.getMessage(),
                                         List.of(channel),
                                         null,
