@@ -43,22 +43,6 @@ spring:
     activation-url: ${app.host}/activer-mon-compte?code=
     password-url: ${app.host}/activer-mon-compte?code=
     new-password-url: ${app.host}/activer-mon-compte?code=
-    host: smtp.gmail.com
-    port: 587
-    password: xpmswzbclbnulucd
-    username: bonjour.zeeven@gmail.com
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-        transport:
-          protocol: 'smtp'
-          auth: true
-          starttls:
-            enable: true
-            required: true
 
 mongock:
   migration-scan-package:

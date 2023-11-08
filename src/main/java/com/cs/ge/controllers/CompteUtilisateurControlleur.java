@@ -8,7 +8,6 @@ import com.cs.ge.enums.GuestType;
 import com.cs.ge.services.ProfileService;
 import com.cs.ge.services.UtilisateursService;
 import com.cs.ge.services.security.TokenService;
-import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +53,7 @@ public class CompteUtilisateurControlleur {
     }
 
     @PostMapping(path = "signup", consumes = APPLICATION_JSON_VALUE)
-    public void inscription(@RequestBody final UserAccount userAccount) throws IOException, MessagingException {
+    public void inscription(@RequestBody final UserAccount userAccount) {
         this.utilisateursService.inscription(userAccount);
     }
 
@@ -76,8 +74,7 @@ public class CompteUtilisateurControlleur {
     public void activate(@RequestBody final Map<String, String> credentials) {
         this.utilisateursService.updatePassword(credentials.get("code"), credentials.get("password"));
     }
-
-
+    
     @ResponseBody
     @GetMapping(path = "profile")
     public UserAccount getAuthenticateUser() {
