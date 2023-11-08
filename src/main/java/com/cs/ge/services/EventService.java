@@ -523,6 +523,7 @@ public class EventService {
             this.eventMessageService.handleMessages(channelsToHandle, event);
         } else {
             // TODO ENVOYER UN MAIL
+            log.info("Pas assez de crédits pour envoyer des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
         }
     }
 
