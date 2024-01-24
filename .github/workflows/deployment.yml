@@ -1,0 +1,153 @@
+on:
+  workflow_dispatch:
+env:
+  NODE_VERSION: '14.x'
+  FOLDER: /opt/applications/zeeven
+  IMAGE: ms-zeeven
+  IMAGE_VERSION: latest
+permissions:
+  contents: read
+
+jobs:
+  create-folder:
+    name: Create folder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create folder
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
+          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
+          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+          script: |
+            sudo rm -rf ${{ env.FOLDER }}
+            sudo mkdir -p  ${{ env.FOLDER }}
+            sudo chmod ugo+rwx  ${{ env.FOLDER }}
+
+  copy-configs:
+    name: 'copy configs'
+    runs-on: ubuntu-latest
+    needs: create-folder
+    steps:
+      - uses: actions/checkout@master
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
+          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
+          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+          source: 'docker-compose.yml'
+          target: ${{ env.FOLDER }}
+
+  dockerize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create folder
+        run: mkdir -p /tmp
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+      - name: Build with Maven
+        run: mvn -Dmaven.test.skip=true clean compile package
+
+      - name: rename
+        run: |
+          ls -al target
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and export
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: ${{env.IMAGE}}
+          outputs: type=docker,dest=/tmp/${{env.IMAGE}}.tar
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.IMAGE}}
+          path: /tmp/${{env.IMAGE}}.tar
+
+  copy-image:
+    name: 'copy image'
+    runs-on: ubuntu-latest
+    needs: dockerize
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{env.IMAGE}}
+          path: .
+      - name: Check artifact
+        run: |
+          ls -al /tmp
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
+          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
+          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+          source: '${{env.IMAGE}}.tar'
+          target: '/tmp/'
+
+  load-image:
+    name: Load image
+    runs-on: ubuntu-latest
+    needs: copy-image
+    steps:
+      - name: Load image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
+          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
+          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+          script: |
+            docker load -i /tmp/${{env.IMAGE}}.tar
+
+  run-container:
+    name: 'Run container'
+    runs-on: ubuntu-latest
+    needs: load-image
+    steps:
+      - name: Run container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_APPLICATIONS_HOST }}
+          port: ${{ secrets.PROD_APPLICATIONS_PORT }}
+          username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
+          key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
+          script: |
+            docker compose -f ${{ env.FOLDER }}/docker-compose.yml stop
+            docker compose -f ${{ env.FOLDER }}/docker-compose.yml rm -f
+
+            echo MAXMIND_ID=${{ secrets.MAXMIND_ID }} >> ${{ env.FOLDER }}/.env
+            echo MAXMIND_KEY=${{ secrets.MAXMIND_KEY }} >> ${{ env.FOLDER }}/.env
+
+            echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> ${{ env.FOLDER }}/.env
+
+            echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> ${{ env.FOLDER }}/.env
+
+            echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> ${{ env.FOLDER }}/.env
+
+            echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> ${{ env.FOLDER }}/.env
+            echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> ${{ env.FOLDER }}/.env
+            echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> ${{ env.FOLDER }}/.env
+
+            echo IPLOCATION_API_KEY=${{ secrets.IPLOCATION_API_KEY }} >> ${{ env.FOLDER }}/.env
+            echo BACKOFFICE_API_KEY=${{ secrets.BACKOFFICE_API_KEY }} >> ${{ env.FOLDER }}/.env
+
+            echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> ${{ env.FOLDER }}/.env
+            echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> ${{ env.FOLDER }}/.env
+            echo RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }} >> ${{ env.FOLDER }}/.env
+            echo RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }} >> ${{ env.FOLDER }}/.env
+
+            sudo docker compose -f ${{ env.FOLDER }}/docker-compose.yml up -d
+
+            rm -f ${{ env.FOLDER }}/.env

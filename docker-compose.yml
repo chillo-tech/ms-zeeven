@@ -3,13 +3,9 @@ version: '3.8'
 services:
   ms-zeeven:
     container_name: ms-zeeven
-    # The official v2 Traefik docker image
-    image: IMAGE_NAME
-    pull_policy: always
-    # Enables the web UI and tells Traefik to listen to docker
+    image: ms-zeeven:latest
     restart: always
     ports:
-      # The HTTP port
       - "8083:8083"
     environment:
       - "SPRING_PROFILES_ACTIVE=prod"
