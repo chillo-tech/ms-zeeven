@@ -5,6 +5,8 @@ import com.cs.ge.entites.Verification;
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.repositories.VerificationRepository;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,7 @@ import java.time.LocalDateTime;
 @Service
 public class VerificationService {
     private final VerificationRepository verificationRepository;
-
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     public VerificationService(
             final VerificationRepository verificationRepository
     ) {
@@ -29,6 +31,7 @@ public class VerificationService {
         final Verification verification = new Verification();
         verification.setUsername(userAccount.getUsername());
         final String randomCode = RandomStringUtils.randomNumeric(6);
+        logger.info("code ", randomCode);
         verification.setCode(randomCode);
         verification.setDateCreation(LocalDateTime.now());
         verification.setDateExpiration(LocalDateTime.now().plusMinutes(15));
