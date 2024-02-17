@@ -11,6 +11,8 @@ import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.utils.UtilitaireService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ import static com.cs.ge.utils.UtilitaireService.valNumber;
 @Service
 public class UtilisateursService {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final GoogleContactService googleContactService;
     private final UtilisateurRepository utilisateurRepository;
     private final VerificationService verificationService;
@@ -201,7 +204,7 @@ public class UtilisateursService {
         userAccount.setPassword(encodedPassword);
         this.utilisateurRepository.save(userAccount);
         final Verification verification = this.verificationService.createCode(userAccount);
-
+        System  .out.println("code :" + verification.getCode());
         if (userAccount.getEmail() != null) {
             this.asynchroniousNotifications.sendEmail(
                     null,
