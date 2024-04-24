@@ -2,9 +2,11 @@ package com.cs.ge.secured.filters;
 
 import com.cs.ge.exception.ApplicationException;
 import com.cs.ge.services.security.TokenService;
+import com.google.common.base.Strings;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -17,6 +19,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
@@ -40,7 +44,16 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
         this.logger.info("processing authentication for '{}'", request.getRequestURL());
         this.logger.info("{}", test);
 
-        final String requestHeader = request.getHeader(this.tokenHeader);
+
+        String requestHeader = request.getHeader(this.tokenHeader);
+        if (Strings.isNullOrEmpty(requestHeader)) {
+
+            final Optional<Cookie> optionalCookie = Arrays.stream(request.getCookies()).filter(cookie -> cookie.getName().equals("next-auth.session-token")).findFirst();
+            if (optionalCookie.isPresent()) {
+                final Cookie cookie = optionalCookie.get();
+                requestHeader = String.format("Bearer %s", cookie.getValue());
+            }
+        }
 
         String username = null;
         String authToken = null;
