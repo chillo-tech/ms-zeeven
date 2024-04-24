@@ -46,6 +46,7 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
 
 
         String requestHeader = request.getHeader(this.tokenHeader);
+        this.logger.info("requestHeader {} ", requestHeader);
         if (Strings.isNullOrEmpty(requestHeader)) {
 
             final Optional<Cookie> optionalCookie = Arrays.stream(request.getCookies()).filter(cookie -> {
