@@ -21,9 +21,9 @@ jobs:
           username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
           key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
-            sudo rm -rf ${{ env.FOLDER }}
-            sudo mkdir -p  ${{ env.FOLDER }}
-            sudo chmod ugo+rwx  ${{ env.FOLDER }}
+            sudo rm -rf ${{ env.FOLDER }}/${{ env.IMAGE }}
+            sudo mkdir -p  ${{ env.FOLDER }}/${{ env.IMAGE }}
+            sudo chmod ugo+rwx  ${{ env.FOLDER }}/${{ env.IMAGE }}
 
   copy-configs:
     name: 'copy configs'
@@ -39,7 +39,7 @@ jobs:
           username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
           key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
           source: 'docker-compose.yml'
-          target: ${{ env.FOLDER }}
+          target: ${{ env.FOLDER }}/${{ env.IMAGE }}
 
   dockerize:
     runs-on: ubuntu-latest
@@ -124,30 +124,30 @@ jobs:
           username: ${{ secrets.PROD_APPLICATIONS_USERNAME }}
           key: ${{ secrets.PROD_APPLICATIONS_SSH_PRIVATE_KEY }}
           script: |
-            docker compose -f ${{ env.FOLDER }}/docker-compose.yml stop
-            docker compose -f ${{ env.FOLDER }}/docker-compose.yml rm -f
+            docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/${{ env.IMAGE }}/docker-compose.yml stop
+            docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/docker-compose.yml rm -f
 
-            echo MAXMIND_ID=${{ secrets.MAXMIND_ID }} >> ${{ env.FOLDER }}/.env
-            echo MAXMIND_KEY=${{ secrets.MAXMIND_KEY }} >> ${{ env.FOLDER }}/.env
+            echo MAXMIND_ID=${{ secrets.MAXMIND_ID }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo MAXMIND_KEY=${{ secrets.MAXMIND_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> ${{ env.FOLDER }}/.env
+            echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> ${{ env.FOLDER }}/.env
+            echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> ${{ env.FOLDER }}/.env
+            echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> ${{ env.FOLDER }}/.env
-            echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> ${{ env.FOLDER }}/.env
-            echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> ${{ env.FOLDER }}/.env
+            echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo STRIPE_WEBHOOKSECRET_KEY=${{ secrets.STRIPE_WEBHOOKSECRET_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo IPLOCATION_API_KEY=${{ secrets.IPLOCATION_API_KEY }} >> ${{ env.FOLDER }}/.env
-            echo BACKOFFICE_API_KEY=${{ secrets.BACKOFFICE_API_KEY }} >> ${{ env.FOLDER }}/.env
+            echo IPLOCATION_API_KEY=${{ secrets.IPLOCATION_API_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo BACKOFFICE_API_KEY=${{ secrets.BACKOFFICE_API_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> ${{ env.FOLDER }}/.env
-            echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> ${{ env.FOLDER }}/.env
-            echo RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }} >> ${{ env.FOLDER }}/.env
-            echo RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }} >> ${{ env.FOLDER }}/.env
+            echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            sudo docker compose -f ${{ env.FOLDER }}/docker-compose.yml up -d
+            sudo docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/docker-compose.yml up -d
 
-            rm -f ${{ env.FOLDER }}/.env
+            rm -f ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
