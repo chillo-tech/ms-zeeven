@@ -79,6 +79,7 @@ public class EventService {
     private final StockService stockService;
     private final SharedService sharedService;
     private final EventMessageService eventMessageService;
+
     private final EventMessageRepository eventMessageRepository;
 
     public EventService(
@@ -692,7 +693,6 @@ public class EventService {
         event.setInvitation(new Invitation());
         this.eventsRepository.save(event);
     }
-
 
     @Scheduled(cron = "0 */1 * * * *")
     public void sendMessages() {

@@ -25,8 +25,8 @@ public class ContactService {
         this.utilisateurRepository = utilisateurRepository;
     }
 
-    @Scheduled(cron = "@daily")
-    public void updateUserContcats() {
+    @Scheduled(cron = "@hourly")
+    public void updateUserContacts() {
         log.info("Mis à jour des contacts");
         final List<UserAccount> userAccounts = this.utilisateurRepository.findAll();
         userAccounts.forEach(userAccount -> {
