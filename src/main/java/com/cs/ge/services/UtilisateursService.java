@@ -83,10 +83,7 @@ public class UtilisateursService {
         this.asynchroniousNotifications.sendEmail(
                 null,
                 userAccount,
-                new HashMap<String, List<String>>() {{
-                    this.put("code", List.of(verification.getCode()));
-                }},
-
+                Map.of("code", List.of(verification.getCode())),
                 "ZEEVEN",
                 "activation.html",
                 null,
@@ -113,14 +110,11 @@ public class UtilisateursService {
         this.asynchroniousNotifications.sendEmail(
                 null,
                 userAccount,
-                new HashMap<String, List<String>>() {{
-                    this.put("stock", List.of("" + DEFAULT_STOCK_SIZE));
-                }},
-
+                Map.of("stock", List.of("" + DEFAULT_STOCK_SIZE)),
                 "ZEEVEN",
                 "welcome.html",
                 null,
-                "Notre cadeau de bienvenue"
+                "Notre offre de bienvenue"
         );
 
         final Map<String, List<String>> params = new HashMap<String, List<String>>();
@@ -206,9 +200,7 @@ public class UtilisateursService {
             this.asynchroniousNotifications.sendEmail(
                     null,
                     userAccount,
-                    new HashMap<String, List<String>>() {{
-                        this.put("code", List.of(verification.getCode()));
-                    }},
+                    Map.of("code", List.of(verification.getCode())),
 
                     "ZEEVEN",
                     "activation.html",
