@@ -1,6 +1,7 @@
 package com.cs.ge.dto;
 
 import com.cs.ge.enums.Civility;
+import com.cs.ge.enums.Role;
 
 public record ProfileDTO(
         String id,
@@ -10,6 +11,9 @@ public record ProfileDTO(
         String email,
         boolean trial,
         String phoneIndex,
-        String phone
+        String phone,
+        Role role,
+
+        StockDTO stock
 ) {
 }
