@@ -80,6 +80,7 @@ public class UtilisateursService {
     public void resetPasswordLink(final String email) {
         final UserAccount userAccount = this.utilisateurRepository.findByEmail(email).orElseThrow(() -> new ApplicationException("Aucun compte ne correspond à cet identifiant"));
         final Verification verification = this.verificationService.createCode(userAccount);
+
         this.asynchroniousNotifications.sendEmail(
                 null,
                 userAccount,
@@ -266,7 +267,7 @@ public class UtilisateursService {
             try {
                 this.addGuest(guest);
             } catch (final Exception exception) {
-                log.error(null, exception);
+                UtilisateursService.log.error(null, exception);
             }
         });
     }
