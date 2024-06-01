@@ -142,11 +142,72 @@ public class EventService {
         table.setId(id);
         table.setPublicId(publicId);
         table.setDeletable(false);
-        table.setName(DEFAULT_TABLE_NAME);
+        table.setName(EventService.DEFAULT_TABLE_NAME);
         table.setType("CLASSIQUE");
         table.setSlug(this.sharedService.toSlug(table.getName()));
         return table;
     }
+
+    public void add(final Map<String, String> event) {
+        final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
+        final String id = UUID.randomUUID().toString();
+        final UserAccount author = this.profileService.getAuthenticateUser();
+/*
+        if (event.getName() == null) {
+            event.setName(String.format("%s %s %s", event.getCategory().getLabel(), author.getFirstName(), author.getLastName()).toLowerCase());
+        }
+
+        //event.setAuthor(author);
+        event.setAuthorId(author.getId());
+        final List<Guest> guestList = event.getGuests().parallelStream().map(guest -> {
+            guest.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+            guest.setId(UUID.randomUUID().toString());
+            guest.setTrial(true);
+            return guest;
+        }).collect(Collectors.toList());
+        event.setGuests(guestList);
+
+        final Map<String, Object> initialData = this.getDefaultData(guestList);
+
+        //final EventStatus status = eventStatus(event.getDates());
+        event.setStatus(INCOMMING);
+        final Table initialTable = (Table) initialData.get("table");
+        event.setTables(List.of(initialTable));
+        event.setPlan((Plan) initialData.get("plan"));
+
+        final List<ApplicationMessage> updatedApplicationMessages = event.getMessages().parallelStream().peek(applicationMessage -> applicationMessage.setId(id)).collect(Collectors.toList());
+        event.setMessages(updatedApplicationMessages);
+
+        event.setPublicId(publicId);
+        final String slug = this.utilitaireService.makeSlug(event.getName());
+        event.setSlug(format("%s-%s", slug, publicId));
+
+        final Category category = this.categorieService.read(event.getCategory().getLabel());
+        event.setCategory(category);
+
+        event = this.eventsRepository.save(event);
+        final String eventName = event.getName();
+        this.eventMessageService.eventToEventMessages(event);
+
+ */
+        /*
+        //TODO
+        this.aSynchroniousNotifications.sendEmail(
+                null,
+                event.getAuthor(),
+                new HashMap<String, List<String>>() {{
+                    this.put("event", Collections.singletonList(eventName));
+                }},
+
+                "ZEEVEN",
+                "welcome.html",
+                null,
+                "Notre cadeau de bienvenue"
+        );
+         */
+        //this.synchroniousNotifications.sendConfirmationMessage(event);
+    }
+
 
     public void add(Event event) {
         final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
@@ -301,7 +362,7 @@ public class EventService {
             final Map<String, Table> planTables = plan.getTables();
             final List<Table> tableList = planTables.keySet().parallelStream().map(key -> planTables.get(key)).collect(Collectors.toList());
             final int index = IntStream.range(0, tableList.size())
-                    .filter(i -> DEFAULT_TABLE_NAME.equals(tableList.get(i).getName()))
+                    .filter(i -> EventService.DEFAULT_TABLE_NAME.equals(tableList.get(i).getName()))
                     .findFirst().orElse(-1);
 
 
@@ -356,7 +417,8 @@ public class EventService {
 
     public List<Guest> guests(final String id) {
         final Event event = this.read(id);
-        return event.getGuests();
+        final List<Guest> guests = event.getGuests();
+        return guests;
     }
 
     public void addSchedule(final String eventId, final Schedule schedule) {
@@ -390,7 +452,7 @@ public class EventService {
     }
 
     public void addScan(final String eventId, final Scan scan) {
-        log.info("Enregistrement du scan pour {}", eventId);
+        EventService.log.info("Enregistrement du scan pour {}", eventId);
         final var event = this.read(eventId);
 
         final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
@@ -481,7 +543,7 @@ public class EventService {
 
             final Optional<String> defaultTableKey = planTables.entrySet()
                     .stream()
-                    .filter(entry -> Objects.equals(entry.getValue().getName(), DEFAULT_TABLE_NAME))
+                    .filter(entry -> Objects.equals(entry.getValue().getName(), EventService.DEFAULT_TABLE_NAME))
                     .map(Map.Entry::getKey)
                     .findFirst();
 
@@ -507,7 +569,7 @@ public class EventService {
         event.getGuests()
                 .stream()
                 .filter(guest -> guestIdsAsList.contains(guest.getPublicId()))
-                .forEach(profile -> log.info("Send Invitation"));
+                .forEach(profile -> EventService.log.info("Send Invitation"));
 
     }
 
@@ -517,10 +579,10 @@ public class EventService {
         final List<Guest> eventGuests = event.getGuests();
         final List<Channel> eventChannels = event.getChannels();
         final Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(authorId, eventChannels);
-        final List<Channel> channelsToHandle = this.getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
+        final List<Channel> channelsToHandle = EventService.getChannelsToHandle(author.getEmail(), eventGuests, eventChannels, channelsStatistics);
 
         if (channelsToHandle.size() > 0) {
-            log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
+            EventService.log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
             this.eventMessageService.handleMessages(channelsToHandle, event);
         } else {
             // TODO ENVOYER UN MAIL
@@ -528,7 +590,7 @@ public class EventService {
         }
     }
 
-    private List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
+    private static List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
         messages.removeAll(messagesToSend);
         return messages;
     }
@@ -539,7 +601,7 @@ public class EventService {
                         .update(userId, null, null, consumed, channel, StockType.DEBIT));
     }
 
-    private List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
+    private static List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
         return eventChannels
                 .stream().filter(channel -> {
                     if (channelsStatistics != null && channelsStatistics.size() > 0) {
@@ -580,28 +642,28 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    private List<ApplicationMessage> getEventMessagesToSend(final List<ApplicationMessage> messages) {
+    private static List<ApplicationMessage> getEventMessagesToSend(final List<ApplicationMessage> messages) {
         return messages
                 .parallelStream()
                 .filter(message -> {
                     if (message.getSchedules() == null) {
                         message.setSchedules(new ArrayList<>());
                     }
-                    return this.isMessageTobeSend(message.getSchedules());
+                    return EventService.isMessageTobeSend(message.getSchedules());
                 })
                 .collect(Collectors.toList());
     }
 
-    private boolean isMessageTobeSend(final List<ApplicationMessageSchedule> schedules) {
+    private static boolean isMessageTobeSend(final List<ApplicationMessageSchedule> schedules) {
         final ApplicationMessageSchedule firstScheduleToHandle = schedules.parallelStream().filter(schedule -> !schedule.isHandled()).findFirst().orElse(null);
         if (firstScheduleToHandle == null) {
             return false;
         }
         if (firstScheduleToHandle.getTimezone() == null) {
-            firstScheduleToHandle.setTimezone(this.getTimeZone());
+            firstScheduleToHandle.setTimezone(EventService.getTimeZone());
         }
         final TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(firstScheduleToHandle.getTimezone()));
-        log.info("Date du message {} position {}", firstScheduleToHandle.getDate(), timeZone.getDisplayName());
+        EventService.log.info("Date du message {} position {}", firstScheduleToHandle.getDate(), timeZone.getDisplayName());
 
         final Instant firstScheduleToHandleDate = firstScheduleToHandle.getDate().atZone(timeZone.toZoneId()).toInstant().truncatedTo(ChronoUnit.MINUTES);
 
@@ -644,7 +706,7 @@ public class EventService {
                     }).collect(Collectors.toList());
             queuedMessagesSatisticts.addAll(staticsData);
         } catch (final Exception exception) {
-            log.error("{}", exception);
+            EventService.log.error("{}", exception);
         }
 
         return queuedMessagesSatisticts;
@@ -658,7 +720,7 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
-    private String getTimeZone() {
+    private static String getTimeZone() {
         return ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
                 ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
         ).getZone().getId();

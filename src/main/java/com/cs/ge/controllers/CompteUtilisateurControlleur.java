@@ -59,8 +59,7 @@ public class CompteUtilisateurControlleur {
     public void inscription(@RequestBody final UserAccount userAccount) {
         this.utilisateursService.inscription(userAccount);
     }
-
-    @ResponseBody
+    
     @PostMapping(path = "activation", consumes = APPLICATION_JSON_VALUE)
     public void activated(@RequestBody final Map<String, String> params) {
         this.utilisateursService.activate(params.get("code"));

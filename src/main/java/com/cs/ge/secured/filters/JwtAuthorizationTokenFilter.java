@@ -49,7 +49,8 @@ public class JwtAuthorizationTokenFilter extends OncePerRequestFilter {
         this.logger.info("requestHeader {} ", requestHeader);
         if (Strings.isNullOrEmpty(requestHeader)) {
 
-            final Optional<Cookie> optionalCookie = Arrays.stream(request.getCookies()).filter(cookie -> {
+            final Cookie[] cookies = request.getCookies();
+            final Optional<Cookie> optionalCookie = Arrays.stream(cookies).filter(cookie -> {
                 this.logger.info("Cookie {} {} ", cookie.getName(), cookie.getValue());
                 return cookie.getName().equals("__Secure-next-auth.session-token");
             }).findFirst();

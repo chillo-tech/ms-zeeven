@@ -38,12 +38,21 @@ public class EventController {
         return this.eventService.search();
     }
 
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public void add(@RequestBody final Event event) {
         this.eventService.add(event);
     }
 
+    /*
+       @ResponseStatus
+               (HttpStatus.CREATED)
+       @PostMapping
+       public void add(@RequestBody final Map<String, String> event) {
+           this.eventService.add(event);
+       }
+   */
     @DeleteMapping(value = "/{id}")
     public void delete(@PathVariable final String id) {
         this.eventService.delete(id);

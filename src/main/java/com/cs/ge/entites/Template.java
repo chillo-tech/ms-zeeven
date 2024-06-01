@@ -18,12 +18,12 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 public class Template {
     private String id;
     private String publicId;
-    private String title;
-    private String name;
+    private String title = "";
+    private String name = "";
     private int width = 0;
     private int height = 0;
     @JsonProperty(access = WRITE_ONLY)
-    private String file;
+    private String file = "";
     private String address;
     private String text;
     private Map<String, String> params;
