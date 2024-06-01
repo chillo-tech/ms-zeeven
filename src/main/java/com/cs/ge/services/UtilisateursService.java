@@ -81,6 +81,7 @@ public class UtilisateursService {
         final UserAccount userAccount = this.utilisateurRepository.findByEmail(email).orElseThrow(() -> new ApplicationException("Aucun compte ne correspond à cet identifiant"));
         final Verification verification = this.verificationService.createCode(userAccount);
 
+        UtilisateursService.log.info("[SERVICE] Envoi d'un code pour le nouveau mot de passe {}", email);
         this.asynchroniousNotifications.sendEmail(
                 null,
                 userAccount,

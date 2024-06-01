@@ -150,3 +150,4 @@ jobs:
 
             sudo docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/docker-compose.yml up -d
 
+            rm -f ${{ env.FOLDER }}/${{ env.IMAGE }}/.env

@@ -79,7 +79,7 @@ public class ASynchroniousNotifications {
             final String message,
             final String subject
     ) {
-
+        ASynchroniousNotifications.log.info("[CONTROLLER] Envoi d'un code pour le nouveau mot de passe {}", template);
         final UserAccount exp = new UserAccount();
         exp.setLastName(this.administratorLastname);
         exp.setFirstName(this.administratorFirstname);

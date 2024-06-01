@@ -45,7 +45,7 @@ public class CompteUtilisateurControlleur {
 
     @PostMapping(value = "signin", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody final JwtRequest authenticationRequest) throws Exception {
-        log.info("login {} {}", authenticationRequest.getUsername(), authenticationRequest.getPassword());
+        CompteUtilisateurControlleur.log.info("login {} {}", authenticationRequest.getUsername(), authenticationRequest.getPassword());
         final Authentication authentication = this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
         final String token = this.tokenService.generateToken(authentication);
         return ResponseEntity.ok(new JwtResponse(token));
@@ -59,7 +59,7 @@ public class CompteUtilisateurControlleur {
     public void inscription(@RequestBody final UserAccount userAccount) {
         this.utilisateursService.inscription(userAccount);
     }
-    
+
     @PostMapping(path = "activation", consumes = APPLICATION_JSON_VALUE)
     public void activated(@RequestBody final Map<String, String> params) {
         this.utilisateursService.activate(params.get("code"));
@@ -68,6 +68,7 @@ public class CompteUtilisateurControlleur {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "reset-password-link")
     public void resetPasswordLink(@RequestBody final Map<String, String> params) {
+        CompteUtilisateurControlleur.log.info("[CONTROLLER] Envoi d'un code pour le nouveau mot de passe {}", params);
         this.utilisateursService.resetPasswordLink(params.get("email"));
     }
 
