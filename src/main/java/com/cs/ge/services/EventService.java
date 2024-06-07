@@ -1,20 +1,9 @@
 package com.cs.ge.services;
 
 import com.cs.ge.dto.Scan;
-import com.cs.ge.entites.ApplicationMessage;
-import com.cs.ge.entites.ApplicationMessageSchedule;
-import com.cs.ge.entites.Category;
-import com.cs.ge.entites.Event;
-import com.cs.ge.entites.EventMessage;
-import com.cs.ge.entites.EventParams;
-import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Invitation;
-import com.cs.ge.entites.Plan;
-import com.cs.ge.entites.Schedule;
-import com.cs.ge.entites.Table;
-import com.cs.ge.entites.Template;
-import com.cs.ge.entites.UserAccount;
+import com.cs.ge.entites.*;
 import com.cs.ge.enums.Channel;
+import com.cs.ge.enums.ChannelEnumGestionnaire;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.enums.Role;
 import com.cs.ge.enums.StockType;
@@ -31,6 +20,7 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -322,7 +312,7 @@ public class EventService {
         return null; //Base64.getDecoder().decode(guest.getTicket());
     }
 
-    public void addGuest(final String eventId, final Guest guest) throws IOException {
+    public ResponseEntity<HashMap> addGuest(final String eventId, final Guest guest ,final String channels) throws IOException {
         final var event = this.read(eventId);
 
         final UserAccount userAccount = new UserAccount();
@@ -385,7 +375,22 @@ public class EventService {
             final Map<String, Table> newPlanTables = tableList.stream().collect(Collectors.toMap(Table::getPublicId, Function.identity()));
             plan.setTables(newPlanTables);
             this.eventsRepository.save(event);
+
+//            add invitation
+            Invitation invitation = new Invitation();
+            String[] channelsStrings = channels.toUpperCase().trim().split(",");
+            ArrayList<Channel> channelsList = new ArrayList<>();
+            for (String item: channelsStrings) {
+                channelsList.add(ChannelEnumGestionnaire.getCorrespondingChannel(item));
+            }
+            invitation.setChannels(channelsList.toArray(new Channel[0]));
+
+            invitation.setTemplate();
+            HashMap<String,String> res = new HashMap<String,String>();
+            res.put("id" , guest.getPublicId());
+            return ResponseEntity.ok(res);
         }
+        return null;
     }
 
     public void deleteGuest(final String eventId, final String guestId) {
