@@ -20,13 +20,13 @@ public class AdministrationController {
         this.administrationService = administrationService;
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
     @PostMapping(path = "user-role", consumes = APPLICATION_JSON_VALUE)
     public void updateUserRole(@RequestBody final ProfileDTO profile) {
         this.administrationService.updateUserRole(profile);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
     @PostMapping(path = "user-stock", consumes = APPLICATION_JSON_VALUE)
     public void updateUserStock(@RequestBody final ProfileDTO profile) {
         this.administrationService.updateUserStock(profile);
