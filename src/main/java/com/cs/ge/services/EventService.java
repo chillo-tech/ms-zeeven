@@ -79,6 +79,7 @@ public class EventService {
     private final StockService stockService;
     private final SharedService sharedService;
     private final EventMessageService eventMessageService;
+    private final InvitationService invitationService;
 
     private final EventMessageRepository eventMessageRepository;
 
@@ -88,7 +89,7 @@ public class EventService {
             final ProfileService profileService,
             final CategorieService categorieService,
             final ASynchroniousNotifications aSynchroniousNotifications,
-            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService, final EventMessageService eventMessageService, final EventMessageRepository eventMessageRepository) {
+            final UtilitaireService utilitaireService, final StockService stockService, final SharedService sharedService, final EventMessageService eventMessageService, final InvitationService invitationService, final EventMessageRepository eventMessageRepository) {
         this.feignNotifications = feignNotifications;
         this.eventsRepository = eventsRepository;
         this.profileService = profileService;
@@ -98,6 +99,7 @@ public class EventService {
         this.stockService = stockService;
         this.sharedService = sharedService;
         this.eventMessageService = eventMessageService;
+        this.invitationService = invitationService;
         this.eventMessageRepository = eventMessageRepository;
     }
 
@@ -322,7 +324,7 @@ public class EventService {
         return null; //Base64.getDecoder().decode(guest.getTicket());
     }
 
-    public void addGuest(final String eventId, final Guest guest) throws IOException {
+    public void addGuest(final String eventId, final Guest guest, final Map<String, Object> parameters) throws IOException {
         final var event = this.read(eventId);
 
         final UserAccount userAccount = new UserAccount();
@@ -384,7 +386,11 @@ public class EventService {
 
             final Map<String, Table> newPlanTables = tableList.stream().collect(Collectors.toMap(Table::getPublicId, Function.identity()));
             plan.setTables(newPlanTables);
-            this.eventsRepository.save(event);
+            final Event updatedEvent = this.eventsRepository.save(event);
+
+            if (!parameters.isEmpty() && parameters.containsKey("sendInvitation") && event.getInvitation() != null && event.getChannels() != null) {
+                this.invitationService.sendGuestInvitation(updatedEvent, guest);
+            }
         }
     }
 

@@ -78,7 +78,6 @@ public class InvitationService {
         if (Strings.isNullOrEmpty(event.getAuthorId())) {
             return;
         }
-        final UserAccount author = this.profileService.findById(event.getAuthorId());
         final List<Guest> guests = event.getGuests();
         final Invitation invitation = event.getInvitation();
         if (invitation == null || invitation.getSend() == null) {
@@ -90,53 +89,10 @@ public class InvitationService {
         if (this.nbInvitations == 0) {
             this.nbInvitations = guests.size();
         }
-        log.debug("Les invitations pour {} seront envoyées à {}", event.getName(), invitation.getSend());
+        InvitationService.log.debug("Les invitations pour {} seront envoyées à {}", event.getName(), invitation.getSend());
         if (invitation.getSend().isBefore(Instant.now())) {
             guests.forEach(guest -> {
-                final QRCodeEntity qrCodeEntity = QRCodeEntity
-                        .builder()
-                        .type(QRCodeType.TEXT)
-                        .data(Map.of("text", String.format("%s|%s|%s", event.getPublicId(), invitation.getPublicId(), guest.getPublicId())))
-                        .build();
-
-                try {
-                    final String qrcode = this.qrCodeGeneratorService.generate(qrCodeEntity, false, new HashMap<>());
-                    String image = this.generateTicket(event, guest, invitation, qrcode);
-                    if (Strings.isNullOrEmpty(image)) {
-                        image = qrcode;
-                    }
-
-                    final byte[] decodedFile = Base64.getDecoder().decode(image);
-                    final File fullPathAsFile = new File("tmp.image.jpg");
-
-                    FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
-
-                    final String filePath = String.format("zeeven/tickets/%s/%s.jpg", event.getPublicId(), guest.getPublicId());
-                    if (!Strings.isNullOrEmpty(filePath) && !Strings.isNullOrEmpty(image)) {
-                        this.aSynchroniousNotifications.sendFile(
-                                Map.of(
-                                        "file", image,
-                                        "path", filePath
-                                )
-                        );
-                        final Map<String, Object> messageParameters = Map.of(
-                                "eventId", event.getPublicId(),
-                                "eventName", event.getName(),
-                                "image", String.format("%s/%s", this.applicationFilesHost, filePath),
-                                "guest", guest,
-                                "author", author,
-                                "application", "ZEEVEN",
-                                "notificationTemplate", invitation.getTemplate().getName(),
-                                "whatsappTemplateName", "ze_invitation",
-                                "invitation", invitation,
-                                "channels", event.getInvitation().getChannels()
-                        );
-                        this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
-
-                    }
-                } catch (final IOException e) {
-                    e.printStackTrace();
-                }
+                this.sendGuestInvitation(event, guest);
 
             });
         }
@@ -145,27 +101,81 @@ public class InvitationService {
         this.eventsRepository.save(event);
     }
 
-    private String generateTicket(final Event event, final Guest guest, final Invitation invitation,
-                                  final String qrcodeAsString) {
+    public void sendGuestInvitation(final Event event, final Guest guest) {
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
+        final Invitation invitation = event.getInvitation();
+        final QRCodeEntity qrCodeEntity = QRCodeEntity
+                .builder()
+                .type(QRCodeType.TEXT)
+                .data(Map.of("text", String.format("%s|%s|%s", event.getPublicId(), invitation.getPublicId(), guest.getPublicId())))
+                .build();
+
+        try {
+            final String qrcode = this.qrCodeGeneratorService.generate(qrCodeEntity, false, new HashMap<>());
+            String image = null;
+            String templateName = event.getName();
+            if (invitation.getTemplate() != null) {
+                templateName = invitation.getTemplate().getName();
+                image = InvitationService.generateTicket(event, guest, invitation, qrcode);
+            }
+            if (Strings.isNullOrEmpty(image)) {
+                image = qrcode;
+            }
+
+            final byte[] decodedFile = Base64.getDecoder().decode(image);
+            final File fullPathAsFile = new File("tmp.image.jpg");
+
+            FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
+
+            final String filePath = String.format("zeeven/tickets/%s/%s.jpg", event.getPublicId(), guest.getPublicId());
+            if (!Strings.isNullOrEmpty(filePath) && !Strings.isNullOrEmpty(image)) {
+                this.aSynchroniousNotifications.sendFile(
+                        Map.of(
+                                "file", image,
+                                "path", filePath
+                        )
+                );
+                final Map<String, Object> messageParameters = Map.of(
+                        "eventId", event.getPublicId(),
+                        "eventName", event.getName(),
+                        "image", String.format("%s/%s", this.applicationFilesHost, filePath),
+                        "guest", guest,
+                        "author", author,
+                        "application", "ZEEVEN",
+                        "notificationTemplate", templateName,
+                        "whatsappTemplateName", "ze_invitation",
+                        "invitation", invitation,
+                        "channels", invitation.getChannels()
+                );
+                this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
+
+            }
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String generateTicket(final Event event, final Guest guest, final Invitation invitation,
+                                         final String qrcodeAsString) {
         try {
 
             final Template template = invitation.getTemplate();
             BufferedImage ticketTemplate = null; //ImageIO.read(new File("horizontal-template.png"));
 
             int ticketWidth = 2000; //ticketTemplate.getWidth();
-            if (template.getWidth() != 0) {
+            if (template != null && template.getWidth() != 0) {
                 ticketWidth = template.getWidth();
             }
 
             int ticketHeight = 647; //ticketTemplate.getHeight();
-            if (template.getHeight() != 0) {
+            if (template != null && template.getHeight() != 0) {
                 ticketHeight = template.getHeight();
             }
 
             final byte[] bytes = Base64.getDecoder().decode(qrcodeAsString);
             final BufferedImage qrcode = ImageIO.read(new ByteArrayInputStream(bytes));
 
-            if (!Strings.isNullOrEmpty(event.getInvitation().getTemplate().getFile())) {
+            if (template != null && !Strings.isNullOrEmpty(template.getFile())) {
                 String imageFromFile = event.getInvitation().getTemplate().getFile();
                 if (!Strings.isNullOrEmpty(imageFromFile) && imageFromFile.contains("base64,")) {
                     imageFromFile = imageFromFile.split(",")[1];
@@ -185,7 +195,11 @@ public class InvitationService {
             final String firstName = guest.getFirstName();
             final String formattedFirstName = firstName.isEmpty() ? " " : firstName;
 
-            final Map<String, String> params = invitation.getTemplate().getParams();
+
+            Map<String, String> params = Map.of("qrCodeX", "0", "qrCodeY", "0", "qrCodeWidth", "100", "qrCodeHeight", "100");
+            if (template != null && template.getParams() != null && !template.getParams().isEmpty()) {
+                params = template.getParams();
+            }
 
             g2d.drawImage(qrcode, Integer.parseInt(params.get("qrCodeX")), Integer.parseInt(params.get("qrCodeY")), Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeHeight")), null);
             final String name = String.format(

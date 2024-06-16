@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -75,8 +76,11 @@ public class EventController {
     }
 
     @PostMapping(value = "{id}/guest")
-    public void addGuests(@PathVariable final String id, @RequestBody final Guest guest) throws IOException {
-        this.eventService.addGuest(id, guest);
+    public void addGuests(
+            @RequestParam(required = false) final Map<String, Object> parameters,
+            @PathVariable final String id, @RequestBody final Guest guest
+    ) throws IOException {
+        this.eventService.addGuest(id, guest, parameters);
     }
 
     @PostMapping(value = "{id}/plan")
