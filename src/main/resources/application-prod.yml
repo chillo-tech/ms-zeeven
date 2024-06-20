@@ -3,14 +3,12 @@ app:
   invitations:
     exchange: tech.invitations.exchange
 spring:
-  rabbitmq:
-    host: 192.168.1.101
   data:
     mongodb:
       host: db-zeeven
   mail:
-      #host:  mails.dev
-      accountLink: ${app.host}/activer-mon-compte?code=
+    #host:  mails.dev
+    accountLink: ${app.host}/activer-mon-compte?code=
 
 
 resources:

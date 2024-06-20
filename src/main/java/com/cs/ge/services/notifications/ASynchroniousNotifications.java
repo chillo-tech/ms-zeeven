@@ -11,16 +11,17 @@ import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
+import com.cs.ge.notifications.entity.Notification;
+import com.cs.ge.notifications.entity.Recipient;
+import com.cs.ge.notifications.entity.Sender;
+import com.cs.ge.notifications.service.NotificationService;
 import com.cs.ge.services.ProfileService;
+import com.cs.ge.services.files.FilesHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
+import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -38,34 +39,26 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class ASynchroniousNotifications {
-    private final RabbitTemplate rabbitTemplate;
+    private final FilesHandler filesHandler;
+    private final NotificationService notificationService;
     private final String administratorFirstname;
     private final String administratorLastname;
-    private final String applicationFilesExchange;
-    private final String applicationFilesVhost;
-    private final String applicationInvitationsExchange;
-    private final String applicationMessagesSendExchange;
     private final String administratoremail;
     private final ProfileService profileService;
 
-    public ASynchroniousNotifications(final RabbitTemplate rabbitTemplate,
-                                      @Value("${app.administrator.firstname}") final String administratorFirstname,
-                                      @Value("${app.administrator.lastname}") final String administratorLastname,
-                                      @Value("${app.files.exchange}") final String applicationFilesExchange,
-                                      @Value("${app.files.virtual-host}") final String applicationFilesVhost,
-                                      @Value("${app.administrator.email}") final String administratoremail,
-                                      @Value("${app.invitations.exchange}") final String applicationInvitationsExchange,
-                                      @Value("${app.messages.exchange}") final String applicationMessagesSendExchange,
-                                      final ProfileService profileService) {
-        this.rabbitTemplate = rabbitTemplate;
+    public ASynchroniousNotifications(
+            final FilesHandler filesHandler,
+            final NotificationService notificationService,
+            @Value("${app.administrator.firstname}") final String administratorFirstname,
+            @Value("${app.administrator.lastname}") final String administratorLastname,
+            @Value("${app.administrator.email}") final String administratoremail,
+            final ProfileService profileService) {
+        this.filesHandler = filesHandler;
         this.administratorFirstname = administratorFirstname;
         this.administratorLastname = administratorLastname;
-        this.applicationFilesExchange = applicationFilesExchange;
-        this.applicationFilesVhost = applicationFilesVhost;
-        this.applicationInvitationsExchange = applicationInvitationsExchange;
-        this.applicationMessagesSendExchange = applicationMessagesSendExchange;
         this.administratoremail = administratoremail;
         this.profileService = profileService;
+        this.notificationService = notificationService;
     }
 
 
@@ -73,7 +66,7 @@ public class ASynchroniousNotifications {
     public void sendEmail(
             UserAccount author,
             UserAccount recipient,
-            final Map<String, List<String>> parameters,
+            final Map<String, List<Object>> parameters,
             final String appliation,
             final String template,
             final String message,
@@ -115,7 +108,7 @@ public class ASynchroniousNotifications {
         );
 
 
-        final ApplicationNotification notification = new ApplicationNotification(
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
                 appliation,
                 template,
                 subject,
@@ -128,20 +121,21 @@ public class ASynchroniousNotifications {
                 List.of(to)
         );
 
+        /*
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("application", appliation);
         properties.setHeader("type", "message");
-        try {
-            final ObjectMapper objectMapper = new ObjectMapper();
-            ASynchroniousNotifications.log.info("Envoi de mail {}", appliation);
-            this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
-            ASynchroniousNotifications.log.info("Fin envoi de mail {}", appliation);
-        } catch (final JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        final ObjectMapper objectMapper = new ObjectMapper();
+        ASynchroniousNotifications.log.info("Envoi de mail {}", appliation);
+        this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
+        ASynchroniousNotifications.log.info("Fin envoi de mail {}", appliation);
+        */
 
+        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
+    @Async
     public void sendEventMessage(
             final Event event,
             final UserAccount author,
@@ -152,9 +146,9 @@ public class ASynchroniousNotifications {
     ) {
         ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
-        final Map<String, List<String>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
-        final ApplicationNotification notification = new ApplicationNotification(
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
                 "ZEEVEN",
                 template,
                 event.getName(),
@@ -165,15 +159,65 @@ public class ASynchroniousNotifications {
                 channelsToHandle,
                 ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
                 event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers())).collect(Collectors.toList()));
-
+/*
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("action", "send");
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(notification);
-        ASynchroniousNotifications.log.info("Envoi du message {}", jsonString);
+       log.info("Envoi du message {}", jsonString);
         this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+*/
+        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
 
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
+    }
+
+
+    private static Notification applicationNotificationToNotification(final ApplicationNotification applicationNotification) {
+        final Notification notification = new Notification();
+        notification.setApplication(applicationNotification.getApplication());
+        notification.setTemplate(applicationNotification.getTemplate());
+        notification.setSubject(applicationNotification.getSubject());
+        notification.setEventId(applicationNotification.getEventId());
+        notification.setApplicationMessageId(applicationNotification.getApplicationMessageId());
+        notification.setMessage(applicationNotification.getMessage());
+        notification.setParams(applicationNotification.getParams());
+        notification.setChannels(ImmutableSet.copyOf(applicationNotification.getChannels()));
+        notification.setFrom(ASynchroniousNotifications.messageProfileToSender(applicationNotification.getFrom()));
+        notification.setContacts(
+                applicationNotification
+                        .getContacts()
+                        .stream()
+                        .map((MessageProfile pro) -> ASynchroniousNotifications.messageProfileToRecipient(pro)).collect(Collectors.toSet())
+        );
+        return notification;
+    }
+
+    private static Sender messageProfileToSender(final MessageProfile messageProfile) {
+        final Sender sender = new Sender();
+        sender.setId(messageProfile.getId());
+        sender.setCivility(messageProfile.getCivility());
+        sender.setEmail(messageProfile.getEmail());
+        sender.setFirstName(messageProfile.getFirstName());
+        sender.setLastName(messageProfile.getLastName());
+        sender.setPhoneIndex(messageProfile.getPhoneIndex());
+        sender.setPhone(messageProfile.getPhone());
+        sender.setOthers(messageProfile.getOthers());
+        return sender;
+    }
+
+    private static Recipient messageProfileToRecipient(final MessageProfile messageProfile) {
+        final Recipient recipient = new Recipient();
+        recipient.setId(messageProfile.getId());
+        recipient.setCivility(messageProfile.getCivility());
+        recipient.setEmail(messageProfile.getEmail());
+        recipient.setFirstName(messageProfile.getFirstName());
+        recipient.setLastName(messageProfile.getLastName());
+        recipient.setPhoneIndex(messageProfile.getPhoneIndex());
+        recipient.setPhone(messageProfile.getPhone());
+        recipient.setOthers(messageProfile.getOthers());
+        return recipient;
     }
 
     public void sendEventMessageToContact(
@@ -187,9 +231,9 @@ public class ASynchroniousNotifications {
     ) {
         ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
-        final Map<String, List<String>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
-        final ApplicationNotification notification = new ApplicationNotification(
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
                 "ZEEVEN",
                 template,
                 event.getName(),
@@ -201,7 +245,7 @@ public class ASynchroniousNotifications {
                 ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
                 List.of(ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers()))
         );
-
+/*
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("action", "send");
         final Gson gson = new Gson();
@@ -209,7 +253,11 @@ public class ASynchroniousNotifications {
         ASynchroniousNotifications.log.info("Envoi du message {}", jsonString);
         this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+*/
 
+        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
+
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
     public void sendPaymentConfirmationMessage(final Event event, final ApplicationMessage applicationMessage, final List<Channel> channelsToHandle) {
@@ -217,9 +265,9 @@ public class ASynchroniousNotifications {
 
         final UserAccount author = this.profileService.findById(event.getAuthorId());
 
-        final Map<String, List<String>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
-        final ApplicationNotification notification = new ApplicationNotification(
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
                 "ZEEVEN",
                 null,
                 event.getName(),
@@ -230,7 +278,7 @@ public class ASynchroniousNotifications {
                 channelsToHandle,
                 ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), null),
                 event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), null)).collect(Collectors.toList()));
-
+/*
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
         properties.setHeader("type", "message");
@@ -238,7 +286,11 @@ public class ASynchroniousNotifications {
         final String jsonString = gson.toJson(notification);
         final ObjectMapper objectMapper = new ObjectMapper();
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+*/
 
+        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
+
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
     private static MessageProfile getUserInfos(
@@ -294,13 +346,13 @@ public class ASynchroniousNotifications {
         return textWithVariables;
     }
 
-    private static Map<String, List<String>> messageParameters(final BaseApplicationMessage applicationMessage) {
+    private static Map<String, List<Object>> messageParameters(final BaseApplicationMessage applicationMessage) {
 
         final String textWithVariables = applicationMessage.getText();
         final Pattern pattern = Pattern.compile("\\{\\{\\w+}}");
         final Matcher matcher = pattern.matcher(textWithVariables);
         int index = 0;
-        final Map<String, List<String>> parameters = new HashMap<>();
+        final Map<String, List<Object>> parameters = new HashMap<>();
         while (matcher.find()) {
             final String searchString = matcher.group();
             final String replacement = applicationMessage.getInformations().get(index);
@@ -325,23 +377,21 @@ public class ASynchroniousNotifications {
     }
 
     public void sendInvitationMessage(final Map<String, Object> messageParameters) throws JsonProcessingException {
+        /*
         final MessageProperties messageProperties = new MessageProperties();
         messageProperties.setHeader("application", "ZEEVEN");
         messageProperties.setHeader("type", "invitation");
 
         final Gson gson = new Gson();
         final String jsonString = gson.toJson(messageParameters);
-
-
         this.rabbitTemplate.setExchange(this.applicationInvitationsExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
+*/
+        this.notificationService.sendInvitation(messageParameters);
     }
 
     public void sendFile(final Map<String, Object> messageParameters) {
-        final MessageProperties messageProperties = new MessageProperties();
-        final Gson gson = new Gson();
-        final String jsonString = gson.toJson(messageParameters);
-        this.rabbitTemplate.setExchange(this.applicationFilesExchange);
-        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), messageProperties));
+
+        this.filesHandler.handleMessage(messageParameters);
     }
 }

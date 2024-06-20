@@ -1,0 +1,187 @@
+<html lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <title>Responsive & Flat - Un kit pour newsletters gratuit et libre</title>
+    <style media='screen' type='text/css'> .wrapper {
+        width: 529px;
+        height: 204px;
+        padding: 10px;
+        display: grid;
+        margin: 0 auto;
+        align-content: center;
+        grid-template-rows: repeat(6, 1fr);
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-areas: 'one one one one two two' 'one one one one two two' 'one one one one two two' 'one one one one two two' 'one one one one two two' 'one one one one two two';
+    }
+
+    .separator {
+        padding: 0 5px
+    }
+
+    .data {
+        grid-area: one;
+        display: flex;
+        background-size: cover;
+        overflow: hidden;
+        border-radius: 6px;
+    }
+
+    .image {
+        grid-area: two;
+        padding-left: 7px;
+        display: flex;
+    }
+
+    .inner {
+        flex: 1;
+        border-radius: 6px;
+        padding: 10px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .dataInner {
+        position: relative;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 0 10px 10px;
+        overflow: hidden;
+    }
+
+    .dataInnerContent {
+        flex-direction: column;
+        justify-content: center;
+        display: flex;
+        inset: 0;
+    }
+
+    .dataInnerMessage {
+        padding: 0 !important;
+        font-size: 10px;
+        margin: 10px 0 0 0 !important;
+    }
+
+    .dataInnerMessageTitle {
+        font-size: 22px;
+        font-weight: bolder;
+        margin: 0 0 5px 0 !important;
+        padding: 0 !important;
+    }
+
+    .dataInnerMessageDateAddress {
+        font-weight: 200;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .dataInnerMessageDateAddressDate {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-weight: 200
+    }
+
+    .imageInner {
+        flex: 1;
+        border-radius: 6px;
+        padding: 10px;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-content: center;
+        align-items: center;
+    }
+
+    .innerImageWrapper {
+        width: 80%;
+        height: 90px;
+        position: relative;
+        text-align: center;
+    }
+
+    .imageInnerName {
+        padding: 0;
+        margin: 0;
+        text-align: center;
+    }
+
+    .imageInnerTicketLabelNumber {
+        padding: 0;
+        margin: 0;
+        font-size: small;
+        text-align: center;
+    }
+
+    .imageInnerTicketNumber {
+        display: block;
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+    .imageInnerImage {
+        object-fit: contain;
+        width: auto;
+        height: 100%;
+        margin: 0 auto;
+    }
+
+    .ExternalClass * {
+        line-height: 100%
+    }
+
+    /* Début style responsive (via media queries) */
+    @media only screen and (max-width: 480px) {
+        *[id=email-penrose-conteneur] {
+            width: 100% !important;
+        }
+
+        table[class=resp-full-table] {
+            width: 100% !important;
+            clear: both;
+        }
+
+        td[class=resp-full-td] {
+            width: 100% !important;
+            clear: both;
+        }
+
+        img[class='email-penrose-img-header'] {
+            width: 100% !important;
+            max-width: 340px !important;
+        }
+    }
+
+    /* Fin style responsive */ </style>
+</head>
+<body style='background-color:#ecf0f1'>
+<div class='wrapper' style='background: rgb(226, 232, 240)'>
+    <div class='data' style='background: #ffffff'>
+        <div class='dataInner' style='background: rgba(255, 255, 255, 0.7)'><p></p>
+            <div class='dataInnerContent' style='color: #000000'>
+                <div class='dataInnerMessageTitle'>${title}</div>
+                <ul class='dataInnerMessageDateAddress'> <#list schedules as schedule>
+                    <li>${schedule}</
+                    #list>
+                </ul>
+                <div class='dataInnerMessageDateAddress'> ${address}</div>
+            </div>
+            <div class='dataInnerMessage'> ${text}</div>
+        </div>
+    </div>
+    <div class='image'>
+        <div class='imageInner' style='color: #000000'><p class='imageInnerName'>${guest}</p>
+            <div class='innerImageWrapper'> <#assign source = 'data:image/jpeg;base64,${image}'>
+                <Image class='imageInnerImage' fill={true} src='${source}' alt='qrcode'/>
+            </div>
+            <div class='imageInnerTicketLabelNumber'><p style='margin: 0'> Ticket No</p>
+                <p class='imageInnerTicketNumber' style='margin: 0'>1323455</p></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

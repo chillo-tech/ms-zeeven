@@ -29,7 +29,7 @@ public class ApplicationNotification implements Serializable {
     @JsonProperty("message")
     String message;
     @JsonProperty("params")
-    Map<String, List<String>> params;
+    Map<String, List<Object>> params;
 
     @JsonProperty("channels")
     List<Channel> channels;

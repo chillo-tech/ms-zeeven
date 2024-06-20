@@ -12,28 +12,24 @@ app:
   messages:
     exchange: messages
     status:
-        queue: messages.status
+      queue: messages.status
   files:
     exchange: tech.files.exchange
     virtual-host: prod-notifications
   administrator:
-      email: no-reply@zeeven.eu
-      firstname: Marlene
-      lastname: "DE ZEEVEN"
+    email: no-reply@zeeven.eu
+    firstname: Marlene
+    lastname: "DE ZEEVEN"
 spring:
   jackson:
     deserialization:
-        read-unknown-enum-values-as-null: false
+      read-unknown-enum-values-as-null: false
     serialization:
-        write-dates-as-timestamps: false
-  rabbitmq:
-    virtual-host: prod-notifications
-    template:
-      exchange: tech.messages.exchange
+      write-dates-as-timestamps: false
   task:
     scheduling:
-        pool:
-            size: 10
+      pool:
+        size: 10
   application:
     name: ms-zeeven
   data:
@@ -48,8 +44,8 @@ mongock:
   migration-scan-package:
     - com.cs.ge.changelog
 rsa:
-    private-key: classpath:certificates/private.pem
-    public-key: classpath:certificates/public.pem
+  private-key: classpath:certificates/private.pem
+  public-key: classpath:certificates/public.pem
 jwt:
   header: 'Authorization'
   secret: 'AL_KEY'
@@ -71,13 +67,24 @@ providers:
   notifications:
     host: 192.168.1.100:27192
     base-path: api/v1
+  callback:
+    host: https://api.notifications.chillo.fr
+    path: ${providers.callback.host}/api/hooks
+  brevo:
+    host: https://api.brevo.com
+    path: v3/smtp/email
   whatsapp:
     api-endpoint: "https://wa.me"
-    host: https://graph.facebook.com/v13.0/${providers.whatsapp.phone}
-    phone: 108190935266755
+    host: https://graph.facebook.com/v17.0/${providers.whatsapp.phone}
+    template-host: https://graph.facebook.com/v16.0/${providers.whatsapp.waba-id}
+    callback-path: ${providers.callback.path}/whatsapp
   twilio:
-    ACCOUNT_SID: ACcbb01f55e3469ff5eea683ebc1aac50f
-    AUTH_TOKEN: 1778b79bac3e35612ed996f5cb2531f4
+    alpha-id: ZEEVEN
+    host: https://api.twilio.com/2010-04-01/Accounts
+    callback-path: ${providers.callback.path}/twilio
+  vonage:
+    callback-path: ${providers.callback.path}/vonage
+
 
 cors:
   urls: 'http://localhost:3000,https://app.zeeven.chillo.fr'

@@ -130,7 +130,6 @@ jobs:
             echo MAXMIND_ID=${{ secrets.MAXMIND_ID }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
             echo MAXMIND_KEY=${{ secrets.MAXMIND_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
             echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
@@ -143,11 +142,19 @@ jobs:
             echo IPLOCATION_API_KEY=${{ secrets.IPLOCATION_API_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
             echo BACKOFFICE_API_KEY=${{ secrets.BACKOFFICE_API_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
-            echo RABBITMQ_IP=${{ secrets.RABBITMQ_IP }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
-            echo RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
-            echo RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
-            echo RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
+            echo SENDINBLUE_TOKEN=${{ secrets.SENDINBLUE_TOKEN }} >> ${{ env.FOLDER }}/.env
+            echo WHATSAPP_WABA_ID=${{ secrets.WHATSAPP_WABA_ID }} >> ${{ env.FOLDER }}/.env
+            echo WHATSAPP_PHONE=${{ secrets.WHATSAPP_PHONE }} >> ${{ env.FOLDER }}/.env
+            echo WHATSAPP_ACCOUNT_ID=${{ secrets.WHATSAPP_ACCOUNT_ID }} >> ${{ env.FOLDER }}/.env
+            echo WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}  >> ${{ env.FOLDER }}/.env
+            echo TWILIO_ACCOUNT_ID=${{ secrets.TWILIO_ACCOUNT_ID }} >> ${{ env.FOLDER }}/.env
+            echo TWILIO_ACCOUNT_SECRET=${{ secrets.TWILIO_ACCOUNT_SECRET }} >> ${{ env.FOLDER }}/.env
+            echo TWILIO_SERVICE_ID=${{ secrets.TWILIO_SERVICE_ID }} >> ${{ env.FOLDER }}/.env
+            echo VONAGE_API_KEY=${{ secrets.VONAGE_API_KEY }} >> ${{ env.FOLDER }}/.env
+            echo VONAGE_API_SECRET=${{ secrets.VONAGE_API_SECRET }} >> ${{ env.FOLDER }}/.env
+            
+            
             sudo docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/docker-compose.yml up -d
 
             rm -f ${{ env.FOLDER }}/${{ env.IMAGE }}/.env

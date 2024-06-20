@@ -2,6 +2,7 @@ package com.cs.ge.configuration;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -12,6 +13,7 @@ import java.nio.charset.Charset;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+@Slf4j
 @ImportAutoConfiguration({FeignAutoConfiguration.class})
 @Component
 public class FeignConfiguration implements RequestInterceptor {
@@ -21,7 +23,18 @@ public class FeignConfiguration implements RequestInterceptor {
     private final String maxMindAccountId;
     private final String maxMindLicenceKey;
 
+
+    String ACCOUNT_SID;
+    String AUTH_TOKEN;
+    String brevoToken;
+    String whatsappToken;
+
+
     public FeignConfiguration(
+            @Value("${providers.twilio.account-id}") final String ACCOUNT_SID,
+            @Value("${providers.twilio.account-secret}") final String AUTH_TOKEN,
+            @Value("${providers.brevo.token}") final String brevoToken,
+            @Value("${providers.whatsapp.token}") final String whatsappToken,
             @Value("${providers.whatsapp.token:''}") final String token,
             @Value("${providers.backoffice.token:''}") final String backofficeToken,
             @Value("${providers.maxmind.accountId:''}") final String maxMindAccountId,
@@ -31,6 +44,11 @@ public class FeignConfiguration implements RequestInterceptor {
         this.backofficeToken = backofficeToken;
         this.maxMindLicenceKey = maxMindLicenceKey;
         this.maxMindAccountId = maxMindAccountId;
+
+        this.ACCOUNT_SID = ACCOUNT_SID;
+        this.AUTH_TOKEN = AUTH_TOKEN;
+        this.brevoToken = brevoToken;
+        this.whatsappToken = whatsappToken;
     }
 
     @Override
@@ -47,6 +65,24 @@ public class FeignConfiguration implements RequestInterceptor {
         } else {
             requestTemplate.header("Authorization", "Bearer " + this.token);
         }
+
+        if (requestTemplate.feignTarget().name().equalsIgnoreCase("whatsappmessages")) {
+            requestTemplate.header("Authorization", "Bearer " + this.whatsappToken);
+        }
+
+        if (requestTemplate.feignTarget().name().equalsIgnoreCase("whatsappendpoint")) {
+            requestTemplate.header("Authorization", "Bearer " + this.whatsappToken);
+        }
+
+        if (requestTemplate.feignTarget().name().equalsIgnoreCase("whatsapp-template-messages")) {
+            requestTemplate.header("Authorization", "Bearer " + this.whatsappToken);
+        }
+
+        if (requestTemplate.feignTarget().name().equalsIgnoreCase("brevomessages")) {
+            FeignConfiguration.log.info("brevoToken {}", this.brevoToken);
+            requestTemplate.header("api-key", this.brevoToken);
+        }
     }
+
 }
 

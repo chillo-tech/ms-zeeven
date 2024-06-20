@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,7 +17,7 @@ import java.time.Instant;
 public class Invitation {
     private String id;
     private String publicId;
-    private Channel[] channels;
+    private List<Channel> channels;
     private Template template;
     private boolean isSent;
     private boolean hasParameters = false;

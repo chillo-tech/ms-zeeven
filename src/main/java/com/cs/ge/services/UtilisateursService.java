@@ -119,7 +119,7 @@ public class UtilisateursService {
                 "Notre offre de bienvenue"
         );
 
-        final Map<String, List<String>> params = new HashMap<String, List<String>>();
+        final Map<String, List<Object>> params = new HashMap<String, List<Object>>();
         params.put("name", List.of(String.format("%s %s", userAccount.getFirstName(), userAccount.getLastName())));
         this.asynchroniousNotifications.sendEmail(
                 null,

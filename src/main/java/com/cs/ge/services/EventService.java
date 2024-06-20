@@ -63,6 +63,7 @@ import java.util.stream.Stream;
 import static com.cs.ge.enums.EventStatus.ACTIVE;
 import static com.cs.ge.enums.EventStatus.DISABLED;
 import static com.cs.ge.enums.EventStatus.INCOMMING;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -342,7 +343,7 @@ public class EventService {
             guest.setSlug(format("%s-%s", slug, publicId));
 
             List<Guest> guests = event.getGuests();
-            this.utilitaireService.checkIfAccountIsInList(guests, guest);
+            //this.utilitaireService.checkIfAccountIsInList(guests, guest);
             if (guests == null) {
                 guests = new ArrayList<>();
             }
@@ -388,7 +389,13 @@ public class EventService {
             plan.setTables(newPlanTables);
             final Event updatedEvent = this.eventsRepository.save(event);
 
-            if (!parameters.isEmpty() && parameters.containsKey("sendInvitation") && event.getInvitation() != null && event.getChannels() != null) {
+            if (
+                    !parameters.isEmpty()
+                            && parameters.containsKey("sendInvitation")
+                            && Boolean.valueOf(parameters.get("sendInvitation").toString()) == TRUE
+                            && event.getInvitation() != null
+                            && event.getChannels() != null
+            ) {
                 this.invitationService.sendGuestInvitation(updatedEvent, guest);
             }
         }
