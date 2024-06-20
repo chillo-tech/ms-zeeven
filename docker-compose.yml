@@ -20,17 +20,23 @@ services:
       - "providers.stripe.key.webhooksecret=${STRIPE_WEBHOOKSECRET_KEY}"
       - "providers.iplocation.key=${IPLOCATION_API_KEY}"
       - "providers.backoffice.token=${BACKOFFICE_API_KEY}"
-      - "spring.rabbitmq.host=${RABBITMQ_IP}"
-      - "spring.rabbitmq.port=${RABBITMQ_PORT}"
-      - "spring.rabbitmq.password=${RABBITMQ_PASSWORD}"
-      - "spring.rabbitmq.username=${RABBITMQ_USERNAME}"
+
+      - "providers.brevo.token=${SENDINBLUE_TOKEN}"
+      - "providers.whatsapp.waba-id=${WHATSAPP_WABA_ID}"
+      - "providers.whatsapp.phone=${WHATSAPP_PHONE}"
+      - "providers.whatsapp.account-id=${WHATSAPP_ACCOUNT_ID}"
+      - "providers.twilio.account-id=${TWILIO_ACCOUNT_ID}"
+      - "providers.twilio.account-secret=${TWILIO_ACCOUNT_SECRET}"
+      - "providers.twilio.service-id=${TWILIO_SERVICE_ID}"
+      - "providers.vonage.api_key=${VONAGE_API_KEY}"
+      - "providers.vonage.api_secret=${VONAGE_API_SECRET}"
 
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ms-zeeven.rule=Headers(`X-Host`, `api.zeeven.chillo.fr`)"
       - "traefik.docker.network=applications-network"
       - "traefik.http.routers.service.middlewares=serviceheaders"
-      - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*" 
+      - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*"
 
     volumes:
       - "/var/www/:/var/www/"
