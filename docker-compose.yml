@@ -30,6 +30,7 @@ services:
       - "providers.twilio.service-id=${TWILIO_SERVICE_ID}"
       - "providers.vonage.api_key=${VONAGE_API_KEY}"
       - "providers.vonage.api_secret=${VONAGE_API_SECRET}"
+      - "application.files.base-path=${FILES_ROOT_FOLDER}"
 
     labels:
       - "traefik.enable=true"
@@ -39,6 +40,7 @@ services:
       - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*"
 
     volumes:
+      - FILES_ROOT_FOLDER:FILES_ROOT_FOLDER
       - "/var/www/:/var/www/"
     networks:
       - applications-network

@@ -5,6 +5,7 @@ env:
   FOLDER: /opt/applications/zeeven
   IMAGE: ms-zeeven
   IMAGE_VERSION: latest
+  FILES_ROOT_FOLDER: '/var/www/files'
 permissions:
   contents: read
 
@@ -152,7 +153,8 @@ jobs:
             echo TWILIO_ACCOUNT_SECRET=${{ secrets.TWILIO_ACCOUNT_SECRET }} >> ${{ env.FOLDER }}/.env
             echo TWILIO_SERVICE_ID=${{ secrets.TWILIO_SERVICE_ID }} >> ${{ env.FOLDER }}/.env
             echo VONAGE_API_KEY=${{ secrets.VONAGE_API_KEY }} >> ${{ env.FOLDER }}/.env
-            echo VONAGE_API_SECRET=${{ secrets.VONAGE_API_SECRET }} >> ${{ env.FOLDER }}/.env
+            echo VONAGE_API_SECRET=${{ secrets.VONAGE_API_SECRET }} >> ${{ env.FOLDER }}/.env 
+            echo FILES_ROOT_FOLDER=${{ env.FILES_ROOT_FOLDER }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
             
             
             
