@@ -26,7 +26,6 @@ import com.cs.ge.services.messages.EventMessageService;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.shared.SharedService;
 import com.cs.ge.utils.UtilitaireService;
-import com.google.api.client.util.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -396,7 +395,11 @@ public class EventService {
                             && event.getInvitation() != null
                             && event.getChannels() != null
             ) {
-                this.invitationService.sendGuestInvitation(updatedEvent, guest);
+                final Map<Channel, Integer> channelsStatistics = this.stockService.getChannelsStatistics(event.getAuthorId(), event.getInvitation().getChannels());
+                final List<Channel> channelsToHandle = EventService.getChannelsToHandle(null, List.of(guest), event.getInvitation().getChannels(), channelsStatistics);
+                if (!channelsToHandle.isEmpty()) {
+                    this.invitationService.sendGuestInvitation(updatedEvent, guest);
+                }
             }
         }
     }
@@ -596,7 +599,8 @@ public class EventService {
 
         if (channelsToHandle.size() > 0) {
             EventService.log.info("Envoi des messages pour l'evenement {} sur {}", event.getName(), channelsToHandle.toString());
-            this.eventMessageService.handleMessages(channelsToHandle, event);
+            this.invitationService.handleEvent(event);
+            //this.eventMessageService.handleMessages(channelsToHandle, event);
         } else {
             // TODO ENVOYER UN MAIL
             //log.info("Pas assez de crédits pour envoyer des messages pour l'evenement {} sur {}", event.getName(), eventChannels.toString());
@@ -769,11 +773,13 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
-    @Scheduled(cron = "0 */1 * * * *")
-    public void sendMessages() {
+    @Scheduled(cron = "0 0/1 * * * *")
+    public void sendInvitations() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
-        events.filter(event -> !Strings.isNullOrEmpty(event.getAuthorId())).forEach(this::handleEvent);
+        events
+                .filter(event -> event.getParams().isInvitation())
+                .forEach(this::handleEvent);
     }
 
     @Scheduled(cron = "0 */1 * * * *")

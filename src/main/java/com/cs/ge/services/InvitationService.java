@@ -15,7 +15,6 @@ import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -30,10 +29,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import static com.cs.ge.enums.EventStatus.ACTIVE;
-import static com.cs.ge.enums.EventStatus.INCOMMING;
 import static com.cs.ge.utils.Data.CIVILITY_MAPPING;
 import static com.cs.ge.utils.Data.IMAGE_FORMAT;
 
@@ -65,16 +61,8 @@ public class InvitationService {
         this.nbInvitations = nbInvitations;
     }
 
-    @Scheduled(cron = "0 0/1 * * * *")
-    public void sendInvitations() {
-        final Stream<Event> events = this.eventsRepository
-                .findByStatusIn(List.of(INCOMMING, ACTIVE));
-        events
-                .filter(event -> event.getParams().isInvitation())
-                .forEach(this::handleEvent);
-    }
 
-    private void handleEvent(final Event event) {
+    public void handleEvent(final Event event) {
         if (Strings.isNullOrEmpty(event.getAuthorId())) {
             return;
         }
