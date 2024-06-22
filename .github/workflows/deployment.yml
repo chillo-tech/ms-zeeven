@@ -135,6 +135,7 @@ jobs:
             echo NOTIFICATIONS_HOST=${{ secrets.NOTIFICATIONS_HOST }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
             echo ZEEVEN_HOST=${{ secrets.ZEEVEN_HOST }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            echo IMAGES_INNER_HOST=${{ secrets.IMAGES_INNER_HOST }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
 
             echo STRIPE_PUBLIC_KEY=${{ secrets.STRIPE_PUBLIC_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
             echo STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env

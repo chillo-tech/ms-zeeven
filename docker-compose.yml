@@ -31,6 +31,7 @@ services:
       - "providers.vonage.api_key=${VONAGE_API_KEY}"
       - "providers.vonage.api_secret=${VONAGE_API_SECRET}"
       - "app.files.base-path=${FILES_ROOT_FOLDER}"
+      - "app.images-host=${IMAGES_INNER_HOST}"
 
     labels:
       - "traefik.enable=true"
