@@ -437,8 +437,6 @@ public class ASynchroniousNotifications {
                 ftp.appendFile(fullPath, local);
                 ftp.logout();
                 log.info("File created at " + fullPath);
-
-
             }
         } catch (final IOException e) {
             error = true;
