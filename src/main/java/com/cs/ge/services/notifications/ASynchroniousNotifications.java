@@ -11,7 +11,7 @@ import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
-import com.cs.ge.feign.FIleHandler;
+import com.cs.ge.feign.FileHandler;
 import com.cs.ge.notifications.entity.Notification;
 import com.cs.ge.notifications.entity.Recipient;
 import com.cs.ge.notifications.entity.Sender;
@@ -43,11 +43,11 @@ public class ASynchroniousNotifications {
     private final String administratorFirstname;
     private final String administratorLastname;
     private final String administratoremail;
-    private final FIleHandler fIleHandler;
+    private final FileHandler fIleHandler;
     private final ProfileService profileService;
 
     public ASynchroniousNotifications(
-            final FIleHandler fIleHandler,
+            final FileHandler fIleHandler,
             final NotificationService notificationService,
             @Value("${app.administrator.firstname}") final String administratorFirstname,
             @Value("${app.administrator.lastname}") final String administratorLastname,
