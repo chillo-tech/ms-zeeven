@@ -16,16 +16,23 @@ import com.cs.ge.notifications.entity.Recipient;
 import com.cs.ge.notifications.entity.Sender;
 import com.cs.ge.notifications.service.NotificationService;
 import com.cs.ge.services.ProfileService;
-import com.cs.ge.services.files.FilesHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -39,21 +46,21 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class ASynchroniousNotifications {
-    private final FilesHandler filesHandler;
     private final NotificationService notificationService;
     private final String administratorFirstname;
     private final String administratorLastname;
     private final String administratoremail;
+    private final String basePath;
     private final ProfileService profileService;
 
     public ASynchroniousNotifications(
-            final FilesHandler filesHandler,
             final NotificationService notificationService,
             @Value("${app.administrator.firstname}") final String administratorFirstname,
             @Value("${app.administrator.lastname}") final String administratorLastname,
+            @Value("${app.files.base-path:''}") final String basePath,
             @Value("${app.administrator.email}") final String administratoremail,
             final ProfileService profileService) {
-        this.filesHandler = filesHandler;
+        this.basePath = basePath;
         this.administratorFirstname = administratorFirstname;
         this.administratorLastname = administratorLastname;
         this.administratoremail = administratoremail;
@@ -390,8 +397,24 @@ public class ASynchroniousNotifications {
         this.notificationService.sendInvitation(messageParameters);
     }
 
-    public void sendFile(final Map<String, Object> messageParameters) {
+    public void sendFile(final Map<String, Object> params) {
+        try {
+            final String filePath = String.valueOf(params.get("path"));
+            if (filePath != null && !filePath.equals("null") && Strings.isNotEmpty(filePath)) {
+                final String fullPath = String.format("%s/%s", this.basePath, filePath);
+                final Path folder = Paths.get(fullPath).getParent();
+                Files.createDirectories(folder);
 
-        this.filesHandler.handleMessage(messageParameters);
+                final String fileAsString = String.valueOf(params.get("file"));
+                final byte[] decodedFile = Base64.getDecoder().decode(fileAsString);
+                final File fullPathAsFile = new File(fullPath);
+                if (Files.exists(Paths.get(fullPath))) {
+                    FileUtils.delete(fullPathAsFile);
+                }
+                FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
+            }
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
     }
 }
