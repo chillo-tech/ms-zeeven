@@ -40,7 +40,6 @@ services:
       - "traefik.http.middlewares.serviceheaders.headers.accesscontrolalloworiginlist=*"
 
     volumes:
-      - FILES_ROOT_FOLDER:FILES_ROOT_FOLDER
       - "/var/www/:/var/www/"
     networks:
       - applications-network

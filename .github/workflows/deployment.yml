@@ -156,7 +156,6 @@ jobs:
             echo VONAGE_API_SECRET=${{ secrets.VONAGE_API_SECRET }} >> ${{ env.FOLDER }}/${{ env.IMAGE }}/.env 
             echo FILES_ROOT_FOLDER=${{ env.FILES_ROOT_FOLDER }} >>  ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
             
-            
             sudo docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/docker-compose.yml up -d
-
-#rm -f ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
+            
+            rm -f ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
