@@ -11,7 +11,7 @@ import java.util.Map;
 public interface FIleHandler {
 
     @PostMapping({"/v1/files"})
-    void message(
+    void send(
             @RequestBody Map<String, Object> params);
 
 }

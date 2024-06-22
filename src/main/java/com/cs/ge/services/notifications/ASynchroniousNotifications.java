@@ -11,6 +11,7 @@ import com.cs.ge.entites.Profile;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
+import com.cs.ge.feign.FIleHandler;
 import com.cs.ge.notifications.entity.Notification;
 import com.cs.ge.notifications.entity.Recipient;
 import com.cs.ge.notifications.entity.Sender;
@@ -19,23 +20,12 @@ import com.cs.ge.services.ProfileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -53,17 +43,17 @@ public class ASynchroniousNotifications {
     private final String administratorFirstname;
     private final String administratorLastname;
     private final String administratoremail;
-    private final String basePath;
+    private final FIleHandler fIleHandler;
     private final ProfileService profileService;
 
     public ASynchroniousNotifications(
+            final FIleHandler fIleHandler,
             final NotificationService notificationService,
             @Value("${app.administrator.firstname}") final String administratorFirstname,
             @Value("${app.administrator.lastname}") final String administratorLastname,
-            @Value("${app.files.base-path:''}") final String basePath,
             @Value("${app.administrator.email}") final String administratoremail,
             final ProfileService profileService) {
-        this.basePath = basePath;
+        this.fIleHandler = fIleHandler;
         this.administratorFirstname = administratorFirstname;
         this.administratorLastname = administratorLastname;
         this.administratoremail = administratoremail;
@@ -402,6 +392,8 @@ public class ASynchroniousNotifications {
 
     public void sendFile(final Map<String, Object> params) {
         ASynchroniousNotifications.log.info("Create file");
+        this.fIleHandler.send(params);
+        /*
         boolean error = false;
         final FTPClient ftp = new FTPClient();
         try {
@@ -451,5 +443,7 @@ public class ASynchroniousNotifications {
             }
             System.exit(error ? 1 : 0);
         }
+
+         */
     }
 }
