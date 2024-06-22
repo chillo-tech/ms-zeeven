@@ -30,7 +30,7 @@ services:
       - "providers.twilio.service-id=${TWILIO_SERVICE_ID}"
       - "providers.vonage.api_key=${VONAGE_API_KEY}"
       - "providers.vonage.api_secret=${VONAGE_API_SECRET}"
-      - "application.files.base-path=${FILES_ROOT_FOLDER}"
+      - "app.files.base-path=${FILES_ROOT_FOLDER}"
 
     labels:
       - "traefik.enable=true"
