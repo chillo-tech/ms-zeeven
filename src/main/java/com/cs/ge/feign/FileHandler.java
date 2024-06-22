@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(name = "files handler", url = "${app.images-inner-host}")
-public interface FIleHandler {
+@FeignClient(name = "fileshandler", url = "${app.images-inner-host}")
+public interface FileHandler {
 
     @PostMapping({"/v1/files"})
     void send(
