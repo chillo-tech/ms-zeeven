@@ -22,11 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPReply;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -398,6 +401,9 @@ public class ASynchroniousNotifications {
     }
 
     public void sendFile(final Map<String, Object> params) {
+        log.info("Create file");
+        boolean error = false;
+        final FTPClient ftp = new FTPClient();
         try {
             final String filePath = String.valueOf(params.get("path"));
             if (filePath != null && !filePath.equals("null") && Strings.isNotEmpty(filePath)) {
@@ -412,9 +418,40 @@ public class ASynchroniousNotifications {
                     FileUtils.delete(fullPathAsFile);
                 }
                 FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
+                final ByteArrayInputStream local = new ByteArrayInputStream(decodedFile);
+
+                log.info("Create file at " + fullPath);
+                final int reply;
+                final String server = "http://192.168.1.200";
+                ftp.connect(server);
+                log.info("Connected to " + server + ".");
+                log.info(ftp.getReplyString());
+
+                reply = ftp.getReplyCode();
+
+                if (!FTPReply.isPositiveCompletion(reply)) {
+                    ftp.disconnect();
+                    log.error("FTP server refused connection.");
+                    System.exit(1);
+                }
+                ftp.appendFile(fullPath, local);
+                ftp.logout();
+                log.info("File created at " + fullPath);
+
+
             }
         } catch (final IOException e) {
+            error = true;
             e.printStackTrace();
+        } finally {
+            if (ftp.isConnected()) {
+                try {
+                    ftp.disconnect();
+                } catch (final IOException ioe) {
+                    // do nothing
+                }
+            }
+            System.exit(error ? 1 : 0);
         }
     }
 }
