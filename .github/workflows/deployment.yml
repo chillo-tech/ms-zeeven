@@ -154,8 +154,7 @@ jobs:
             echo TWILIO_SERVICE_ID=${{ secrets.TWILIO_SERVICE_ID }} >> ${{ env.FOLDER }}/.env
             echo VONAGE_API_KEY=${{ secrets.VONAGE_API_KEY }} >> ${{ env.FOLDER }}/.env
             echo VONAGE_API_SECRET=${{ secrets.VONAGE_API_SECRET }} >> ${{ env.FOLDER }}/.env 
-            echo FILES_ROOT_FOLDER=${{ env.FILES_ROOT_FOLDER }} >> /opt/applications/${{env.APPLICATION_NAME}}/${{env.APPLICATION_TYPE}}-${{env.APPLICATION_NAME}}/.env
-            
+            echo FILES_ROOT_FOLDER=${{ env.FILES_ROOT_FOLDER }} >>  ${{ env.FOLDER }}/.env
             
             
             
