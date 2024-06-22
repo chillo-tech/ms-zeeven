@@ -401,7 +401,7 @@ public class ASynchroniousNotifications {
     }
 
     public void sendFile(final Map<String, Object> params) {
-        log.info("Create file");
+        ASynchroniousNotifications.log.info("Create file");
         boolean error = false;
         final FTPClient ftp = new FTPClient();
         try {
@@ -420,23 +420,23 @@ public class ASynchroniousNotifications {
                 FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
                 final ByteArrayInputStream local = new ByteArrayInputStream(decodedFile);
 
-                log.info("Create file at " + fullPath);
+                ASynchroniousNotifications.log.info("Create file at " + fullPath);
                 final int reply;
-                final String server = "http://192.168.1.200";
+                final String server = "192.168.1.200";
                 ftp.connect(server);
-                log.info("Connected to " + server + ".");
-                log.info(ftp.getReplyString());
+                ASynchroniousNotifications.log.info("Connected to " + server + ".");
+                ASynchroniousNotifications.log.info(ftp.getReplyString());
 
                 reply = ftp.getReplyCode();
 
                 if (!FTPReply.isPositiveCompletion(reply)) {
                     ftp.disconnect();
-                    log.error("FTP server refused connection.");
+                    ASynchroniousNotifications.log.error("FTP server refused connection.");
                     System.exit(1);
                 }
                 ftp.appendFile(fullPath, local);
                 ftp.logout();
-                log.info("File created at " + fullPath);
+                ASynchroniousNotifications.log.info("File created at " + fullPath);
             }
         } catch (final IOException e) {
             error = true;

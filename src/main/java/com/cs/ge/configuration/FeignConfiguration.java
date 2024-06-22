@@ -2,7 +2,6 @@ package com.cs.ge.configuration;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -13,7 +12,7 @@ import java.nio.charset.Charset;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Slf4j
+
 @ImportAutoConfiguration({FeignAutoConfiguration.class})
 @Component
 public class FeignConfiguration implements RequestInterceptor {
@@ -79,7 +78,6 @@ public class FeignConfiguration implements RequestInterceptor {
         }
 
         if (requestTemplate.feignTarget().name().equalsIgnoreCase("brevomessages")) {
-            FeignConfiguration.log.info("brevoToken {}", this.brevoToken);
             requestTemplate.header("api-key", this.brevoToken);
         }
     }
