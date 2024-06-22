@@ -157,7 +157,6 @@ jobs:
             echo FILES_ROOT_FOLDER=${{ env.FILES_ROOT_FOLDER }} >>  ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
             
             
-            
             sudo docker compose -f ${{ env.FOLDER }}/${{ env.IMAGE }}/docker-compose.yml up -d
             
             rm -f ${{ env.FOLDER }}/${{ env.IMAGE }}/.env
