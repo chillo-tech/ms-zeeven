@@ -19,7 +19,7 @@ import java.util.Map;
 public class FilesHandler {
     final String basePath;
 
-    public FilesHandler(@Value("${app.files.base-path}") final String basePath) {
+    public FilesHandler(@Value("${app.files.base-path:''}") final String basePath) {
         this.basePath = basePath;
     }
 
