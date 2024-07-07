@@ -72,7 +72,7 @@ public class InvitationService {
             return;
         }
         if (invitation.isSent()) {
-            return;
+           return;
         }
         if (this.nbInvitations == 0) {
             this.nbInvitations = guests.size();
@@ -83,10 +83,10 @@ public class InvitationService {
                 this.sendGuestInvitation(event, guest);
 
             });
+            invitation.setSent(true);
+            event.setInvitation(invitation);
+            this.eventsRepository.save(event);
         }
-        invitation.setSent(true);
-        event.setInvitation(invitation);
-        this.eventsRepository.save(event);
     }
 
     public void sendGuestInvitation(final Event event, final Guest guest) {
@@ -138,6 +138,7 @@ public class InvitationService {
                 this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
 
             }
+
         } catch (final IOException e) {
             e.printStackTrace();
         }
@@ -147,18 +148,49 @@ public class InvitationService {
                                          final String qrcodeAsString) {
         try {
 
-            final Template template = invitation.getTemplate();
-            BufferedImage ticketTemplate = null; //ImageIO.read(new File("horizontal-template.png"));
-
             int ticketWidth = 2000; //ticketTemplate.getWidth();
-            if (template != null && template.getWidth() != 0) {
-                ticketWidth = template.getWidth();
-            }
-
             int ticketHeight = 647; //ticketTemplate.getHeight();
-            if (template != null && template.getHeight() != 0) {
-                ticketHeight = template.getHeight();
+            int qrCodeWidth = 100;
+            int qrCodeHeight = 100;
+            int qrCodeX = ticketWidth /2;
+            int qrCodeY = ticketHeight / 2;
+            int nameX = ticketWidth /2;
+            int nameY = ticketHeight / 2;
+
+            final Template template = invitation.getTemplate();
+
+            if(template.getParams() != null && !template.getParams().isEmpty()) {
+                Map<String, String> params = template.getParams();
+                if(params.containsKey("width")) {
+                    ticketWidth = Integer.parseInt(params.get("width"));
+                }
+
+                if(params.containsKey("height")) {
+                    ticketHeight = Integer.parseInt(params.get("height"));
+                }
+
+                if(params.containsKey("qrCodeWidth")) {
+                    qrCodeWidth = Integer.parseInt(params.get("qrCodeWidth"));
+                }
+
+                if(params.containsKey("qrCodeHeight")) {
+                    qrCodeHeight = Integer.parseInt(params.get("qrCodeHeight"));
+                }
+                if(params.containsKey("qrCodeX")) {
+                    qrCodeX = Integer.parseInt(params.get("qrCodeX"));
+                }
+                if(params.containsKey("qrCodeY")) {
+                    qrCodeX = Integer.parseInt(params.get("qrCodeY"));
+                }
+                if(params.containsKey("nameX")) {
+                    nameX = Integer.parseInt(params.get("nameX"));
+                }
+                if(params.containsKey("nameY")) {
+                    nameY = Integer.parseInt(params.get("nameY"));
+                }
+
             }
+            BufferedImage ticketTemplate = null; //ImageIO.read(new File("horizontal-template.png"));
 
             final byte[] bytes = Base64.getDecoder().decode(qrcodeAsString);
             final BufferedImage qrcode = ImageIO.read(new ByteArrayInputStream(bytes));
@@ -184,7 +216,14 @@ public class InvitationService {
             final String formattedFirstName = firstName.isEmpty() ? " " : firstName;
 
 
-            Map<String, String> params = Map.of("qrCodeX", "0", "qrCodeY", "0", "qrCodeWidth", "100", "qrCodeHeight", "100");
+            Map<String, String> params = Map.of(
+                    "qrCodeX", String.valueOf(qrCodeX),
+                    "qrCodeY",  String.valueOf(qrCodeY),
+                    "qrCodeWidth", String.valueOf(qrCodeWidth),
+                    "qrCodeHeight", String.valueOf(qrCodeHeight),
+                    "nameX", String.valueOf(nameX),
+                    "nameY", String.valueOf(nameY)
+            );
             if (template != null && template.getParams() != null && !template.getParams().isEmpty()) {
                 params = template.getParams();
             }
@@ -198,7 +237,7 @@ public class InvitationService {
 
                     String.valueOf(guest.getLastName().isEmpty() ? "" : guest.getLastName()).toUpperCase()
             );
-            g2d.drawString(name.trim(), Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 55);
+            g2d.drawString(name.trim(), Integer.parseInt(params.get("nameX")), Integer.parseInt(params.get("nameY")));
             g2d.drawString("Ticket No", Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 120);
             g2d.drawString(
                     guest.getPublicId(), Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 170);

@@ -1,6 +1,7 @@
 package com.cs.ge.services;
 
 import com.cs.ge.entites.UserAccount;
+import com.cs.ge.enums.Role;
 import com.cs.ge.repositories.UtilisateurRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -29,6 +31,10 @@ public class ProfileService implements UserDetailsService {
 
     public UserAccount findById(final String utilisateurId) throws UsernameNotFoundException {
         return this.utilisateurRepository.findById(utilisateurId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public List<UserAccount> findByRole(final Role role) {
+        return this.utilisateurRepository.findByRole(role);
     }
 
     public UserAccount getAuthenticateUser() {

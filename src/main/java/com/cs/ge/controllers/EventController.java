@@ -76,11 +76,19 @@ public class EventController {
     }
 
     @PostMapping(value = "{id}/guest")
-    public void addGuests(
+    public void addGuest(
             @RequestParam(required = false) final Map<String, Object> parameters,
             @PathVariable final String id, @RequestBody final Guest guest
     ) throws IOException {
         this.eventService.addGuest(id, guest, parameters);
+    }
+
+    @PostMapping(value = "{id}/guest-list")
+    public void addGuests(
+            @RequestParam(required = false) final Map<String, Object> parameters,
+            @PathVariable final String id, @RequestBody final Set<Guest> guests
+    ) throws IOException {
+        this.eventService.addGuests(id, guests, parameters);
     }
 
     @PostMapping(value = "{id}/plan")
@@ -154,9 +162,14 @@ public class EventController {
         this.eventService.deleteInvitation(eventId, invitationPublicId);
     }
 
-    @PatchMapping(value = "{eventId}/invitation/{invitationPublicId}/params")
-    public void setTemplateParams(@PathVariable final String eventId, @PathVariable final String invitationPublicId, @RequestBody final Map<String, String> templateParams) {
-        this.eventService.setTemplateParams(eventId, invitationPublicId, templateParams);
+    @GetMapping(value = "{eventId}/invitation/{invitationPublicId}/simulate")
+    public void simulateInvitation(@PathVariable final String eventId, @PathVariable final String invitationPublicId) {
+        this.eventService.simulate(eventId, invitationPublicId);
+    }
+
+    @PatchMapping(value = "{eventPublicId}/invitation/{invitationPublicId}/params")
+    public void setTemplateParams(@PathVariable final String eventPublicId, @PathVariable final String invitationPublicId, @RequestBody final Map<String, String> templateParams) {
+        this.eventService.setTemplateParams(eventPublicId, invitationPublicId, templateParams);
     }
 
     @PatchMapping(value = "{id}/params")

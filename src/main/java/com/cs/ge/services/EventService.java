@@ -26,6 +26,7 @@ import com.cs.ge.services.messages.EventMessageService;
 import com.cs.ge.services.notifications.ASynchroniousNotifications;
 import com.cs.ge.services.shared.SharedService;
 import com.cs.ge.utils.UtilitaireService;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -755,7 +756,9 @@ public class EventService {
                 }).collect(Collectors.toSet());
                 template.setSchedules(schedules);
             }
-
+            if(invitation.getChannels() == null) {
+                invitation.setChannels(event.getChannels());
+            }
             template.setId(UUID.randomUUID().toString());
             template.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
             invitation.setTemplate(template);
@@ -782,7 +785,7 @@ public class EventService {
                 .forEach(this::handleEvent);
     }
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 1 1 * * *")
     public void updateEventStatus() {
         final Stream<Event> events = this.eventsRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
@@ -816,5 +819,39 @@ public class EventService {
         invitation.setTemplate(template);
         event.setInvitation(invitation);
         this.eventsRepository.save(event);
+    }
+
+    public void addGuests(String id, Set<Guest> guests, Map<String, Object> parameters) {
+        guests.stream().filter(guest -> Strings.isNullOrEmpty(guest.getId()) && Strings.isNullOrEmpty(guest.getPublicId())).forEach(guest -> {
+            try {
+                this.addGuest(
+                        id,
+                        guest,
+                        parameters
+                );
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public void simulate(String eventId, String invitationPublicId) {
+        final var event = this.read(eventId);
+        this.profileService.findByRole(Role.ADMIN).stream().map(user -> {
+            Guest guest = new Guest();
+            guest.setTrial(true);
+            guest.setId(UUID.randomUUID().toString());
+            guest.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+            guest.setCivility(user.getCivility());
+            guest.setFirstName(user.getFirstName());
+            guest.setLastName(user.getLastName());
+            guest.setPhoneIndex(user.getPhoneIndex());
+            guest.setPhone(user.getPhone());
+            guest.setEmail(user.getEmail());
+            return guest;
+        }).forEach(
+             guest ->   this.invitationService.sendGuestInvitation(event, guest)
+        );
+
     }
 }
