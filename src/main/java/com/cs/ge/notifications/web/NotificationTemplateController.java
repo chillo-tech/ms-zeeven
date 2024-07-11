@@ -26,9 +26,9 @@ public class NotificationTemplateController {
     private NotificationTemplateService notificationTemplateService;
 
     @PostMapping
-    public void create(@RequestParam("application") final String application,
-                       @RequestBody final Set<NotificationTemplate> templates) {
-        this.notificationTemplateService.create(application, templates);
+    public void create(
+                       @RequestBody NotificationTemplate template) {
+        this.notificationTemplateService.create(template);
     }
 
     @PutMapping(consumes = APPLICATION_JSON_VALUE, path = "{id}")

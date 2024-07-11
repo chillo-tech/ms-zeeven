@@ -80,6 +80,7 @@ public class FeignConfiguration implements RequestInterceptor {
         if (requestTemplate.feignTarget().name().equalsIgnoreCase("brevomessages")) {
             requestTemplate.header("api-key", this.brevoToken);
         }
+
     }
 
 }

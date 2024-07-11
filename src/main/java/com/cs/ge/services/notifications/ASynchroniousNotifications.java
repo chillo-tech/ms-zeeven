@@ -390,7 +390,6 @@ public class ASynchroniousNotifications {
         this.notificationService.sendInvitation(messageParameters);
     }
 
-    @Async
     public void sendFile(final Map<String, Object> params) {
         ASynchroniousNotifications.log.info("Create file");
         this.fIleHandler.send(params);

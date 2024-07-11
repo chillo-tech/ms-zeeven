@@ -30,6 +30,7 @@ public class Event {
     private EventStatus status;
     //private UserAccount author;
     private String authorId;
+    private String whatsapp_template;
     private Category category;
     private String slug;
     private Plan plan;

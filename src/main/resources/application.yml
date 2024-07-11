@@ -5,7 +5,7 @@ server:
 app:
   host: http://app.zeeven.com
   api-host: http://api.zeeven.com
-  images-host: http://files.chillo.fr
+  images-host: https://files.chillo.fr
   invitations:
     exchange: tech.invitations.exchange
     limit: 1

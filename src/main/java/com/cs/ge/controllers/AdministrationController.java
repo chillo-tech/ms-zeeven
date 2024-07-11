@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -30,5 +32,11 @@ public class AdministrationController {
     @PostMapping(path = "user-stock", consumes = APPLICATION_JSON_VALUE)
     public void updateUserStock(@RequestBody final ProfileDTO profile) {
         this.administrationService.updateUserStock(profile);
+    }
+
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+    @PostMapping(path = "event-parameters", consumes = APPLICATION_JSON_VALUE)
+    public void updateEventParameters(@RequestBody final Map<String, String> parameters) {
+        this.administrationService.updateEventParameters(parameters);
     }
 }

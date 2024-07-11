@@ -92,6 +92,15 @@ public class InvitationService {
     public void sendGuestInvitation(final Event event, final Guest guest) {
         final UserAccount author = this.profileService.findById(event.getAuthorId());
         final Invitation invitation = event.getInvitation();
+
+        if (Strings.isNullOrEmpty(guest.getPhoneIndex()) && Strings.isNullOrEmpty(guest.getPhone())) {
+            log.info("#####################################");
+            log.info("Pas d'envoi de l'invitation : {} à {} {} {} phone {}{} pour l'évènement {}", invitation.getId(), guest.getId(), guest.getFirstName(), guest.getLastName(), guest.getPhoneIndex(), guest.getPhone(), event.getName());
+            log.info("#####################################");
+        } else {
+            log.info("Envoi de l'invitation : {} à {} {} {} phone {}{} pour l'évènement {}", invitation.getId(), guest.getId(), guest.getFirstName(), guest.getLastName(), guest.getPhoneIndex(), guest.getPhone(), event.getName());
+
+
         final QRCodeEntity qrCodeEntity = QRCodeEntity
                 .builder()
                 .type(QRCodeType.TEXT)
@@ -114,6 +123,7 @@ public class InvitationService {
             final File fullPathAsFile = new File("tmp.image.jpg");
 
             FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
+
 
             final String filePath = String.format("zeeven/tickets/%s/%s.jpg", event.getPublicId(), guest.getPublicId());
             if (!Strings.isNullOrEmpty(filePath) && !Strings.isNullOrEmpty(image)) {
@@ -142,6 +152,10 @@ public class InvitationService {
         } catch (final IOException e) {
             e.printStackTrace();
         }
+
+        }
+
+
     }
 
     private static String generateTicket(final Event event, final Guest guest, final Invitation invitation,
@@ -161,12 +175,12 @@ public class InvitationService {
 
             if(template.getParams() != null && !template.getParams().isEmpty()) {
                 Map<String, String> params = template.getParams();
-                if(params.containsKey("width")) {
-                    ticketWidth = Integer.parseInt(params.get("width"));
+                if(params.containsKey("ticketWidth")) {
+                    ticketWidth = Integer.parseInt(params.get("ticketWidth"));
                 }
 
-                if(params.containsKey("height")) {
-                    ticketHeight = Integer.parseInt(params.get("height"));
+                if(params.containsKey("ticketHeight")) {
+                    ticketHeight = Integer.parseInt(params.get("ticketHeight"));
                 }
 
                 if(params.containsKey("qrCodeWidth")) {
@@ -180,7 +194,7 @@ public class InvitationService {
                     qrCodeX = Integer.parseInt(params.get("qrCodeX"));
                 }
                 if(params.containsKey("qrCodeY")) {
-                    qrCodeX = Integer.parseInt(params.get("qrCodeY"));
+                    qrCodeY = Integer.parseInt(params.get("qrCodeY"));
                 }
                 if(params.containsKey("nameX")) {
                     nameX = Integer.parseInt(params.get("nameX"));
@@ -235,12 +249,12 @@ public class InvitationService {
                     String.valueOf(formattedFirstName.charAt(0)).toUpperCase(),
                     formattedFirstName.substring(1).toLowerCase(),
 
-                    String.valueOf(guest.getLastName().isEmpty() ? "" : guest.getLastName()).toUpperCase()
+                    String.valueOf((guest.getLastName().isEmpty()) ? "" : guest.getLastName()).toUpperCase()
             );
             g2d.drawString(name.trim(), Integer.parseInt(params.get("nameX")), Integer.parseInt(params.get("nameY")));
-            g2d.drawString("Ticket No", Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 120);
+            g2d.drawString("Ticket No", Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 100);
             g2d.drawString(
-                    guest.getPublicId(), Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 170);
+                    guest.getPublicId(), Integer.parseInt(params.get("qrCodeX")) + Integer.parseInt(params.get("qrCodeWidth")), Integer.parseInt(params.get("qrCodeY")) + 140);
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(finalImage, IMAGE_FORMAT, baos);
             return Base64.getEncoder().encodeToString(baos.toByteArray());

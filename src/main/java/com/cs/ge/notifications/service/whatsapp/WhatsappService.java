@@ -5,6 +5,7 @@ import com.cs.ge.entites.Invitation;
 import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
+import com.cs.ge.enums.Civility;
 import com.cs.ge.notifications.entity.Notification;
 import com.cs.ge.notifications.entity.NotificationStatus;
 import com.cs.ge.notifications.entity.NotificationTemplate;
@@ -30,6 +31,7 @@ import com.cs.ge.notifications.service.whatsapp.dto.WhatsAppResponse;
 import com.cs.ge.notifications.service.whatsapp.dto.WhatsappTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -265,6 +267,23 @@ public class WhatsappService extends NotificationMapper {
         return whatsAppResponse;
     }
 
+    private String formatName(Civility civility, final String firstName, final String lastName) {
+        String name = "";
+
+        if(!Strings.isNullOrEmpty(firstName)) {
+            name = String.format("%s%s%s", name, String.valueOf(firstName.charAt(0)).toUpperCase(), firstName.substring(1).toLowerCase());
+        }
+
+        if(!Strings.isNullOrEmpty(lastName)) {
+            name = String.format("%s %s", name, lastName.toUpperCase());
+        }
+
+        if(civility != null) {
+            name = String.format("%s %s", name, CIVILITY_MAPPING.get(civility));
+        }
+
+        return name;
+    }
     public List<NotificationStatus> sendFromParams(final Map<String, Object> notificationParams, final Channel channel) {
         final Invitation invitation = (Invitation) notificationParams.get("invitation");
         final com.cs.ge.entites.Template template = invitation.getTemplate();
@@ -299,31 +318,6 @@ public class WhatsappService extends NotificationMapper {
             return dateTime.format(formatter); // "1986-04-08 12:30"
         }).collect(Collectors.toList());
 
-        final String firstName = to.getFirstName();
-        final String formattedFirstName = firstName.isEmpty() ? " " : firstName;
-        final String finalTemplate = NotificationMapper.processTemplate(
-                Map.of(
-                        "title", List.of(template.getTitle()),
-                        "text", List.of(template.getText()),
-                        "address", List.of(template.getAddress()),
-                        "guest", List.of(String.format(
-                                "%s %s%s %s",
-                                CIVILITY_MAPPING.get(to.getCivility()),
-
-                                String.valueOf(formattedFirstName.charAt(0)).toUpperCase(),
-                                formattedFirstName.substring(1).toLowerCase(),
-
-                                String.valueOf(to.getLastName().isEmpty() ? "" : to.getLastName()).toUpperCase()
-                        )),
-                        "schedules", List.of(mappedSchedules),
-                        "image", List.of(notificationParams.get("image"))
-                ),
-                templateFromDatabase.getContent(),
-                WHATSAPP
-        );
-
-        WhatsappService.log.info(" template nem {}", finalTemplate);
-
         final Component headerCompoenent = new Component();
         headerCompoenent.setType("header");
         final List<Parameter> headerComponentParameters = List.of(
@@ -339,14 +333,7 @@ public class WhatsappService extends NotificationMapper {
         final List<Parameter> bodyComponentParameters = List.of(
                 new Parameter(
                         "text",
-                        String.format(
-                                "%s %s%s %s",
-                                sender.getCivility() == null ? "" : CIVILITY_MAPPING.get(to.getCivility()),
-                                String.valueOf(formattedFirstName.charAt(0)).toUpperCase(),
-                                formattedFirstName.substring(1).toLowerCase(),
-
-                                String.valueOf(to.getLastName().isEmpty() ? "" : to.getLastName()).toUpperCase()
-                        ).trim(),
+                        formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
                         null
                 ),
                 new Parameter(
@@ -369,12 +356,7 @@ public class WhatsappService extends NotificationMapper {
                 ),
                 new Parameter(
                         "text",
-                        String.format(
-                                "%s%s %s",
-                                String.valueOf(sender.getFirstName().charAt(0)).toUpperCase(),
-                                sender.getFirstName().substring(1).toLowerCase(),
-                                sender.getLastName().toUpperCase()
-                        ).trim(),
+                        formatName(null, sender.getFirstName(), sender.getLastName()),
                         null
                 )
         );
