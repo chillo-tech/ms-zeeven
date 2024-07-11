@@ -330,7 +330,7 @@ public class WhatsappService extends NotificationMapper {
 
         final Component bodyComponent = new Component();
         bodyComponent.setType("body");
-        final List<Parameter> bodyComponentParameters = getBodyComponentParameters(whatsappTemplateName, sender, eventName, mappedSchedules, template);
+        final List<Parameter> bodyComponentParameters = getBodyComponentParameters(whatsappTemplateName, sender, to, eventName, mappedSchedules, template);
         bodyComponent.setParameters(bodyComponentParameters);
 
 
@@ -362,12 +362,12 @@ public class WhatsappService extends NotificationMapper {
         return List.of(notificationStatus);
     }
 
-    private List<Parameter> getBodyComponentParameters(String notificationTemplate, UserAccount sender, String eventName, List<String> mappedSchedules, com.cs.ge.entites.Template template) {
+    private List<Parameter> getBodyComponentParameters(String notificationTemplate, UserAccount sender, Guest to, String eventName, List<String> mappedSchedules, com.cs.ge.entites.Template template) {
         if(notificationTemplate.equals("ze_weeding_invitation")) {
             return List.of(
                     new Parameter(
                             "text",
-                            formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
+                            formatName(to.getCivility(), to.getFirstName(), to.getLastName()),
                             null
                     ),
                     new Parameter(
@@ -393,7 +393,7 @@ public class WhatsappService extends NotificationMapper {
         return List.of(
                 new Parameter(
                         "text",
-                        formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
+                        formatName(to.getCivility(), to.getFirstName(), to.getLastName()),
                         null
                 ),
                 new Parameter(
