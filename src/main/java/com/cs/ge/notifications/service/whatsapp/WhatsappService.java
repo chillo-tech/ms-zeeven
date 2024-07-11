@@ -330,36 +330,7 @@ public class WhatsappService extends NotificationMapper {
 
         final Component bodyComponent = new Component();
         bodyComponent.setType("body");
-        final List<Parameter> bodyComponentParameters = List.of(
-                new Parameter(
-                        "text",
-                        formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        eventName,
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        String.format(
-                                "%s",
-                                String.join(" | ", mappedSchedules)
-                        ),
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        template.getAddress(),
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        formatName(null, sender.getFirstName(), sender.getLastName()),
-                        null
-                )
-        );
+        final List<Parameter> bodyComponentParameters = getBodyComponentParameters(whatsappTemplateName, sender, eventName, mappedSchedules, template);
         bodyComponent.setParameters(bodyComponentParameters);
 
 
@@ -389,6 +360,66 @@ public class WhatsappService extends NotificationMapper {
         notificationStatus.setStatus(whatsAppResponse.getMessages().get(0).getMessage_status());
         notificationStatus.setCreation(Instant.now());
         return List.of(notificationStatus);
+    }
+
+    private List<Parameter> getBodyComponentParameters(String notificationTemplate, UserAccount sender, String eventName, List<String> mappedSchedules, com.cs.ge.entites.Template template) {
+        if(notificationTemplate.equals("ze_weeding_invitation")) {
+            return List.of(
+                    new Parameter(
+                            "text",
+                            formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
+                            null
+                    ),
+                    new Parameter(
+                            "text",
+                            eventName,
+                            null
+                    ),
+                    new Parameter(
+                            "text",
+                            String.format(
+                                    "%s",
+                                    String.join(" | ", mappedSchedules)
+                            ),
+                            null
+                    ),
+                    new Parameter(
+                            "text",
+                            formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
+                            null
+                    )
+            );
+        }
+        return List.of(
+                new Parameter(
+                        "text",
+                        formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        eventName,
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        String.format(
+                                "%s",
+                                String.join(" | ", mappedSchedules)
+                        ),
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        template.getAddress(),
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        formatName(null, sender.getFirstName(), sender.getLastName()),
+                        null
+                )
+        );
     }
 
 

@@ -133,6 +133,12 @@ public class InvitationService {
                                 "path", filePath
                         )
                 );
+
+                String template = event.getWhatsapp_template();
+
+                if(Strings.isNullOrEmpty(event.getWhatsapp_template())) {
+                    template = "whatsappTemplateName";
+                }
                 final Map<String, Object> messageParameters = Map.of(
                         "eventId", event.getPublicId(),
                         "eventName", event.getName(),
@@ -141,7 +147,7 @@ public class InvitationService {
                         "author", author,
                         "application", "ZEEVEN",
                         "notificationTemplate", templateName,
-                        "whatsappTemplateName", "ze_invitation",
+                        "whatsappTemplateName", template,
                         "invitation", invitation,
                         "channels", invitation.getChannels()
                 );
