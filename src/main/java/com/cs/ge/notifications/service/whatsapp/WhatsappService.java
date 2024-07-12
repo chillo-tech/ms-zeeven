@@ -367,7 +367,7 @@ public class WhatsappService extends NotificationMapper {
             return List.of(
                     new Parameter(
                             "text",
-                            formatName(to.getCivility(), to.getFirstName(), to.getLastName()),
+                            formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
                             null
                     ),
                     new Parameter(
@@ -385,7 +385,7 @@ public class WhatsappService extends NotificationMapper {
                     ),
                     new Parameter(
                             "text",
-                            formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()),
+                            formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()).trim(),
                             null
                     )
             );
@@ -393,7 +393,7 @@ public class WhatsappService extends NotificationMapper {
         return List.of(
                 new Parameter(
                         "text",
-                        formatName(to.getCivility(), to.getFirstName(), to.getLastName()),
+                        formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
                         null
                 ),
                 new Parameter(
@@ -416,7 +416,7 @@ public class WhatsappService extends NotificationMapper {
                 ),
                 new Parameter(
                         "text",
-                        formatName(null, sender.getFirstName(), sender.getLastName()),
+                        formatName(null, sender.getFirstName(), sender.getLastName()).trim(),
                         null
                 )
         );
