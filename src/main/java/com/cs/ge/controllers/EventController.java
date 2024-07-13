@@ -1,27 +1,11 @@
 package com.cs.ge.controllers;
 
 import com.cs.ge.dto.Scan;
-import com.cs.ge.entites.Event;
-import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Invitation;
-import com.cs.ge.entites.Plan;
-import com.cs.ge.entites.Schedule;
-import com.cs.ge.entites.Table;
+import com.cs.ge.entites.*;
 import com.cs.ge.services.EventService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -168,8 +152,9 @@ public class EventController {
     }
 
     @PatchMapping(value = "{eventPublicId}/invitation/{invitationPublicId}/params")
-    public void setTemplateParams(@PathVariable final String eventPublicId, @PathVariable final String invitationPublicId, @RequestBody final Map<String, String> templateParams) {
-        this.eventService.setTemplateParams(eventPublicId, invitationPublicId, templateParams);
+    public Map<String, String> setTemplateParams(@PathVariable final String eventPublicId, @PathVariable final String invitationPublicId, @RequestBody final Map<String, String> templateParams) {
+        final String image = this.eventService.setTemplateParams(eventPublicId, invitationPublicId, templateParams);
+        return Map.of("image", image);
     }
 
     @PatchMapping(value = "{id}/params")

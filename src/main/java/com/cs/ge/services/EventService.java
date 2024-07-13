@@ -1,19 +1,7 @@
 package com.cs.ge.services;
 
 import com.cs.ge.dto.Scan;
-import com.cs.ge.entites.ApplicationMessage;
-import com.cs.ge.entites.ApplicationMessageSchedule;
-import com.cs.ge.entites.Category;
-import com.cs.ge.entites.Event;
-import com.cs.ge.entites.EventMessage;
-import com.cs.ge.entites.EventParams;
-import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Invitation;
-import com.cs.ge.entites.Plan;
-import com.cs.ge.entites.Schedule;
-import com.cs.ge.entites.Table;
-import com.cs.ge.entites.Template;
-import com.cs.ge.entites.UserAccount;
+import com.cs.ge.entites.*;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.EventStatus;
 import com.cs.ge.enums.Role;
@@ -37,32 +25,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.cs.ge.enums.EventStatus.ACTIVE;
-import static com.cs.ge.enums.EventStatus.DISABLED;
-import static com.cs.ge.enums.EventStatus.INCOMMING;
+import static com.cs.ge.enums.EventStatus.*;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -70,7 +45,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 @Service
 public class EventService {
-    public static final String DEFAULT_TABLE_NAME = "Contacts";
+    private static final String DEFAULT_TABLE_NAME = "Contacts";
     private final FeignNotifications feignNotifications;
     private final EventRepository eventsRepository;
     private final ProfileService profileService;
@@ -102,6 +77,87 @@ public class EventService {
         this.eventMessageService = eventMessageService;
         this.invitationService = invitationService;
         this.eventMessageRepository = eventMessageRepository;
+    }
+
+    private static EventStatus eventStatus(final Set<Instant> dates) {
+        final List<Instant> datesAsList = new ArrayList<>(dates);
+        final List<Instant> sorted = datesAsList.stream()
+                .distinct() // If you want only unique elements in the end List
+                .sorted()
+                .collect(Collectors.toList());
+        final Date date = new Date();
+        EventStatus status = EventStatus.DISABLED;
+        final Instant now = Instant.now();
+        if (sorted.get(0).isBefore(now)) {
+            throw new ApplicationException("La date de votre évènement est invalide");
+        }
+
+        if (sorted.get(0).equals(now)) {
+            status = ACTIVE;
+        }
+
+        if (sorted.get(sorted.size() - 1).isAfter(now)) {
+            status = INCOMMING;
+        }
+
+        return status;
+    }
+
+    private static List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
+        messages.removeAll(messagesToSend);
+        return messages;
+    }
+
+    private static List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
+        return eventChannels
+                .stream().filter(channel -> {
+                    if (channelsStatistics != null && channelsStatistics.size() > 0) {
+                        return channelsStatistics.get(channel) != null && channelsStatistics.get(channel) >= eventGuests.size();
+                    } else {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+    }
+
+    private static List<ApplicationMessage> getEventMessagesToSend(final List<ApplicationMessage> messages) {
+        return messages
+                .parallelStream()
+                .filter(message -> {
+                    if (message.getSchedules() == null) {
+                        message.setSchedules(new ArrayList<>());
+                    }
+                    return EventService.isMessageTobeSend(message.getSchedules());
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isMessageTobeSend(final List<ApplicationMessageSchedule> schedules) {
+        final ApplicationMessageSchedule firstScheduleToHandle = schedules.parallelStream().filter(schedule -> !schedule.isHandled()).findFirst().orElse(null);
+        if (firstScheduleToHandle == null) {
+            return false;
+        }
+        if (firstScheduleToHandle.getTimezone() == null) {
+            firstScheduleToHandle.setTimezone(EventService.getTimeZone());
+        }
+        final TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(firstScheduleToHandle.getTimezone()));
+        EventService.log.info("Date du message {} position {}", firstScheduleToHandle.getDate(), timeZone.getDisplayName());
+
+        final Instant firstScheduleToHandleDate = firstScheduleToHandle.getDate().atZone(timeZone.toZoneId()).toInstant().truncatedTo(ChronoUnit.MINUTES);
+
+        final Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+        final ZonedDateTime zonedDateTime = now.atZone(timeZone.toZoneId());
+
+        boolean send = zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS).isAfter(firstScheduleToHandleDate);
+        if (!send) {
+            send = firstScheduleToHandleDate.equals(now);
+        }
+        return send;
+    }
+
+    private static String getTimeZone() {
+        return ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
+                ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
+        ).getZone().getId();
     }
 
     public List<Event> search() {
@@ -211,7 +267,6 @@ public class EventService {
         //this.synchroniousNotifications.sendConfirmationMessage(event);
     }
 
-
     public void add(Event event) {
         final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
         final String id = UUID.randomUUID().toString();
@@ -268,31 +323,6 @@ public class EventService {
         );
          */
         //this.synchroniousNotifications.sendConfirmationMessage(event);
-    }
-
-
-    private static EventStatus eventStatus(final Set<Instant> dates) {
-        final List<Instant> datesAsList = new ArrayList<>(dates);
-        final List<Instant> sorted = datesAsList.stream()
-                .distinct() // If you want only unique elements in the end List
-                .sorted()
-                .collect(Collectors.toList());
-        final Date date = new Date();
-        EventStatus status = EventStatus.DISABLED;
-        final Instant now = Instant.now();
-        if (sorted.get(0).isBefore(now)) {
-            throw new ApplicationException("La date de votre évènement est invalide");
-        }
-
-        if (sorted.get(0).equals(now)) {
-            status = ACTIVE;
-        }
-
-        if (sorted.get(sorted.size() - 1).isAfter(now)) {
-            status = INCOMMING;
-        }
-
-        return status;
     }
 
     public void delete(final String id) {
@@ -608,26 +638,10 @@ public class EventService {
         }
     }
 
-    private static List<ApplicationMessage> getEventMessagesToKeep(final List<ApplicationMessage> messages, final List<ApplicationMessage> messagesToSend) {
-        messages.removeAll(messagesToSend);
-        return messages;
-    }
-
     private void updateStocks(final String userId, final List<Channel> channelsToHandle, final int consumed) {
         channelsToHandle.parallelStream()
                 .forEach(channel -> this.stockService
                         .update(userId, null, null, consumed, channel, StockType.DEBIT));
-    }
-
-    private static List<Channel> getChannelsToHandle(final String email, final List<Guest> eventGuests, final List<Channel> eventChannels, final Map<Channel, Integer> channelsStatistics) {
-        return eventChannels
-                .stream().filter(channel -> {
-                    if (channelsStatistics != null && channelsStatistics.size() > 0) {
-                        return channelsStatistics.get(channel) != null && channelsStatistics.get(channel) >= eventGuests.size();
-                    } else {
-                        return false;
-                    }
-                }).collect(Collectors.toList());
     }
 
     private List<ApplicationMessage> sendMessages(final Event event, final List<ApplicationMessage> messagesTosend, final List<Channel> channelsToHandle) {
@@ -660,41 +674,6 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    private static List<ApplicationMessage> getEventMessagesToSend(final List<ApplicationMessage> messages) {
-        return messages
-                .parallelStream()
-                .filter(message -> {
-                    if (message.getSchedules() == null) {
-                        message.setSchedules(new ArrayList<>());
-                    }
-                    return EventService.isMessageTobeSend(message.getSchedules());
-                })
-                .collect(Collectors.toList());
-    }
-
-    private static boolean isMessageTobeSend(final List<ApplicationMessageSchedule> schedules) {
-        final ApplicationMessageSchedule firstScheduleToHandle = schedules.parallelStream().filter(schedule -> !schedule.isHandled()).findFirst().orElse(null);
-        if (firstScheduleToHandle == null) {
-            return false;
-        }
-        if (firstScheduleToHandle.getTimezone() == null) {
-            firstScheduleToHandle.setTimezone(EventService.getTimeZone());
-        }
-        final TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of(firstScheduleToHandle.getTimezone()));
-        EventService.log.info("Date du message {} position {}", firstScheduleToHandle.getDate(), timeZone.getDisplayName());
-
-        final Instant firstScheduleToHandleDate = firstScheduleToHandle.getDate().atZone(timeZone.toZoneId()).toInstant().truncatedTo(ChronoUnit.MINUTES);
-
-        final Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
-        final ZonedDateTime zonedDateTime = now.atZone(timeZone.toZoneId());
-
-        boolean send = zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS).isAfter(firstScheduleToHandleDate);
-        if (!send) {
-            send = firstScheduleToHandleDate.equals(now);
-        }
-        return send;
-    }
-
     public List<Object> statistics(final String id) {
         final Event event = this.read(id);
         final List<Channel> channels = event.getChannels();
@@ -702,6 +681,9 @@ public class EventService {
         final List<Object> queuedMessagesSatisticts = new ArrayList<>();
         channels.parallelStream().forEach(channel -> queuedMessagesSatisticts.addAll(
                 Collections.nCopies(event.getGuests().size(), new HashMap<String, String>() {
+                    @Serial
+                    private static final long serialVersionUID = 7903851413224066394L;
+
                     {
                         this.put("chanel", channel.name());
                         this.put("status", "QUEUED");
@@ -716,6 +698,9 @@ public class EventService {
             final List<Object> staticsData = statistics.stream()
                     .filter(statistic -> List.of("QUEUED", "SENT", "DELIVERED", "OPENED", "UNIQUE_OPENED").contains(statistic.get("status").toString()))
                     .map(entry -> new HashMap<String, String>() {
+                        @Serial
+                        private static final long serialVersionUID = 4728131242244835242L;
+
                         {
                             this.put("chanel", entry.get("channel"));
                             this.put("status", entry.get("status"));
@@ -738,12 +723,6 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
-    private static String getTimeZone() {
-        return ZonedDateTime.now(           // Capture the current moment in the wall-clock time used by the people of a certain region (a time zone).
-                ZoneId.systemDefault()   // Get the JVM’s current default time zone. Can change at any moment during runtime. If important, confirm with the user.
-        ).getZone().getId();
-    }
-
     public void addInvitation(final String id, final Invitation invitation) {
         final Event event = this.read(id);
         if (event.getParams().isInvitation()) {
@@ -756,7 +735,7 @@ public class EventService {
                 }).collect(Collectors.toSet());
                 template.setSchedules(schedules);
             }
-            if(invitation.getChannels() == null) {
+            if (invitation.getChannels() == null) {
                 invitation.setChannels(event.getChannels());
             }
             template.setId(UUID.randomUUID().toString());
@@ -811,17 +790,31 @@ public class EventService {
         this.eventsRepository.save(event);
     }
 
-    public void setTemplateParams(final String eventId, final String invitationPublicId, final Map<String, String> templateParams) {
-        final var event = this.read(eventId);
+    public String setTemplateParams(final String eventId, final String invitationPublicId, final Map<String, String> templateParams) {
+        var event = this.read(eventId);
         final var invitation = event.getInvitation();
         final var template = invitation.getTemplate();
         template.setParams(templateParams);
         invitation.setTemplate(template);
         event.setInvitation(invitation);
-        this.eventsRepository.save(event);
+        event = this.eventsRepository.save(event);
+        final Guest admin = this.profileService.findByRole(Role.ADMIN).stream().map(user -> {
+            final Guest guest = new Guest();
+            guest.setTrial(true);
+            guest.setId(UUID.randomUUID().toString());
+            guest.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
+            guest.setCivility(user.getCivility());
+            guest.setFirstName(user.getFirstName());
+            guest.setLastName(user.getLastName());
+            guest.setPhoneIndex(user.getPhoneIndex());
+            guest.setPhone(user.getPhone());
+            guest.setEmail(user.getEmail());
+            return guest;
+        }).findFirst().get();
+        return this.invitationService.getInvitation(event, admin, event.getInvitation());
     }
 
-    public void addGuests(String id, Set<Guest> guests, Map<String, Object> parameters) {
+    public void addGuests(final String id, final Set<Guest> guests, final Map<String, Object> parameters) {
         guests.stream().filter(guest -> Strings.isNullOrEmpty(guest.getId()) && Strings.isNullOrEmpty(guest.getPublicId())).forEach(guest -> {
             try {
                 this.addGuest(
@@ -829,16 +822,16 @@ public class EventService {
                         guest,
                         parameters
                 );
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    public void simulate(String eventId, String invitationPublicId) {
+    public void simulate(final String eventId, final String invitationPublicId) {
         final var event = this.read(eventId);
         this.profileService.findByRole(Role.ADMIN).stream().map(user -> {
-            Guest guest = new Guest();
+            final Guest guest = new Guest();
             guest.setTrial(true);
             guest.setId(UUID.randomUUID().toString());
             guest.setPublicId(RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT));
@@ -850,7 +843,7 @@ public class EventService {
             guest.setEmail(user.getEmail());
             return guest;
         }).forEach(
-             guest ->   this.invitationService.sendGuestInvitation(event, guest)
+                guest -> this.invitationService.sendGuestInvitation(event, guest)
         );
 
     }
