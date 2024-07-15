@@ -38,7 +38,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.cs.ge.enums.EventStatus.*;
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -418,7 +417,7 @@ public class EventService {
             final Map<String, Table> newPlanTables = tableList.stream().collect(Collectors.toMap(Table::getPublicId, Function.identity()));
             plan.setTables(newPlanTables);
             final Event updatedEvent = this.eventsRepository.save(event);
-
+/*
             if (
                     !parameters.isEmpty()
                             && parameters.containsKey("sendInvitation")
@@ -432,6 +431,8 @@ public class EventService {
                     this.invitationService.sendGuestInvitation(updatedEvent, guest);
                 }
             }
+            
+ */
         }
     }
 
@@ -845,6 +846,11 @@ public class EventService {
         }).forEach(
                 guest -> this.invitationService.sendGuestInvitation(event, guest)
         );
+
+    }
+
+    public void getInvitation(final String eventId, final String invitationId) {
+        final var event = this.read(eventId);
 
     }
 }

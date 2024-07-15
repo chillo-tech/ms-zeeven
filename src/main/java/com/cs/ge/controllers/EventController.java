@@ -90,6 +90,11 @@ public class EventController {
         this.eventService.sendInvitations(id, guestIds);
     }
 
+    @PostMapping(value = "{id}/invitations/${invitationId}")
+    public void getInvitation(@PathVariable final String id, @PathVariable final String invitationId) {
+        this.eventService.getInvitation(id, invitationId);
+    }
+
 
     @GetMapping(value = "{id}/table")
     public List<Table> fetchTables(@PathVariable final String id) {
