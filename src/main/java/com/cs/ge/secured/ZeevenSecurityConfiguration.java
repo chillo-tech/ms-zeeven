@@ -5,11 +5,7 @@ import com.cs.ge.secured.properties.RsaConfigurationProperties;
 import com.cs.ge.secured.providers.ApiKeyAuthenticationProvider;
 import com.cs.ge.services.ProfileService;
 import com.cs.ge.services.security.TokenService;
-import org.passay.CharacterRule;
-import org.passay.EnglishCharacterData;
-import org.passay.LengthRule;
-import org.passay.Rule;
-import org.passay.WhitespaceRule;
+import org.passay.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -84,6 +80,7 @@ public class ZeevenSecurityConfiguration {
                                         .requestMatchers(GET, "/ticket").permitAll()
                                         .requestMatchers("/qr-code/**").permitAll()
                                         .requestMatchers("/webhooks").permitAll()
+                                        .requestMatchers("/hooks/**").permitAll()
                                         .requestMatchers(POST, "/webhooks/stripe").permitAll()
                                         .requestMatchers(POST, "/activation").permitAll()
                                         .requestMatchers(POST, "/update-password").permitAll()
