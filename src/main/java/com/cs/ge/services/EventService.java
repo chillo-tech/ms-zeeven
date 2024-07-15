@@ -431,7 +431,7 @@ public class EventService {
                     this.invitationService.sendGuestInvitation(updatedEvent, guest);
                 }
             }
-            
+
  */
         }
     }

@@ -90,7 +90,7 @@ public class EventController {
         this.eventService.sendInvitations(id, guestIds);
     }
 
-    @PostMapping(value = "{id}/invitations/${invitationId}")
+    @PostMapping(value = "{id}/invitations/{invitationId}")
     public void getInvitation(@PathVariable final String id, @PathVariable final String invitationId) {
         this.eventService.getInvitation(id, invitationId);
     }
