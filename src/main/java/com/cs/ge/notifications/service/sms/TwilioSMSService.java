@@ -75,6 +75,7 @@ public class TwilioSMSService extends NotificationMapper {
                     createdMessage.getStatus().name()
             );
             notificationStatus.setProvider("TWILIO");
+            notificationStatus.setPhone(phoneNumber);
             return notificationStatus;
 
         }).collect(Collectors.toList());

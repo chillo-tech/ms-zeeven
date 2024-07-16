@@ -6,11 +6,7 @@ import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
-import com.cs.ge.notifications.entity.Notification;
-import com.cs.ge.notifications.entity.NotificationStatus;
-import com.cs.ge.notifications.entity.NotificationTemplate;
-import com.cs.ge.notifications.entity.Recipient;
-import com.cs.ge.notifications.entity.TemplateStatus;
+import com.cs.ge.notifications.entity.*;
 import com.cs.ge.notifications.entity.template.Template;
 import com.cs.ge.notifications.entity.template.TemplateComponent;
 import com.cs.ge.notifications.entity.template.TemplateExample;
@@ -20,15 +16,9 @@ import com.cs.ge.notifications.repository.NotificationTemplateRepository;
 import com.cs.ge.notifications.repository.TemplateRepository;
 import com.cs.ge.notifications.repository.TemplateStatusRepository;
 import com.cs.ge.notifications.service.NotificationMapper;
-import com.cs.ge.notifications.service.mail.WhatsAppMessageService;
 import com.cs.ge.notifications.service.whatsapp.dto.Component;
 import com.cs.ge.notifications.service.whatsapp.dto.Image;
-import com.cs.ge.notifications.service.whatsapp.dto.Language;
-import com.cs.ge.notifications.service.whatsapp.dto.Parameter;
-import com.cs.ge.notifications.service.whatsapp.dto.Text;
-import com.cs.ge.notifications.service.whatsapp.dto.TextMessage;
-import com.cs.ge.notifications.service.whatsapp.dto.WhatsAppResponse;
-import com.cs.ge.notifications.service.whatsapp.dto.WhatsappTemplate;
+import com.cs.ge.notifications.service.whatsapp.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Strings;
@@ -46,11 +36,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.cs.ge.enums.Channel.WHATSAPP;
@@ -70,15 +57,14 @@ public class WhatsappService extends NotificationMapper {
     private final TextMessageService textMessageService;
     private final TemplateMessageService templateMessageService;
     private final NotificationTemplateRepository notificationTemplateRepository;
-    private final WhatsAppMessageService whatsAppMessageService;
 
     public WhatsappService(
             final TemplateRepository templateRepository, @Value("${application.recipient.sms:#{null}}") final String recipient,
             final TemplateStatusRepository templateStatusRepository,
             final TextMessageService textMessageService,
             final TemplateMessageService templateMessageService,
-            final NotificationTemplateRepository notificationTemplateRepository,
-            final WhatsAppMessageService whatsAppMessageService) {
+            final NotificationTemplateRepository notificationTemplateRepository
+    ) {
         super(notificationTemplateRepository);
         this.templateRepository = templateRepository;
         this.templateStatusRepository = templateStatusRepository;
@@ -86,7 +72,157 @@ public class WhatsappService extends NotificationMapper {
         this.textMessageService = textMessageService;
         this.templateMessageService = templateMessageService;
         this.notificationTemplateRepository = notificationTemplateRepository;
-        this.whatsAppMessageService = whatsAppMessageService;
+    }
+
+    private static BufferedImage createImageFromBytes(final String image) {
+        try {
+            final byte[] bytes = Base64.getDecoder().decode(image);
+            return ImageIO.read(new ByteArrayInputStream(bytes));
+        } catch (final IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void convertHtmlToImage(final String qr, final String htmlSource) {
+        final BufferedImage bufferedImage = new BufferedImage(20000, 2500, BufferedImage.TYPE_INT_RGB);
+
+        final Graphics2D g2d = bufferedImage.createGraphics();
+        final Font font = new Font("Ticketing", Font.PLAIN, 120);
+
+        g2d.setFont(font);
+        g2d.setColor(Color.DARK_GRAY);
+        final BufferedImage qrCode = WhatsappService.createImageFromBytes(qr);
+        g2d.drawImage(qrCode, 0, 0, null);
+
+        g2d.drawString("lkhpfe", 1550, 400);
+        g2d.drawString("pk^^zjf^^j^", 1550, 800);
+        g2d.drawString("jfpzhjpzozj", 1550, 1100);
+        g2d.drawString("ko^^jz^^zj", 1550, 1400);
+        g2d.dispose();
+        try {
+            ImageIO.write(bufferedImage, "png", new File("/Users/chillo/projets/zeeven/data/tickets/test.png"));
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String formatName(final Civility civility, final String firstName, final String lastName) {
+        String name = "";
+
+        if (!Strings.isNullOrEmpty(firstName)) {
+            name = String.format("%s%s%s", name, String.valueOf(firstName.charAt(0)).toUpperCase(), firstName.substring(1).toLowerCase());
+        }
+
+        if (!Strings.isNullOrEmpty(lastName)) {
+            name = String.format("%s %s", name, lastName.toUpperCase());
+        }
+
+        if (civility != null && CIVILITY_MAPPING.get(civility) != null && !Strings.isNullOrEmpty(CIVILITY_MAPPING.get(civility))) {
+            name = String.format("%s %s", CIVILITY_MAPPING.get(civility), name);
+        }
+
+        return name;
+    }
+
+    private static List<Parameter> getBodyComponentParameters(final String notificationTemplate, final UserAccount sender, final Guest to, final String eventName, final List<String> mappedSchedules, final com.cs.ge.entites.Template template) {
+        if (notificationTemplate.equals("ze_weeding_invitation")) {
+            return List.of(
+                    new Parameter(
+                            "text",
+                            WhatsappService.formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
+                            null
+                    ),
+                    new Parameter(
+                            "text",
+                            eventName,
+                            null
+                    ),
+                    new Parameter(
+                            "text",
+                            String.format(
+                                    "%s",
+                                    String.join(" | ", mappedSchedules)
+                            ),
+                            null
+                    ),
+                    new Parameter(
+                            "text",
+                            WhatsappService.formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()).trim(),
+                            null
+                    )
+            );
+        }
+        return List.of(
+                new Parameter(
+                        "text",
+                        WhatsappService.formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        eventName,
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        String.format(
+                                "%s",
+                                String.join(" | ", mappedSchedules)
+                        ),
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        template.getAddress(),
+                        null
+                ),
+                new Parameter(
+                        "text",
+                        WhatsappService.formatName(null, sender.getFirstName(), sender.getLastName()).trim(),
+                        null
+                )
+        );
+    }
+
+    private List<NotificationStatus> disabledAccountComponents(final Notification notification) {
+
+        final String templateName = "ze_test_template";
+        return notification.getContacts().stream().map((final Recipient to) -> {
+            final Component component = new Component();
+            component.setType("body");
+            final List<Parameter> parameters = List.of(
+                    new Parameter("text", String.format("%s %s", notification.getFrom().getFirstName(), notification.getFrom().getLastName().toUpperCase()), null)
+            );
+            component.setParameters(parameters);
+
+            final WhatsappTemplate template = new WhatsappTemplate();
+            template.setName(templateName);
+            template.setLanguage(new Language("en"));
+            template.setComponents(List.of(component));
+
+            final TextMessage textMessage = new TextMessage();
+            textMessage.setTemplate(template);
+            textMessage.setMessaging_product("whatsapp");
+            textMessage.setType("template");
+            String phoneNumber = this.recipient;
+            if (phoneNumber == null) {
+                phoneNumber = String.format("+%s%s", to.getPhoneIndex(), to.getPhone());
+            }
+            textMessage.setTo(phoneNumber);
+
+            final WhatsAppResponse response = this.textMessageService.message(textMessage);
+            final NotificationStatus notificationStatus = this.getNotificationStatus(
+                    notification,
+                    to.getId(),
+                    WHATSAPP,
+                    response.getMessages().get(0).getId(), //createdMessage.getSid(),
+                    "SENT" //createdMessage.getStatus().name()
+            );
+
+            notificationStatus.setProvider("WHATSAPP");
+            return notificationStatus;
+        }).collect(Collectors.toList());
     }
 
     @Async
@@ -132,8 +268,7 @@ public class WhatsappService extends NotificationMapper {
 
     }
 
-
-    public List<NotificationStatus> activeAccountComponents(final Notification notification) {
+    private List<NotificationStatus> activeAccountComponents(final Notification notification) {
         final String templateName = "ze_say_hello";
         final Template templateInBDD = this.templateRepository.findByName(templateName);
         return notification.getContacts().stream().map((final Recipient to) -> {
@@ -173,48 +308,6 @@ public class WhatsappService extends NotificationMapper {
             return notificationStatus;
         }).collect(Collectors.toList());
     }
-
-
-    public List<NotificationStatus> disabledAccountComponents(final Notification notification) {
-
-        final String templateName = "ze_test_template";
-        return notification.getContacts().stream().map((final Recipient to) -> {
-            final Component component = new Component();
-            component.setType("body");
-            final List<Parameter> parameters = List.of(
-                    new Parameter("text", String.format("%s %s", notification.getFrom().getFirstName(), notification.getFrom().getLastName().toUpperCase()), null)
-            );
-            component.setParameters(parameters);
-
-            final WhatsappTemplate template = new WhatsappTemplate();
-            template.setName(templateName);
-            template.setLanguage(new Language("en"));
-            template.setComponents(List.of(component));
-
-            final TextMessage textMessage = new TextMessage();
-            textMessage.setTemplate(template);
-            textMessage.setMessaging_product("whatsapp");
-            textMessage.setType("template");
-            String phoneNumber = this.recipient;
-            if (phoneNumber == null) {
-                phoneNumber = String.format("+%s%s", to.getPhoneIndex(), to.getPhone());
-            }
-            textMessage.setTo(phoneNumber);
-
-            final WhatsAppResponse response = this.textMessageService.message(textMessage);
-            final NotificationStatus notificationStatus = this.getNotificationStatus(
-                    notification,
-                    to.getId(),
-                    WHATSAPP,
-                    response.getMessages().get(0).getId(), //createdMessage.getSid(),
-                    "SENT" //createdMessage.getStatus().name()
-            );
-
-            notificationStatus.setProvider("WHATSAPP");
-            return notificationStatus;
-        }).collect(Collectors.toList());
-    }
-
 
     public WhatsAppResponse createTemplate(final Template templateInBDD) {
         List<TemplateComponent> components = templateInBDD.getComponents();
@@ -267,23 +360,6 @@ public class WhatsappService extends NotificationMapper {
         return whatsAppResponse;
     }
 
-    private String formatName(Civility civility, final String firstName, final String lastName) {
-        String name = "";
-
-        if(!Strings.isNullOrEmpty(firstName)) {
-            name = String.format("%s%s%s", name, String.valueOf(firstName.charAt(0)).toUpperCase(), firstName.substring(1).toLowerCase());
-        }
-
-        if(!Strings.isNullOrEmpty(lastName)) {
-            name = String.format("%s %s", name, lastName.toUpperCase());
-        }
-
-        if(civility != null && CIVILITY_MAPPING.get(civility) !=null && !Strings.isNullOrEmpty(CIVILITY_MAPPING.get(civility))) {
-            name = String.format("%s %s", CIVILITY_MAPPING.get(civility), name);
-        }
-
-        return name;
-    }
     public List<NotificationStatus> sendFromParams(final Map<String, Object> notificationParams, final Channel channel) {
         final Invitation invitation = (Invitation) notificationParams.get("invitation");
         final com.cs.ge.entites.Template template = invitation.getTemplate();
@@ -330,7 +406,7 @@ public class WhatsappService extends NotificationMapper {
 
         final Component bodyComponent = new Component();
         bodyComponent.setType("body");
-        final List<Parameter> bodyComponentParameters = getBodyComponentParameters(whatsappTemplateName, sender, to, eventName, mappedSchedules, template);
+        final List<Parameter> bodyComponentParameters = WhatsappService.getBodyComponentParameters(whatsappTemplateName, sender, to, eventName, mappedSchedules, template);
         bodyComponent.setParameters(bodyComponentParameters);
 
 
@@ -356,104 +432,11 @@ public class WhatsappService extends NotificationMapper {
         notificationStatus.setEventId(String.format("%s", notificationParams.get("eventId")));
         notificationStatus.setUserId(to.getId());
         notificationStatus.setChannel(channel);
+        notificationStatus.setPhone(phoneNumber);
         notificationStatus.setProviderNotificationId(whatsAppResponse.getMessages().get(0).getId());
         notificationStatus.setStatus(whatsAppResponse.getMessages().get(0).getMessage_status());
         notificationStatus.setCreation(Instant.now());
         return List.of(notificationStatus);
-    }
-
-    private List<Parameter> getBodyComponentParameters(String notificationTemplate, UserAccount sender, Guest to, String eventName, List<String> mappedSchedules, com.cs.ge.entites.Template template) {
-        if(notificationTemplate.equals("ze_weeding_invitation")) {
-            return List.of(
-                    new Parameter(
-                            "text",
-                            formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
-                            null
-                    ),
-                    new Parameter(
-                            "text",
-                            eventName,
-                            null
-                    ),
-                    new Parameter(
-                            "text",
-                            String.format(
-                                    "%s",
-                                    String.join(" | ", mappedSchedules)
-                            ),
-                            null
-                    ),
-                    new Parameter(
-                            "text",
-                            formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()).trim(),
-                            null
-                    )
-            );
-        }
-        return List.of(
-                new Parameter(
-                        "text",
-                        formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        eventName,
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        String.format(
-                                "%s",
-                                String.join(" | ", mappedSchedules)
-                        ),
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        template.getAddress(),
-                        null
-                ),
-                new Parameter(
-                        "text",
-                        formatName(null, sender.getFirstName(), sender.getLastName()).trim(),
-                        null
-                )
-        );
-    }
-
-
-    private static BufferedImage createImageFromBytes(final String image) {
-        try {
-            final byte[] bytes = Base64.getDecoder().decode(image);
-            return ImageIO.read(new ByteArrayInputStream(bytes));
-        } catch (final IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void convertHtmlToImage(final String qr, final String htmlSource) {
-        final BufferedImage bufferedImage = new BufferedImage(20000, 2500, BufferedImage.TYPE_INT_RGB);
-
-        final Graphics2D g2d = bufferedImage.createGraphics();
-        final Font font = new Font("Ticketing", Font.PLAIN, 120);
-
-        g2d.setFont(font);
-        g2d.setColor(Color.DARK_GRAY);
-        final BufferedImage qrCode = WhatsappService.createImageFromBytes(qr);
-        g2d.drawImage(qrCode, 0, 0, null);
-
-        g2d.drawString("lkhpfe", 1550, 400);
-        g2d.drawString("pk^^zjf^^j^", 1550, 800);
-        g2d.drawString("jfpzhjpzozj", 1550, 1100);
-        g2d.drawString("ko^^jz^^zj", 1550, 1400);
-        g2d.dispose();
-        try {
-            ImageIO.write(bufferedImage, "png", new File("/Users/chillo/projets/zeeven/data/tickets/test.png"));
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
     }
 
     protected String processTemplate(final String application, final String template, final Map<String, List<Object>> params) {

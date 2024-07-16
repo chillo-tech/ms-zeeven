@@ -49,6 +49,7 @@ public class MailService extends NotificationMapper {
                     "INITIAL"
             );
             notificationStatus.setProvider("BREVO");
+            notificationStatus.setEmail(to.getEmail());
             try {
                 final String messageToSend = String.valueOf(this.map(notification, to, EMAIL).get("message"));
                 final Map<String, Object> result = this.sendMessageUsingSendinBlueAPI(notification, messageToSend, to);

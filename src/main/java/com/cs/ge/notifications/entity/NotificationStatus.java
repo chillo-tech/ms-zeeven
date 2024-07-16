@@ -21,6 +21,7 @@ public class NotificationStatus {
     private String eventId;
     private String recipient;
     private String phone;
+    private String email;
     private String userId;
     private String applicationMessageId;
     private String providerNotificationId;

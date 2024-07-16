@@ -28,11 +28,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,6 +46,19 @@ public class VonageSMSService {
     ) {
         this.notificationTemplateRepository = notificationTemplateRepository;
         this.client = VonageClient.builder().apiKey(vonageAccountId).apiSecret(vonageAccountSecret).build();
+    }
+
+    private static String processTemplate(final Map<String, List<Object>> model, final String template) {
+        try {
+            final Template t = new Template("TemplateFromDBName", template, null);
+            final Writer out = new StringWriter();
+            t.process(model, out);
+            return out.toString();
+
+        } catch (final TemplateException | IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Async
@@ -122,25 +131,13 @@ public class VonageSMSService {
                 notificationStatus.setProviderNotificationId(submissionResponseMessage.getId());
                 notificationStatus.setStatus(submissionResponseMessage.getStatus().name());
                 notificationStatus.setProvider("VONAGE");
+                notificationStatus.setPhone(phoneNumber);
                 return notificationStatus;
             } catch (final IntrospectionException | InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
             }
             return null;
         }).collect(Collectors.toList());
-    }
-
-    private static String processTemplate(final Map<String, List<Object>> model, final String template) {
-        try {
-            final Template t = new Template("TemplateFromDBName", template, null);
-            final Writer out = new StringWriter();
-            t.process(model, out);
-            return out.toString();
-
-        } catch (final TemplateException | IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
 }
