@@ -38,6 +38,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.cs.ge.enums.EventStatus.*;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -359,7 +360,7 @@ public class EventService {
 
         final UserAccount userAccount = new UserAccount();
         BeanUtils.copyProperties(guest, userAccount);
-        if (event.getParams().isContact()) {
+        if (event.getParams().isContact() && Strings.isNullOrEmpty(guest.getId()) && Strings.isNullOrEmpty(guest.getPublicId())) {
             ValidationService.checkEmail(guest.getEmail());
             ValidationService.checkPhone(guest.getPhone());
             final String publicId = RandomStringUtils.randomNumeric(8).toLowerCase(Locale.ROOT);
@@ -417,7 +418,7 @@ public class EventService {
             final Map<String, Table> newPlanTables = tableList.stream().collect(Collectors.toMap(Table::getPublicId, Function.identity()));
             plan.setTables(newPlanTables);
             final Event updatedEvent = this.eventsRepository.save(event);
-/*
+
             if (
                     !parameters.isEmpty()
                             && parameters.containsKey("sendInvitation")
@@ -431,8 +432,8 @@ public class EventService {
                     this.invitationService.sendGuestInvitation(updatedEvent, guest);
                 }
             }
-
- */
+        } else {
+            EventService.log.info("L'utilisateur {} est déjà dans la liste des invités de l'évènement {}", guest.getPublicId(), eventId);
         }
     }
 

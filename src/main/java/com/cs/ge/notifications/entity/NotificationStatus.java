@@ -20,6 +20,7 @@ public class NotificationStatus {
     private String id;
     private String eventId;
     private String recipient;
+    private String phone;
     private String userId;
     private String applicationMessageId;
     private String providerNotificationId;
