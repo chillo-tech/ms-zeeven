@@ -326,7 +326,7 @@ public class EventService {
     }
 
     public void delete(final String id) {
-        this.eventsRepository.deleteById(id);
+        this.eventsRepository.deleteByPublicId(id);
     }
 
     public void update(final String id, final Event event) {

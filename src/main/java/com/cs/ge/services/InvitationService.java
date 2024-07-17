@@ -195,63 +195,52 @@ public class InvitationService {
         final UserAccount author = this.profileService.findById(event.getAuthorId());
         final Invitation invitation = event.getInvitation();
 
-        if (Strings.isNullOrEmpty(guest.getPhoneIndex()) && Strings.isNullOrEmpty(guest.getPhone())) {
-            log.info("#####################################");
-            log.info("Pas d'envoi de l'invitation : {} à {} {} {} phone {}{} pour l'évènement {}", invitation.getId(), guest.getId(), guest.getFirstName(), guest.getLastName(), guest.getPhoneIndex(), guest.getPhone(), event.getName());
-            log.info("#####################################");
-        } else {
-            log.info("Envoi de l'invitation : {} à {} {} {} phone {}{} pour l'évènement {}", invitation.getId(), guest.getId(), guest.getFirstName(), guest.getLastName(), guest.getPhoneIndex(), guest.getPhone(), event.getName());
+        final String image = this.getInvitation(event, guest, invitation);
+        try {
+            final String templateName = invitation.getTemplate().getName();
 
+            final byte[] decodedFile = Base64.getDecoder().decode(image);
+            final File fullPathAsFile = new File("tmp.image.jpg");
 
-            final String image = this.getInvitation(event, guest, invitation);
-            try {
-                final String templateName = invitation.getTemplate().getName();
+            FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
 
-                final byte[] decodedFile = Base64.getDecoder().decode(image);
-                final File fullPathAsFile = new File("tmp.image.jpg");
+            final String filePath = String.format("zeeven/tickets/%s/%s.jpg", event.getPublicId(), guest.getPublicId());
+            if (!Strings.isNullOrEmpty(filePath) && !Strings.isNullOrEmpty(image)) {
+                this.aSynchroniousNotifications.sendFile(
+                        Map.of(
+                                "file", image,
+                                "path", filePath
+                        )
+                );
 
-                FileUtils.writeByteArrayToFile(fullPathAsFile, decodedFile);
+                String template = event.getWhatsapp_template();
 
-                final String filePath = String.format("zeeven/tickets/%s/%s.jpg", event.getPublicId(), guest.getPublicId());
-                if (!Strings.isNullOrEmpty(filePath) && !Strings.isNullOrEmpty(image)) {
-                    this.aSynchroniousNotifications.sendFile(
-                            Map.of(
-                                    "file", image,
-                                    "path", filePath
-                            )
-                    );
-
-                    String template = event.getWhatsapp_template();
-
-                    if (Strings.isNullOrEmpty(event.getWhatsapp_template())) {
-                        template = "whatsappTemplateName";
-                    }
-                    final Map<String, Object> messageParameters = Map.of(
-                            "eventId", event.getPublicId(),
-                            "eventName", event.getName(),
-                            "image", String.format("%s/%s", this.applicationFilesHost, filePath),
-                            "guest", guest,
-                            "author", author,
-                            "application", "ZEEVEN",
-                            "notificationTemplate", templateName,
-                            "whatsappTemplateName", template,
-                            "invitation", invitation,
-                            "channels", invitation.getChannels()
-                    );
-                    this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
-
+                if (Strings.isNullOrEmpty(event.getWhatsapp_template())) {
+                    template = "whatsappTemplateName";
                 }
+                final Map<String, Object> messageParameters = Map.of(
+                        "eventId", event.getPublicId(),
+                        "eventName", event.getName(),
+                        "image", String.format("%s/%s", this.applicationFilesHost, filePath),
+                        "guest", guest,
+                        "author", author,
+                        "application", "ZEEVEN",
+                        "notificationTemplate", templateName,
+                        "whatsappTemplateName", template,
+                        "invitation", invitation,
+                        "channels", invitation.getChannels()
+                );
+                this.aSynchroniousNotifications.sendInvitationMessage(messageParameters);
 
-            } catch (final IOException e) {
-                e.printStackTrace();
             }
 
+        } catch (final IOException e) {
+            e.printStackTrace();
         }
-
 
     }
 
-    public String getInvitation(final Event event, final Guest guest, final Invitation invitation) {
+    String getInvitation(final Event event, final Guest guest, final Invitation invitation) {
         final QRCodeEntity qrCodeEntity = QRCodeEntity
                 .builder()
                 .type(QRCodeType.TEXT)

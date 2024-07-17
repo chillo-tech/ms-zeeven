@@ -3,12 +3,7 @@ package com.cs.ge.services.notifications;
 import com.cs.ge.dto.ApplicationNotification;
 import com.cs.ge.dto.MessageProfile;
 import com.cs.ge.dto.ProfileParams;
-import com.cs.ge.entites.ApplicationMessage;
-import com.cs.ge.entites.BaseApplicationMessage;
-import com.cs.ge.entites.Event;
-import com.cs.ge.entites.Guest;
-import com.cs.ge.entites.Profile;
-import com.cs.ge.entites.UserAccount;
+import com.cs.ge.entites.*;
 import com.cs.ge.enums.Channel;
 import com.cs.ge.enums.Civility;
 import com.cs.ge.feign.FileHandler;
@@ -61,139 +56,6 @@ public class ASynchroniousNotifications {
         this.notificationService = notificationService;
     }
 
-
-    @Async
-    public void sendEmail(
-            UserAccount author,
-            UserAccount recipient,
-            final Map<String, List<Object>> parameters,
-            final String appliation,
-            final String template,
-            final String message,
-            final String subject
-    ) {
-        ASynchroniousNotifications.log.info("[CONTROLLER] Envoi d'un code pour le nouveau mot de passe {}", template);
-        final UserAccount exp = new UserAccount();
-        exp.setLastName(this.administratorLastname);
-        exp.setFirstName(this.administratorFirstname);
-        exp.setEmail(this.administratoremail);
-        if (author == null) {
-            author = exp;
-        }
-        if (recipient == null) {
-            recipient = exp;
-        }
-        final MessageProfile expProfile = ASynchroniousNotifications.getUserInfos(
-                author.getId(),
-                author.getCivility(),
-                author.getFirstName(),
-                author.getLastName(),
-                author.getEmail(),
-                author.getPhone(),
-                author.getPhoneIndex(),
-                author.isTrial(),
-                author.getOthers()
-        );
-
-        final MessageProfile to = ASynchroniousNotifications.getUserInfos(
-                recipient.getId(),
-                recipient.getCivility(),
-                recipient.getFirstName(),
-                recipient.getLastName(),
-                recipient.getEmail(),
-                recipient.getPhone(),
-                recipient.getPhoneIndex(),
-                recipient.isTrial(),
-                author.getOthers()
-        );
-
-
-        final ApplicationNotification applicationNotification = new ApplicationNotification(
-                appliation,
-                template,
-                subject,
-                RandomStringUtils.random(8, true, true),
-                RandomStringUtils.random(8, true, true),
-                message,
-                parameters,
-                List.of(Channel.EMAIL),
-                expProfile,
-                List.of(to)
-        );
-
-        /*
-        final MessageProperties properties = new MessageProperties();
-        properties.setHeader("application", appliation);
-        properties.setHeader("type", "message");
-        final ObjectMapper objectMapper = new ObjectMapper();
-        ASynchroniousNotifications.log.info("Envoi de mail {}", appliation);
-        this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
-        ASynchroniousNotifications.log.info("Fin envoi de mail {}", appliation);
-        */
-
-        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
-        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
-    }
-
-    @Async
-    public void sendEventMessage(
-            final Event event,
-            final UserAccount author,
-            final BaseApplicationMessage applicationMessage,
-            final List<Channel> channelsToHandle,
-            final String template,
-            final Map<String, List<String>> extraParams
-    ) {
-        ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
-
-        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
-        params.put("trial", List.of(String.valueOf(author.isTrial())));
-        final ApplicationNotification applicationNotification = new ApplicationNotification(
-                "ZEEVEN",
-                template,
-                event.getName(),
-                event.getId(),
-                applicationMessage.getId(),
-                applicationMessage.getText(),
-                params,
-                channelsToHandle,
-                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
-                event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers())).collect(Collectors.toList()));
-/*
-        final MessageProperties properties = new MessageProperties();
-        properties.setHeader("action", "send");
-        final Gson gson = new Gson();
-        final String jsonString = gson.toJson(notification);
-       log.info("Envoi du message {}", jsonString);
-        this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
-        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
-*/
-        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
-
-        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
-    }
-
-
-    private static Notification applicationNotificationToNotification(final ApplicationNotification applicationNotification) {
-        final Notification notification = new Notification();
-        notification.setApplication(applicationNotification.getApplication());
-        notification.setTemplate(applicationNotification.getTemplate());
-        notification.setSubject(applicationNotification.getSubject());
-        notification.setEventId(applicationNotification.getEventId());
-        notification.setApplicationMessageId(applicationNotification.getApplicationMessageId());
-        notification.setMessage(applicationNotification.getMessage());
-        notification.setParams(applicationNotification.getParams());
-        notification.setChannels(ImmutableSet.copyOf(applicationNotification.getChannels()));
-        notification.setFrom(ASynchroniousNotifications.messageProfileToSender(applicationNotification.getFrom()));
-        notification.setContacts(
-                applicationNotification
-                        .getContacts()
-                        .stream()
-                        .map((MessageProfile pro) -> ASynchroniousNotifications.messageProfileToRecipient(pro)).collect(Collectors.toSet())
-        );
-        return notification;
-    }
-
     private static Sender messageProfileToSender(final MessageProfile messageProfile) {
         final Sender sender = new Sender();
         sender.setId(messageProfile.getId());
@@ -205,92 +67,6 @@ public class ASynchroniousNotifications {
         sender.setPhone(messageProfile.getPhone());
         sender.setOthers(messageProfile.getOthers());
         return sender;
-    }
-
-    private static Recipient messageProfileToRecipient(final MessageProfile messageProfile) {
-        final Recipient recipient = new Recipient();
-        recipient.setId(messageProfile.getId());
-        recipient.setCivility(messageProfile.getCivility());
-        recipient.setEmail(messageProfile.getEmail());
-        recipient.setFirstName(messageProfile.getFirstName());
-        recipient.setLastName(messageProfile.getLastName());
-        recipient.setPhoneIndex(messageProfile.getPhoneIndex());
-        recipient.setPhone(messageProfile.getPhone());
-        recipient.setOthers(messageProfile.getOthers());
-        return recipient;
-    }
-
-    public void sendEventMessageToContact(
-            final Event event,
-            final UserAccount author,
-            final Guest guest,
-            final BaseApplicationMessage applicationMessage,
-            final List<Channel> channelsToHandle,
-            final String template,
-            final Map<String, List<String>> extraParams
-    ) {
-        ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
-
-        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
-        params.put("trial", List.of(String.valueOf(author.isTrial())));
-        final ApplicationNotification applicationNotification = new ApplicationNotification(
-                "ZEEVEN",
-                template,
-                event.getName(),
-                event.getId(),
-                applicationMessage.getId(),
-                applicationMessage.getText(),
-                params,
-                channelsToHandle,
-                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
-                List.of(ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers()))
-        );
-/*
-        final MessageProperties properties = new MessageProperties();
-        properties.setHeader("action", "send");
-        final Gson gson = new Gson();
-        final String jsonString = gson.toJson(notification);
-        ASynchroniousNotifications.log.info("Envoi du message {}", jsonString);
-        this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
-        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
-*/
-
-        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
-
-        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
-    }
-
-    public void sendPaymentConfirmationMessage(final Event event, final ApplicationMessage applicationMessage, final List<Channel> channelsToHandle) {
-        ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
-
-        final UserAccount author = this.profileService.findById(event.getAuthorId());
-
-        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
-        params.put("trial", List.of(String.valueOf(author.isTrial())));
-        final ApplicationNotification applicationNotification = new ApplicationNotification(
-                "ZEEVEN",
-                null,
-                event.getName(),
-                event.getId(),
-                applicationMessage.getId(),
-                applicationMessage.getText(),
-                params,
-                channelsToHandle,
-                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), null),
-                event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), null)).collect(Collectors.toList()));
-/*
-        final MessageProperties properties = new MessageProperties();
-        properties.setHeader("application", "ZEEVEN");
-        properties.setHeader("type", "message");
-        final Gson gson = new Gson();
-        final String jsonString = gson.toJson(notification);
-        final ObjectMapper objectMapper = new ObjectMapper();
-        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
-*/
-
-        final Notification notification = ASynchroniousNotifications.applicationNotificationToNotification(applicationNotification);
-
-        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
     private static MessageProfile getUserInfos(
@@ -374,6 +150,223 @@ public class ASynchroniousNotifications {
             index++;
         }
         return parameters;
+    }
+
+    private Recipient messageProfileToRecipient(final MessageProfile messageProfile) {
+        final Recipient recipient = new Recipient();
+        recipient.setId(messageProfile.getId());
+        recipient.setCivility(messageProfile.getCivility());
+        recipient.setEmail(messageProfile.getEmail());
+        recipient.setFirstName(messageProfile.getFirstName());
+        recipient.setLastName(messageProfile.getLastName());
+        recipient.setPhoneIndex(messageProfile.getPhoneIndex());
+        recipient.setPhone(messageProfile.getPhone());
+        recipient.setOthers(messageProfile.getOthers());
+        return recipient;
+    }
+
+    @Async
+    public void sendEmail(
+            UserAccount author,
+            UserAccount recipient,
+            final Map<String, List<Object>> parameters,
+            final String appliation,
+            final String template,
+            final String message,
+            final String subject
+    ) {
+        ASynchroniousNotifications.log.info("[CONTROLLER] Envoi d'un code pour le nouveau mot de passe {}", template);
+        final UserAccount exp = new UserAccount();
+        exp.setLastName(this.administratorLastname);
+        exp.setFirstName(this.administratorFirstname);
+        exp.setEmail(this.administratoremail);
+        if (author == null) {
+            author = exp;
+        }
+        if (recipient == null) {
+            recipient = exp;
+        }
+        final MessageProfile expProfile = ASynchroniousNotifications.getUserInfos(
+                author.getId(),
+                author.getCivility(),
+                author.getFirstName(),
+                author.getLastName(),
+                author.getEmail(),
+                author.getPhone(),
+                author.getPhoneIndex(),
+                author.isTrial(),
+                author.getOthers()
+        );
+
+        final MessageProfile to = ASynchroniousNotifications.getUserInfos(
+                recipient.getId(),
+                recipient.getCivility(),
+                recipient.getFirstName(),
+                recipient.getLastName(),
+                recipient.getEmail(),
+                recipient.getPhone(),
+                recipient.getPhoneIndex(),
+                recipient.isTrial(),
+                author.getOthers()
+        );
+
+
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
+                appliation,
+                template,
+                subject,
+                RandomStringUtils.random(8, true, true),
+                RandomStringUtils.random(8, true, true),
+                message,
+                parameters,
+                List.of(Channel.EMAIL),
+                expProfile,
+                List.of(to)
+        );
+
+        /*
+        final MessageProperties properties = new MessageProperties();
+        properties.setHeader("application", appliation);
+        properties.setHeader("type", "message");
+        final ObjectMapper objectMapper = new ObjectMapper();
+        ASynchroniousNotifications.log.info("Envoi de mail {}", appliation);
+        this.rabbitTemplate.convertAndSend(new Message(objectMapper.writeValueAsBytes(notification), properties));
+        ASynchroniousNotifications.log.info("Fin envoi de mail {}", appliation);
+        */
+
+        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
+    }
+
+    @Async
+    public void sendEventMessage(
+            final Event event,
+            final UserAccount author,
+            final BaseApplicationMessage applicationMessage,
+            final List<Channel> channelsToHandle,
+            final String template,
+            final Map<String, List<String>> extraParams
+    ) {
+        ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
+
+        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        params.put("trial", List.of(String.valueOf(author.isTrial())));
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
+                "ZEEVEN",
+                template,
+                event.getName(),
+                event.getId(),
+                applicationMessage.getId(),
+                applicationMessage.getText(),
+                params,
+                channelsToHandle,
+                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
+                event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers())).collect(Collectors.toList()));
+/*
+        final MessageProperties properties = new MessageProperties();
+        properties.setHeader("action", "send");
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(notification);
+       log.info("Envoi du message {}", jsonString);
+        this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+*/
+        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
+    }
+
+    private Notification applicationNotificationToNotification(final ApplicationNotification applicationNotification) {
+        final Notification notification = new Notification();
+        notification.setApplication(applicationNotification.getApplication());
+        notification.setTemplate(applicationNotification.getTemplate());
+        notification.setSubject(applicationNotification.getSubject());
+        notification.setEventId(applicationNotification.getEventId());
+        notification.setApplicationMessageId(applicationNotification.getApplicationMessageId());
+        notification.setMessage(applicationNotification.getMessage());
+        notification.setParams(applicationNotification.getParams());
+        notification.setChannels(ImmutableSet.copyOf(applicationNotification.getChannels()));
+        notification.setFrom(ASynchroniousNotifications.messageProfileToSender(applicationNotification.getFrom()));
+        notification.setContacts(
+                applicationNotification
+                        .getContacts()
+                        .stream()
+                        .map((MessageProfile pro) -> this.messageProfileToRecipient(pro)).collect(Collectors.toSet())
+        );
+        return notification;
+    }
+
+    public void sendEventMessageToContact(
+            final Event event,
+            final UserAccount author,
+            final Guest guest,
+            final BaseApplicationMessage applicationMessage,
+            final List<Channel> channelsToHandle,
+            final String template,
+            final Map<String, List<String>> extraParams
+    ) {
+        log.info("ApplicationNotification du message de {}", applicationMessage.getId());
+
+        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        params.put("trial", List.of(String.valueOf(author.isTrial())));
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
+                "ZEEVEN",
+                template,
+                event.getName(),
+                event.getId(),
+                applicationMessage.getId(),
+                applicationMessage.getText(),
+                params,
+                channelsToHandle,
+                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
+                List.of(ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers()))
+        );
+/*
+        final MessageProperties properties = new MessageProperties();
+        properties.setHeader("action", "send");
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(notification);
+        ASynchroniousNotifications.log.info("Envoi du message {}", jsonString);
+        this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+*/
+
+        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
+    }
+
+    public void sendPaymentConfirmationMessage(final Event event, final ApplicationMessage applicationMessage, final List<Channel> channelsToHandle) {
+        log.info("ApplicationNotification du message de {}", applicationMessage.getId());
+
+        final UserAccount author = this.profileService.findById(event.getAuthorId());
+
+        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        params.put("trial", List.of(String.valueOf(author.isTrial())));
+        final ApplicationNotification applicationNotification = new ApplicationNotification(
+                "ZEEVEN",
+                null,
+                event.getName(),
+                event.getId(),
+                applicationMessage.getId(),
+                applicationMessage.getText(),
+                params,
+                channelsToHandle,
+                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), null),
+                event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), null)).collect(Collectors.toList()));
+/*
+        final MessageProperties properties = new MessageProperties();
+        properties.setHeader("application", "ZEEVEN");
+        properties.setHeader("type", "message");
+        final Gson gson = new Gson();
+        final String jsonString = gson.toJson(notification);
+        final ObjectMapper objectMapper = new ObjectMapper();
+        this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
+*/
+
+        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+
+        this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
     public void sendInvitationMessage(final Map<String, Object> messageParameters) throws JsonProcessingException {

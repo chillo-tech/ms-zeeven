@@ -37,7 +37,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @Configuration
 @EnableConfigurationProperties(RsaConfigurationProperties.class)
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class ZeevenSecurityConfiguration {
 
     private final ProfileService profileService;

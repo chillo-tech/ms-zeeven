@@ -2,16 +2,13 @@ package com.cs.ge.notifications.service.whatsapp;
 
 import com.cs.ge.entites.Guest;
 import com.cs.ge.entites.Invitation;
-import com.cs.ge.entites.Schedule;
 import com.cs.ge.entites.UserAccount;
 import com.cs.ge.enums.Channel;
-import com.cs.ge.enums.Civility;
 import com.cs.ge.notifications.entity.*;
 import com.cs.ge.notifications.entity.template.Template;
 import com.cs.ge.notifications.entity.template.TemplateComponent;
 import com.cs.ge.notifications.entity.template.TemplateExample;
 import com.cs.ge.notifications.entity.template.WhatsAppTemplate;
-import com.cs.ge.notifications.enums.Application;
 import com.cs.ge.notifications.repository.NotificationTemplateRepository;
 import com.cs.ge.notifications.repository.TemplateRepository;
 import com.cs.ge.notifications.repository.TemplateStatusRepository;
@@ -19,9 +16,6 @@ import com.cs.ge.notifications.service.NotificationMapper;
 import com.cs.ge.notifications.service.whatsapp.dto.Component;
 import com.cs.ge.notifications.service.whatsapp.dto.Image;
 import com.cs.ge.notifications.service.whatsapp.dto.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -34,14 +28,13 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.cs.ge.enums.Channel.WHATSAPP;
-import static com.cs.ge.notifications.data.ApplicationData.CIVILITY_MAPPING;
 import static com.cs.ge.notifications.data.ApplicationData.FOOTER_TEXT;
 import static com.cs.ge.notifications.enums.TemplateCategory.UTILITY;
 import static com.cs.ge.notifications.enums.TemplateComponentType.BODY;
@@ -107,30 +100,12 @@ public class WhatsappService extends NotificationMapper {
         }
     }
 
-    private static String formatName(final Civility civility, final String firstName, final String lastName) {
-        String name = "";
-
-        if (!Strings.isNullOrEmpty(firstName)) {
-            name = String.format("%s%s%s", name, String.valueOf(firstName.charAt(0)).toUpperCase(), firstName.substring(1).toLowerCase());
-        }
-
-        if (!Strings.isNullOrEmpty(lastName)) {
-            name = String.format("%s %s", name, lastName.toUpperCase());
-        }
-
-        if (civility != null && CIVILITY_MAPPING.get(civility) != null && !Strings.isNullOrEmpty(CIVILITY_MAPPING.get(civility))) {
-            name = String.format("%s %s", CIVILITY_MAPPING.get(civility), name);
-        }
-
-        return name;
-    }
-
-    private static List<Parameter> getBodyComponentParameters(final String notificationTemplate, final UserAccount sender, final Guest to, final String eventName, final List<String> mappedSchedules, final com.cs.ge.entites.Template template) {
+    private List<Parameter> getBodyComponentParameters(final String notificationTemplate, final UserAccount sender, final Guest to, final String eventName, final List<String> mappedSchedules, final com.cs.ge.entites.Template template) {
         if (notificationTemplate.equals("ze_weeding_invitation")) {
             return List.of(
                     new Parameter(
                             "text",
-                            WhatsappService.formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
+                            this.formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
                             null
                     ),
                     new Parameter(
@@ -148,7 +123,7 @@ public class WhatsappService extends NotificationMapper {
                     ),
                     new Parameter(
                             "text",
-                            WhatsappService.formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()).trim(),
+                            this.formatName(sender.getCivility(), sender.getFirstName(), sender.getLastName()).trim(),
                             null
                     )
             );
@@ -156,7 +131,7 @@ public class WhatsappService extends NotificationMapper {
         return List.of(
                 new Parameter(
                         "text",
-                        WhatsappService.formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
+                        this.formatName(to.getCivility(), to.getFirstName(), to.getLastName()).trim(),
                         null
                 ),
                 new Parameter(
@@ -179,7 +154,7 @@ public class WhatsappService extends NotificationMapper {
                 ),
                 new Parameter(
                         "text",
-                        WhatsappService.formatName(null, sender.getFirstName(), sender.getLastName()).trim(),
+                        this.formatName(null, sender.getFirstName(), sender.getLastName()).trim(),
                         null
                 )
         );
@@ -360,39 +335,13 @@ public class WhatsappService extends NotificationMapper {
         return whatsAppResponse;
     }
 
-    public List<NotificationStatus> sendFromParams(final Map<String, Object> notificationParams, final Channel channel) {
-        final Invitation invitation = (Invitation) notificationParams.get("invitation");
+    public List<NotificationStatus> sendFromParams(final String eventName, final Invitation invitation, final Guest to, final Map<String, Object> notificationParams, final Channel channel) {
         final com.cs.ge.entites.Template template = invitation.getTemplate();
         final String whatsappTemplateName = (String) notificationParams.get("whatsappTemplateName");
-        final String notificationTemplate = (String) notificationParams.get("notificationTemplate");
-        final String eventName = (String) notificationParams.get("eventName");
-        final String application = (String) notificationParams.get("application");
 
-        final Guest to = (Guest) notificationParams.get("guest");
         final UserAccount sender = (UserAccount) notificationParams.get("author");
 
-        final Map<String, String> body = Map.of(
-                "body", String.format("%s", template.getText())
-        );
-        final NotificationTemplate templateFromDatabase = this.notificationTemplateRepository
-                .findByApplicationAndName(
-                        application,
-                        notificationTemplate
-                )
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Aucun template %s n'existe pour %s", Application.valueOf(application), notificationTemplate)));
-        final Set<Schedule> schedules = template.getSchedules();
-
-        final ObjectMapper oMapper = new ObjectMapper()
-                .findAndRegisterModules()
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        final List<String> mappedSchedules = schedules.stream().map(schedule -> {
-            final Map<String, Object> map = oMapper.convertValue(schedule, Map.class);
-            final String invitationDate = String.valueOf(map.get("date"));
-
-            final LocalDateTime dateTime = LocalDateTime.parse(invitationDate.substring(0, invitationDate.indexOf('Z')));
-            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return dateTime.format(formatter); // "1986-04-08 12:30"
-        }).collect(Collectors.toList());
+        final List<String> mappedSchedules = this.getMappedSchedules(template);
 
         final Component headerCompoenent = new Component();
         headerCompoenent.setType("header");
@@ -406,7 +355,7 @@ public class WhatsappService extends NotificationMapper {
 
         final Component bodyComponent = new Component();
         bodyComponent.setType("body");
-        final List<Parameter> bodyComponentParameters = WhatsappService.getBodyComponentParameters(whatsappTemplateName, sender, to, eventName, mappedSchedules, template);
+        final List<Parameter> bodyComponentParameters = this.getBodyComponentParameters(whatsappTemplateName, sender, to, eventName, mappedSchedules, template);
         bodyComponent.setParameters(bodyComponentParameters);
 
 
@@ -442,9 +391,9 @@ public class WhatsappService extends NotificationMapper {
     protected String processTemplate(final String application, final String template, final Map<String, List<Object>> params) {
         final String messageToSend;
         final NotificationTemplate notificationTemplate = this.notificationTemplateRepository
-                .findByApplicationAndName(application, template)
+                .findByApplicationAndNameAndTypeIn(application, template, List.of(WHATSAPP))
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Aucun template %s n'existe pour %s", template, application)));
-        messageToSend = NotificationMapper.processTemplate(params, notificationTemplate.getContent(), WHATSAPP);
+        messageToSend = this.processTemplate(params, notificationTemplate.getContent(), WHATSAPP);
         return messageToSend;
     }
 }

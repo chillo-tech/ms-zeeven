@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static java.lang.String.format;
 
@@ -16,27 +15,27 @@ import static java.lang.String.format;
 public class NotificationTemplateService {
     private NotificationTemplateRepository notificationTemplateRepository;
 
-    private void checkTemplates(NotificationTemplate template) {
+    private void checkTemplates(final NotificationTemplate template) {
 
-            final Optional<NotificationTemplate> templateInBDD = this.notificationTemplateRepository
-                    .findByApplicationAndNameAndVersionAndType(
-                            template.getApplication(),
+        final Optional<NotificationTemplate> templateInBDD = this.notificationTemplateRepository
+                .findByApplicationAndNameAndVersionAndType(
+                        template.getApplication(),
+                        template.getName(),
+                        template.getVersion(),
+                        template.getType()
+
+                );
+        if (templateInBDD.isPresent()) {
+            throw new IllegalArgumentException(
+                    format("un template existe déjà avec les paramètres application %s name %s version %s type %s", template.getApplication(),
                             template.getName(),
                             template.getVersion(),
-                            template.getType()
-
-                    );
-            if (templateInBDD.isPresent()) {
-                throw new IllegalArgumentException(
-                        format("un template existe déjà avec les paramètres application %s name %s version %s type %s", template.getApplication(),
-                                template.getName(),
-                                template.getVersion(),
-                                template.getType()));
-            }
+                            template.getType()));
+        }
 
     }
 
-    public void create(NotificationTemplate template) {
+    public void create(final NotificationTemplate template) {
         this.checkTemplates(template);
         this.notificationTemplateRepository.save(template);
     }
@@ -53,7 +52,16 @@ public class NotificationTemplateService {
     }
 
     public List<NotificationTemplate> search() {
-        return this.notificationTemplateRepository.findAll();
+        final List<NotificationTemplate> notificationTemplates = this.notificationTemplateRepository.findAll();
+        return notificationTemplates.stream().map(
+                notificationTemplate -> NotificationTemplate.builder()
+                        .id(notificationTemplate.getId())
+                        .name(notificationTemplate.getName())
+                        .application(notificationTemplate.getApplication())
+                        .version(notificationTemplate.getVersion())
+                        .type(notificationTemplate.getType())
+                        .build()
+        ).toList();
     }
 
     public void delete(final String id) {

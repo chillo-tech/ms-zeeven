@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface NotificationTemplateRepository extends MongoRepository<NotificationTemplate, String> {
 
-    Optional<NotificationTemplate> findByApplicationAndName(String application, String name);
+    Optional<NotificationTemplate> findByApplicationAndNameAndTypeIn(String application, String name, List<Channel> channel);
 
     Optional<NotificationTemplate> findByApplicationAndNameAndVersionAndType(String application, String name, int version, Channel type);
 

@@ -4,6 +4,7 @@ import com.cs.ge.enums.Channel;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Builder
 @Getter
 @Setter
 @AllArgsConstructor
@@ -23,7 +25,9 @@ public class Notification {
     @Id
     private String id;
     private String message;
+    private String image;
     private String subject;
+    private String date;
     private String eventId;
     private String applicationMessageId;
     private String application;

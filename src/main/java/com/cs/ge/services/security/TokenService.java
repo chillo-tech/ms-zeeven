@@ -26,17 +26,17 @@ public class TokenService {
 
     public String generateToken(final Authentication profile) {
         final Map<String, Object> claims = new HashMap<>();
-        ObjectMapper oMapper = new ObjectMapper();
-        Map<String, String> infos = oMapper.convertValue(profile.getPrincipal(), Map.class);
+        final ObjectMapper oMapper = new ObjectMapper();
+        final Map<String, String> infos = oMapper.convertValue(profile.getPrincipal(), Map.class);
         claims.put("lastName", infos.get("lastName"));
         claims.put("firstName", infos.get("firstName"));
         claims.put("name", infos.get("firstName") + " " + infos.get("lastName"));
         claims.put("email", infos.get("email"));
-        Instant now = Instant.now();
-        String scope = profile.getAuthorities()
+        final Instant now = Instant.now();
+        final String scope = profile.getAuthorities()
                 .stream().map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
-        JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
+        final JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
                 .expiresAt(now.plus(6, ChronoUnit.HOURS))
@@ -47,20 +47,20 @@ public class TokenService {
                 .encode(JwtEncoderParameters.from(jwtClaimsSet)).getTokenValue();
     }
 
-    public String getUsernameFromToken(String token) {
+    public String getUsernameFromToken(final String token) {
         return this.jwtDecoder.decode(token).getClaim("email");
     }
 
-    public Instant getExpirationDateFromToken(String token) {
+    private Instant getExpirationDateFromToken(final String token) {
         return this.jwtDecoder.decode(token).getExpiresAt();
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Boolean validateToken(final String token, final UserDetails userDetails) {
         final String username = this.getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !this.isTokenExpired(token));
     }
 
-    private Boolean isTokenExpired(String token) {
+    private Boolean isTokenExpired(final String token) {
         final Instant expiration = this.getExpirationDateFromToken(token);
         return expiration.isBefore(Instant.now());
     }

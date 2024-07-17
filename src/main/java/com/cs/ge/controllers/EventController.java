@@ -29,15 +29,8 @@ public class EventController {
     public void add(@RequestBody final Event event) {
         this.eventService.add(event);
     }
-
-    /*
-       @ResponseStatus
-               (HttpStatus.CREATED)
-       @PostMapping
-       public void add(@RequestBody final Map<String, String> event) {
-           this.eventService.add(event);
-       }
-   */
+    
+    //@PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(value = "/{id}")
     public void delete(@PathVariable final String id) {
         this.eventService.delete(id);

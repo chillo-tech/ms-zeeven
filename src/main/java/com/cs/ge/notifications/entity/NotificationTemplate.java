@@ -1,13 +1,15 @@
 package com.cs.ge.notifications.entity;
 
 import com.cs.ge.enums.Channel;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 @EqualsAndHashCode
 @ToString(callSuper = true)
 @Document("NOTIFICATION_TEMPLATE")

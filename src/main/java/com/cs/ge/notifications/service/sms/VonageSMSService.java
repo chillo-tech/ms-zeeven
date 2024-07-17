@@ -99,7 +99,7 @@ public class VonageSMSService {
 
                 if (!Strings.isNullOrEmpty(notification.getTemplate())) {
                     final NotificationTemplate notificationTemplate = this.notificationTemplateRepository
-                            .findByApplicationAndName(notification.getApplication(), notification.getTemplate())
+                            .findByApplicationAndNameAndTypeIn(notification.getApplication(), notification.getTemplate(), List.of(Channel.SMS))
                             .orElseThrow(() -> new IllegalArgumentException(String.format("Aucun template %s n'existe pour %s", notification.getTemplate(), notification.getApplication())));
                     //final String template = this.textTemplateEngine.process(notificationTemplate.getContent(), context);
                     messageToSend = VonageSMSService.processTemplate(params, notificationTemplate.getContent());
