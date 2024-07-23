@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,7 +90,7 @@ public class MailService extends NotificationMapper {
             firstName = format("%s%s", firstName.substring(0, 1).toUpperCase(), firstName.substring(1).toLowerCase());
         }
 
-        List<Map<String, String>> attachment = new ArrayList<>();
+        List<Map<String, String>> attachment = null;
         if (!Strings.isNullOrEmpty(notification.getImage())) {
             attachment = List.of(Map.of("url", notification.getImage()));
         }

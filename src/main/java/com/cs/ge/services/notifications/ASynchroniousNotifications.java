@@ -186,7 +186,7 @@ public class ASynchroniousNotifications {
         if (recipient == null) {
             recipient = exp;
         }
-        final MessageProfile expProfile = ASynchroniousNotifications.getUserInfos(
+        final MessageProfile expProfile = this.getUserInfos(
                 author.getId(),
                 author.getCivility(),
                 author.getFirstName(),
@@ -198,7 +198,7 @@ public class ASynchroniousNotifications {
                 author.getOthers()
         );
 
-        final MessageProfile to = ASynchroniousNotifications.getUserInfos(
+        final MessageProfile to = this.getUserInfos(
                 recipient.getId(),
                 recipient.getCivility(),
                 recipient.getFirstName(),
