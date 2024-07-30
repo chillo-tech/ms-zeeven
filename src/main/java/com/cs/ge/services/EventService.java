@@ -326,7 +326,10 @@ public class EventService {
     }
 
     public void delete(final String id) {
-        this.eventsRepository.deleteByPublicId(id);
+        final UserAccount userAccount = this.profileService.getAuthenticateUser();
+        if (userAccount.getRole().equals(Role.ADMIN) || userAccount.getRole().equals(Role.SUPER_ADMIN)) {
+            this.eventsRepository.deleteByPublicId(id);
+        }
     }
 
     public void update(final String id, final Event event) {

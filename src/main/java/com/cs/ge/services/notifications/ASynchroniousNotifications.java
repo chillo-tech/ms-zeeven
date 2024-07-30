@@ -2,18 +2,14 @@ package com.cs.ge.services.notifications;
 
 import com.cs.ge.dto.ApplicationNotification;
 import com.cs.ge.dto.MessageProfile;
-import com.cs.ge.dto.ProfileParams;
 import com.cs.ge.entites.*;
 import com.cs.ge.enums.Channel;
-import com.cs.ge.enums.Civility;
 import com.cs.ge.feign.FileHandler;
 import com.cs.ge.notifications.entity.Notification;
-import com.cs.ge.notifications.entity.Recipient;
-import com.cs.ge.notifications.entity.Sender;
 import com.cs.ge.notifications.service.NotificationService;
 import com.cs.ge.services.ProfileService;
+import com.cs.ge.services.shared.SharedService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,14 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 @Service
@@ -40,6 +34,7 @@ public class ASynchroniousNotifications {
     private final String administratoremail;
     private final FileHandler fIleHandler;
     private final ProfileService profileService;
+    private final SharedService sharedService;
 
     public ASynchroniousNotifications(
             final FileHandler fIleHandler,
@@ -47,55 +42,16 @@ public class ASynchroniousNotifications {
             @Value("${app.administrator.firstname}") final String administratorFirstname,
             @Value("${app.administrator.lastname}") final String administratorLastname,
             @Value("${app.administrator.email}") final String administratoremail,
-            final ProfileService profileService) {
+            final ProfileService profileService, final SharedService sharedService) {
         this.fIleHandler = fIleHandler;
         this.administratorFirstname = administratorFirstname;
         this.administratorLastname = administratorLastname;
         this.administratoremail = administratoremail;
         this.profileService = profileService;
         this.notificationService = notificationService;
+        this.sharedService = sharedService;
     }
 
-    private static Sender messageProfileToSender(final MessageProfile messageProfile) {
-        final Sender sender = new Sender();
-        sender.setId(messageProfile.getId());
-        sender.setCivility(messageProfile.getCivility());
-        sender.setEmail(messageProfile.getEmail());
-        sender.setFirstName(messageProfile.getFirstName());
-        sender.setLastName(messageProfile.getLastName());
-        sender.setPhoneIndex(messageProfile.getPhoneIndex());
-        sender.setPhone(messageProfile.getPhone());
-        sender.setOthers(messageProfile.getOthers());
-        return sender;
-    }
-
-    private static MessageProfile getUserInfos(
-            final String id,
-            final Civility civility,
-            final String firstName,
-            final String lastName,
-            final String email,
-            final String phone,
-            final String phoneIndex,
-            final boolean trial,
-            final List<ProfileParams> others
-    ) {
-        String finalCivility = "";
-        if (civility != null) {
-            finalCivility = civility.name();
-        }
-        return new MessageProfile(
-                id,
-                finalCivility,
-                firstName,
-                lastName,
-                email,
-                phoneIndex,
-                phone,
-                trial,
-                others
-        );
-    }
 
     private static Map<String, String> userAsMap(final Profile profile) {
         final Map<String, String> from = new HashMap();
@@ -122,49 +78,6 @@ public class ASynchroniousNotifications {
         return textWithVariables;
     }
 
-    private static Map<String, List<Object>> messageParameters(final BaseApplicationMessage applicationMessage) {
-
-        final String textWithVariables = applicationMessage.getText();
-        final Pattern pattern = Pattern.compile("\\{\\{\\w+}}");
-        final Matcher matcher = pattern.matcher(textWithVariables);
-        int index = 0;
-        final Map<String, List<Object>> parameters = new HashMap<>();
-        while (matcher.find()) {
-            final String searchString = matcher.group();
-            final String replacement = applicationMessage.getInformations().get(index);
-            if (!searchString.equals(replacement)) {
-                final String key = searchString
-                        .replaceAll(Pattern.quote("{{"), Matcher.quoteReplacement(""))
-                        .replaceAll(Pattern.quote("}}"), Matcher.quoteReplacement(""));
-                if (parameters.containsKey(key)) {
-                    parameters.put(
-                            key,
-                            Stream.of(parameters.get(key), List.of(replacement))
-                                    .flatMap(Collection::stream)
-                                    .collect(Collectors.toList())
-                    );
-                } else {
-                    parameters.put(key, List.of(replacement));
-                }
-            }
-            index++;
-        }
-        return parameters;
-    }
-
-    private Recipient messageProfileToRecipient(final MessageProfile messageProfile) {
-        final Recipient recipient = new Recipient();
-        recipient.setId(messageProfile.getId());
-        recipient.setCivility(messageProfile.getCivility());
-        recipient.setEmail(messageProfile.getEmail());
-        recipient.setFirstName(messageProfile.getFirstName());
-        recipient.setLastName(messageProfile.getLastName());
-        recipient.setPhoneIndex(messageProfile.getPhoneIndex());
-        recipient.setPhone(messageProfile.getPhone());
-        recipient.setOthers(messageProfile.getOthers());
-        return recipient;
-    }
-
     @Async
     public void sendEmail(
             UserAccount author,
@@ -186,29 +99,8 @@ public class ASynchroniousNotifications {
         if (recipient == null) {
             recipient = exp;
         }
-        final MessageProfile expProfile = this.getUserInfos(
-                author.getId(),
-                author.getCivility(),
-                author.getFirstName(),
-                author.getLastName(),
-                author.getEmail(),
-                author.getPhone(),
-                author.getPhoneIndex(),
-                author.isTrial(),
-                author.getOthers()
-        );
-
-        final MessageProfile to = this.getUserInfos(
-                recipient.getId(),
-                recipient.getCivility(),
-                recipient.getFirstName(),
-                recipient.getLastName(),
-                recipient.getEmail(),
-                recipient.getPhone(),
-                recipient.getPhoneIndex(),
-                recipient.isTrial(),
-                author.getOthers()
-        );
+        final MessageProfile expProfile = this.sharedService.userAccountToMessageProfile(author);
+        final MessageProfile to = this.sharedService.userAccountToMessageProfile(recipient);
 
 
         final ApplicationNotification applicationNotification = new ApplicationNotification(
@@ -234,7 +126,7 @@ public class ASynchroniousNotifications {
         ASynchroniousNotifications.log.info("Fin envoi de mail {}", appliation);
         */
 
-        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+        final Notification notification = this.sharedService.applicationNotificationToNotification(applicationNotification);
         this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
@@ -249,7 +141,7 @@ public class ASynchroniousNotifications {
     ) {
         ASynchroniousNotifications.log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
-        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        final Map<String, List<Object>> params = this.sharedService.messageParameters(applicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
         final ApplicationNotification applicationNotification = new ApplicationNotification(
                 "ZEEVEN",
@@ -260,8 +152,8 @@ public class ASynchroniousNotifications {
                 applicationMessage.getText(),
                 params,
                 channelsToHandle,
-                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
-                event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers())).collect(Collectors.toList()));
+                this.sharedService.userAccountToMessageProfile(author),
+                event.getGuests().parallelStream().map(guest -> this.sharedService.guestToMessageProfile(guest)).collect(Collectors.toList()));
 /*
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("action", "send");
@@ -271,30 +163,11 @@ public class ASynchroniousNotifications {
         this.rabbitTemplate.setExchange(this.applicationMessagesSendExchange);
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
 */
-        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+        final Notification notification = this.sharedService.applicationNotificationToNotification(applicationNotification);
 
         this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
 
-    private Notification applicationNotificationToNotification(final ApplicationNotification applicationNotification) {
-        final Notification notification = new Notification();
-        notification.setApplication(applicationNotification.getApplication());
-        notification.setTemplate(applicationNotification.getTemplate());
-        notification.setSubject(applicationNotification.getSubject());
-        notification.setEventId(applicationNotification.getEventId());
-        notification.setApplicationMessageId(applicationNotification.getApplicationMessageId());
-        notification.setMessage(applicationNotification.getMessage());
-        notification.setParams(applicationNotification.getParams());
-        notification.setChannels(ImmutableSet.copyOf(applicationNotification.getChannels()));
-        notification.setFrom(ASynchroniousNotifications.messageProfileToSender(applicationNotification.getFrom()));
-        notification.setContacts(
-                applicationNotification
-                        .getContacts()
-                        .stream()
-                        .map((MessageProfile pro) -> this.messageProfileToRecipient(pro)).collect(Collectors.toSet())
-        );
-        return notification;
-    }
 
     public void sendEventMessageToContact(
             final Event event,
@@ -307,7 +180,7 @@ public class ASynchroniousNotifications {
     ) {
         log.info("ApplicationNotification du message de {}", applicationMessage.getId());
 
-        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        final Map<String, List<Object>> params = this.sharedService.messageParameters(applicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
         final ApplicationNotification applicationNotification = new ApplicationNotification(
                 "ZEEVEN",
@@ -318,8 +191,9 @@ public class ASynchroniousNotifications {
                 applicationMessage.getText(),
                 params,
                 channelsToHandle,
-                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), author.getOthers()),
-                List.of(ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), guest.getOthers()))
+
+                this.sharedService.userAccountToMessageProfile(author),
+                List.of(this.sharedService.guestToMessageProfile(guest))
         );
 /*
         final MessageProperties properties = new MessageProperties();
@@ -331,7 +205,7 @@ public class ASynchroniousNotifications {
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
 */
 
-        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+        final Notification notification = this.sharedService.applicationNotificationToNotification(applicationNotification);
 
         this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }
@@ -341,7 +215,7 @@ public class ASynchroniousNotifications {
 
         final UserAccount author = this.profileService.findById(event.getAuthorId());
 
-        final Map<String, List<Object>> params = ASynchroniousNotifications.messageParameters(applicationMessage);
+        final Map<String, List<Object>> params = this.sharedService.messageParameters(applicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
         final ApplicationNotification applicationNotification = new ApplicationNotification(
                 "ZEEVEN",
@@ -352,8 +226,10 @@ public class ASynchroniousNotifications {
                 applicationMessage.getText(),
                 params,
                 channelsToHandle,
-                ASynchroniousNotifications.getUserInfos(author.getId(), author.getCivility(), author.getFirstName(), author.getLastName(), author.getEmail(), author.getPhone(), author.getPhoneIndex(), author.isTrial(), null),
-                event.getGuests().parallelStream().map(guest -> ASynchroniousNotifications.getUserInfos(guest.getId(), guest.getCivility(), guest.getFirstName(), guest.getLastName(), guest.getEmail(), guest.getPhone(), guest.getPhoneIndex(), guest.isTrial(), null)).collect(Collectors.toList()));
+
+                this.sharedService.userAccountToMessageProfile(author),
+                event.getGuests().parallelStream().map(guest ->
+                        this.sharedService.guestToMessageProfile(guest)).collect(Collectors.toList()));
 /*
         final MessageProperties properties = new MessageProperties();
         properties.setHeader("application", "ZEEVEN");
@@ -364,7 +240,7 @@ public class ASynchroniousNotifications {
         this.rabbitTemplate.convertAndSend(new Message(jsonString.getBytes(), properties));
 */
 
-        final Notification notification = this.applicationNotificationToNotification(applicationNotification);
+        final Notification notification = this.sharedService.applicationNotificationToNotification(applicationNotification);
 
         this.notificationService.send(notification.getApplication(), notification, notification.getChannels().stream().toList());
     }

@@ -13,6 +13,7 @@ import com.cs.ge.notifications.records.brevo.Contact;
 import com.cs.ge.notifications.records.brevo.Message;
 import com.cs.ge.notifications.repository.NotificationTemplateRepository;
 import com.cs.ge.notifications.service.NotificationMapper;
+import com.cs.ge.services.shared.SharedService;
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
@@ -38,14 +39,16 @@ import static java.lang.String.format;
 public class MailService extends NotificationMapper {
     private final String recipient;
     private final SendinblueMessageService brevoMessageService;
+    private final SharedService sharedService;
 
     public MailService(
             final NotificationTemplateRepository notificationTemplateRepository,
             final SendinblueMessageService brevoMessageService,
-            @Value("${application.recipient.email:#{null}}") final String recipient) {
+            @Value("${application.recipient.email:#{null}}") final String recipient, final SharedService sharedService) {
         super(notificationTemplateRepository);
         this.brevoMessageService = brevoMessageService;
         this.recipient = recipient;
+        this.sharedService = sharedService;
     }
 
     public List<NotificationStatus> send(final Notification notification) {
@@ -60,13 +63,17 @@ public class MailService extends NotificationMapper {
             notificationStatus.setProvider("BREVO");
             notificationStatus.setEmail(to.getEmail());
             try {
-                final String messageToSend = String.valueOf(this.map(notification, to, EMAIL).get("message"));
-                final Map<String, Object> result = this.sendMessageUsingSendinBlueAPI(notification, notification.getFrom(), messageToSend, to);
-                notificationStatus.setProviderNotificationId(result.get("messageId").toString());
+                if (this.sharedService.isEmailValid(to.getEmail())) {
+                    final String messageToSend = String.valueOf(this.map(notification, to, EMAIL).get("message"));
+                    final Map<String, Object> result = this.sendMessageUsingSendinBlueAPI(notification, notification.getFrom(), messageToSend, to);
+                    notificationStatus.setProviderNotificationId(result.get("messageId").toString());
+                } else {
+                    log.info("Aucun envoi pour {} {} son email {} est null ou invalide", to.getFirstName(), to.getLastName(), to.getEmail());
+                    notificationStatus.setStatus("NOT_SEND");
+                }
                 return notificationStatus;
             } catch (final Exception e) {
-                //e.printStackTrace();
-                MailService.log.error("ERROR {}", e.getMessage());
+                MailService.log.error("ERROR", e);
                 notificationStatus.setStatus("ERROR");
             }
             return notificationStatus;

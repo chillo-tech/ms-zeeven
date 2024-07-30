@@ -16,6 +16,7 @@ import com.cs.ge.notifications.service.NotificationMapper;
 import com.cs.ge.notifications.service.whatsapp.dto.Component;
 import com.cs.ge.notifications.service.whatsapp.dto.Image;
 import com.cs.ge.notifications.service.whatsapp.dto.*;
+import com.cs.ge.services.shared.SharedService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -50,13 +51,14 @@ public class WhatsappService extends NotificationMapper {
     private final TextMessageService textMessageService;
     private final TemplateMessageService templateMessageService;
     private final NotificationTemplateRepository notificationTemplateRepository;
+    private final SharedService sharedService;
 
     public WhatsappService(
             final TemplateRepository templateRepository, @Value("${application.recipient.sms:#{null}}") final String recipient,
             final TemplateStatusRepository templateStatusRepository,
             final TextMessageService textMessageService,
             final TemplateMessageService templateMessageService,
-            final NotificationTemplateRepository notificationTemplateRepository
+            final NotificationTemplateRepository notificationTemplateRepository, final SharedService sharedService
     ) {
         super(notificationTemplateRepository);
         this.templateRepository = templateRepository;
@@ -65,6 +67,7 @@ public class WhatsappService extends NotificationMapper {
         this.textMessageService = textMessageService;
         this.templateMessageService = templateMessageService;
         this.notificationTemplateRepository = notificationTemplateRepository;
+        this.sharedService = sharedService;
     }
 
     private static BufferedImage createImageFromBytes(final String image) {
@@ -164,38 +167,48 @@ public class WhatsappService extends NotificationMapper {
 
         final String templateName = "ze_test_template";
         return notification.getContacts().stream().map((final Recipient to) -> {
-            final Component component = new Component();
-            component.setType("body");
-            final List<Parameter> parameters = List.of(
-                    new Parameter("text", String.format("%s %s", notification.getFrom().getFirstName(), notification.getFrom().getLastName().toUpperCase()), null)
-            );
-            component.setParameters(parameters);
-
-            final WhatsappTemplate template = new WhatsappTemplate();
-            template.setName(templateName);
-            template.setLanguage(new Language("en"));
-            template.setComponents(List.of(component));
-
-            final TextMessage textMessage = new TextMessage();
-            textMessage.setTemplate(template);
-            textMessage.setMessaging_product("whatsapp");
-            textMessage.setType("template");
-            String phoneNumber = this.recipient;
-            if (phoneNumber == null) {
-                phoneNumber = String.format("+%s%s", to.getPhoneIndex(), to.getPhone());
-            }
-            textMessage.setTo(phoneNumber);
-
-            final WhatsAppResponse response = this.textMessageService.message(textMessage);
             final NotificationStatus notificationStatus = this.getNotificationStatus(
                     notification,
                     to.getId(),
                     WHATSAPP,
-                    response.getMessages().get(0).getId(), //createdMessage.getSid(),
+                    "WHATSAPP", //createdMessage.getSid(),
                     "SENT" //createdMessage.getStatus().name()
             );
+            String phoneNumber = this.recipient;
+            if (phoneNumber == null) {
+                phoneNumber = String.format("+%s%s", to.getPhoneIndex(), to.getPhone());
+            }
+            try {
+                if (this.sharedService.isPhoneNumberValid(to.getPhone())) {
+                    final Component component = new Component();
+                    component.setType("body");
+                    final List<Parameter> parameters = List.of(
+                            new Parameter("text", String.format("%s %s", notification.getFrom().getFirstName(), notification.getFrom().getLastName().toUpperCase()), null)
+                    );
+                    component.setParameters(parameters);
 
-            notificationStatus.setProvider("WHATSAPP");
+                    final WhatsappTemplate template = new WhatsappTemplate();
+                    template.setName(templateName);
+                    template.setLanguage(new Language("en"));
+                    template.setComponents(List.of(component));
+
+                    final TextMessage textMessage = new TextMessage();
+                    textMessage.setTemplate(template);
+                    textMessage.setMessaging_product("whatsapp");
+                    textMessage.setType("template");
+
+                    textMessage.setTo(String.format("+%s", phoneNumber));
+                    final WhatsAppResponse response = this.textMessageService.message(textMessage);
+                    notificationStatus.setProvider(response.getMessages().get(0).getId());
+                    return notificationStatus;
+                } else {
+                    log.info("Aucun envoi pour {} {} son téléphone {}{} est null ou invalide", to.getFirstName(), to.getLastName(), to.getPhoneIndex(), to.getPhone());
+                    notificationStatus.setStatus("NOT_SEND");
+                }
+            } catch (final Exception e) {
+                log.error("ERROR", e);
+                notificationStatus.setStatus("ERROR");
+            }
             return notificationStatus;
         }).collect(Collectors.toList());
     }
@@ -227,7 +240,6 @@ public class WhatsappService extends NotificationMapper {
         }).collect(Collectors.toList());
     }
 
-    @Async
     public List<NotificationStatus> send(final Notification notification) {
         try {
             if (notification.getFrom().isTrial()) {
@@ -247,39 +259,51 @@ public class WhatsappService extends NotificationMapper {
         final String templateName = "ze_say_hello";
         final Template templateInBDD = this.templateRepository.findByName(templateName);
         return notification.getContacts().stream().map((final Recipient to) -> {
-
-            final Component component = new Component();
-            component.setType("body");
-            final Map<String, String> params = (Map<String, String>) this.map(notification, to, WHATSAPP).get("params");
-            final Map<Integer, String> templateInBDDParams = templateInBDD.getWhatsAppMapping();
-            final List<Parameter> parameters = templateInBDDParams.keySet()
-                    .stream().map(param -> new Parameter("text", params.get(templateInBDDParams.get(param)), null))
-                    .collect(Collectors.toList());
-            component.setParameters(parameters);
-
-            final WhatsappTemplate template = new WhatsappTemplate();
-            template.setName(templateName);
-            template.setLanguage(new Language("fr"));
-            template.setComponents(List.of(component));
-
-            final TextMessage textMessage = new TextMessage();
-            textMessage.setTemplate(template);
-            textMessage.setMessaging_product("whatsapp");
-            textMessage.setType("template");
-            String phoneNumber = this.recipient;
-            if (phoneNumber == null) {
-                phoneNumber = String.format("+%s%s", to.getPhoneIndex(), to.getPhone());
-            }
-            textMessage.setTo(phoneNumber);
-            final WhatsAppResponse response = this.textMessageService.message(textMessage);
             final NotificationStatus notificationStatus = this.getNotificationStatus(
                     notification,
                     to.getId(),
                     WHATSAPP,
-                    response.getMessages().get(0).getId(), //createdMessage.getSid(),
+                    WHATSAPP.name(),
                     "SENT" //createdMessage.getStatus().name()
             );
-            notificationStatus.setProvider("WHATSAPP");
+            String phoneNumber = this.recipient;
+            if (phoneNumber == null) {
+                phoneNumber = String.format("%s%s", to.getPhoneIndex(), to.getPhone());
+            }
+
+            try {
+                if (this.sharedService.isPhoneNumberValid(to.getPhone())) {
+                    final Component component = new Component();
+                    component.setType("body");
+                    final Map<String, String> params = (Map<String, String>) this.map(notification, to, WHATSAPP).get("params");
+                    final Map<Integer, String> templateInBDDParams = templateInBDD.getWhatsAppMapping();
+                    final List<Parameter> parameters = templateInBDDParams.keySet()
+                            .stream().map(param -> new Parameter("text", params.get(templateInBDDParams.get(param)), null))
+                            .collect(Collectors.toList());
+                    component.setParameters(parameters);
+
+                    final WhatsappTemplate template = new WhatsappTemplate();
+                    template.setName(templateName);
+                    template.setLanguage(new Language("fr"));
+                    template.setComponents(List.of(component));
+
+                    final TextMessage textMessage = new TextMessage();
+                    textMessage.setTemplate(template);
+                    textMessage.setMessaging_product("whatsapp");
+                    textMessage.setType("template");
+                    textMessage.setTo(String.format("+%s", phoneNumber));
+
+                    final WhatsAppResponse response = this.textMessageService.message(textMessage);
+                    notificationStatus.setProvider(response.getMessages().get(0).getId());
+                    return notificationStatus;
+                } else {
+                    log.info("Aucun envoi pour {} {} son téléphone {}{} est null ou invalide", to.getFirstName(), to.getLastName(), to.getPhoneIndex(), to.getPhone());
+                    notificationStatus.setStatus("NOT_SEND");
+                }
+            } catch (final Exception e) {
+                log.error("ERROR", e);
+                notificationStatus.setStatus("ERROR");
+            }
             return notificationStatus;
         }).collect(Collectors.toList());
     }

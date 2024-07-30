@@ -17,6 +17,16 @@ public class CampainController {
         return this.campainService.search();
     }
 
+    @GetMapping(value = "/{id}/simulate")
+    public void simulate(@PathVariable final String id) {
+        this.campainService.simulate(id);
+    }
+
+    @DeleteMapping(value = "/{id}")
+    public void delete(@PathVariable final String id) {
+        this.campainService.delete(id);
+    }
+
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping

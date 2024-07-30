@@ -34,5 +34,5 @@ public class Campain {
     private String date;
     private String[] informations;
     private List<Channel> channels;
-    private List<Guest> contacts;
+    private List<Guest> guests;
 }
