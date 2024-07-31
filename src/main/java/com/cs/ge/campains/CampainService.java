@@ -69,21 +69,21 @@ public class CampainService {
         return this.campainRepository.findAll();
     }
 
-    @Scheduled(cron = "0 0/5 * * * *")
+    @Scheduled(cron = "0 0/2 * * * *")
     public void sendInvitations() {
-        final Stream<Campain> events = this.campainRepository
+        final Stream<Campain> campains = this.campainRepository
                 .findByStatusIn(List.of(INCOMMING, ACTIVE));
-        events
-                .filter(event -> {
-                    boolean isToBehandled = !event.getStatus().equals(DISABLED);
+        campains
+                .filter(campain -> {
+                    boolean isToBehandled = !campain.getStatus().equals(DISABLED);
                     final String zoneId = "Europe/Paris";
                     final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
-                    final String dateTime = String.format("%s %s:00 %s", event.getDate(), event.getTime(), zoneId);
+                    final String dateTime = String.format("%s %s:00 %s", campain.getDate(), campain.getTime(), zoneId);
                     final ZonedDateTime eventZonedDateTime = ZonedDateTime.parse(dateTime, formatter);
 
                     final ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of(zoneId));
                     if (eventZonedDateTime.toInstant().isBefore(now.toInstant())) {
-                        isToBehandled = false;
+                        isToBehandled = true;
                     }
                     return isToBehandled;
                 })
@@ -116,8 +116,11 @@ public class CampainService {
         final BaseApplicationMessage baseApplicationMessage = BaseApplicationMessage.builder().informations(List.of(campain.getInformations())).text(campain.getMessage()).build();
         final Map<String, List<Object>> params = this.sharedService.messageParameters(baseApplicationMessage);
         params.put("trial", List.of(String.valueOf(author.isTrial())));
-        if (!channelsToHandle.isEmpty()) {
-            log.info("Envoi des messages pour l'evenement {} sur {}", campain.getName(), channelsToHandle.toString());
+        if (channelsToHandle.isEmpty()) {
+            // TODO ENVOYER UN MAIL
+            log.info("Pas assez de crédits pour envoyer des messages pour la campagne {} sur {}", campain.getName(), campain.getChannels().toString());
+        } else {
+            log.info("Envoi des messages pour la campagne {} sur {}", campain.getName(), channelsToHandle.toString());
             final List<MessageProfile> messageProfiles = contacts.stream().map(to -> this.sharedService.guestToMessageProfile(to)).collect(Collectors.toUnmodifiableList());
             final ApplicationNotification applicationNotification = new ApplicationNotification(
                     "ZEEVEN",
@@ -137,9 +140,6 @@ public class CampainService {
                 campain.setStatus(DISABLED);
                 this.campainRepository.save(campain);
             }
-        } else {
-            // TODO ENVOYER UN MAIL
-            //log.info("Pas assez de crédits pour envoyer des messages pour l'evenement {} sur {}", event.getName(), eventChannels.toString());
         }
     }
 
